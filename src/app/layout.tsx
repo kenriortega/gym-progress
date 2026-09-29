@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { OfflineBanner } from "@/components/offline-banner";
+import { ServiceWorkerProvider } from "@/components/serwist-provider";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es" suppressHydrationWarning className={cn("h-full antialiased", "font-sans", geist.variable)}>
       <body className="min-h-full font-sans antialiased">
+        <ServiceWorkerProvider>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
@@ -51,6 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
           <Toaster />
         </ThemeProvider>
+        </ServiceWorkerProvider>
       </body>
     </html>
   );
