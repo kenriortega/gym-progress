@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, isNull, ne, or } from "drizzle-orm";
 import Link from "next/link";
+import { HistoryIcon, PencilIcon, PlusIcon, TrendingUpIcon } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
@@ -21,6 +22,31 @@ import {
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { PendingButton } from "@/components/pending-button";
 import { SetEntryForm } from "@/components/set-entry-form";
+import { FormSelect } from "@/components/form-select";
+import { AppHeader } from "@/components/app-header";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   SESSIONS_TO_PROGRESS,
   suggestProgression,
@@ -228,74 +254,64 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-md px-5 pb-32 pt-6">
-      <header className="flex items-center justify-between">
-        <Link
-          href="/"
-          className="grid size-11 place-items-center rounded-full border border-white/10 text-xl text-zinc-300 transition hover:border-white/25 hover:text-white"
-          aria-label="Volver al inicio"
-        >
-          ←
-        </Link>
-        <div className="text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-lime-300">
-            En curso
-          </p>
-          <h1 className="mt-1 max-w-52 truncate text-lg font-extrabold text-white">
-            {plan?.name ?? "Sesión libre"}
-          </h1>
-        </div>
-        <div className="grid size-11 place-items-center rounded-full bg-lime-300/10 text-sm font-bold text-lime-300">
-          {totalSets}
-        </div>
-      </header>
+      <AppHeader
+        backHref="/"
+        eyebrow="En curso"
+        title={plan?.name ?? "Sesión libre"}
+        action={
+          <div
+            className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-bold text-primary"
+            title={`${totalSets} series registradas`}
+          >
+            {totalSets}
+          </div>
+        }
+      />
 
-      <p className="mt-6 capitalize text-sm text-zinc-500">{dateLabel}</p>
+      <p className="mt-6 capitalize text-sm text-muted-foreground">{dateLabel}</p>
 
-      <section className="mt-6 rounded-3xl border border-white/8 bg-white/[0.035] p-4">
+      <Card className="mt-6 p-4">
         <form action={addExercise} className="flex gap-2">
           <input type="hidden" name="workoutId" value={workout.id} />
           <label htmlFor="exerciseId" className="sr-only">
             Ejercicio
           </label>
-          <select
+          <FormSelect
             id="exerciseId"
             name="exerciseId"
             required
             disabled={availableExercises.length === 0}
-            defaultValue=""
-            className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-zinc-900 px-4 text-base font-semibold text-white outline-none focus:border-lime-300 disabled:text-zinc-600"
-          >
-            <option value="" disabled>
-              {availableExercises.length > 0
-                ? "Añadir ejercicio"
-                : "Todos añadidos"}
-            </option>
-            {availableExercises.map((exercise) => (
-              <option key={exercise.id} value={exercise.id}>
-                {exercise.name} · {exercise.muscleGroup}
-              </option>
-            ))}
-          </select>
-          <button
+            placeholder={
+              availableExercises.length > 0 ? "Añadir ejercicio" : "Todos añadidos"
+            }
+            options={availableExercises.map((exercise) => ({
+              value: exercise.id,
+              label: exercise.name,
+              group: exercise.muscleGroup,
+            }))}
+            className="h-14 min-w-0 flex-1 rounded-2xl px-4 text-base font-semibold"
+          />
+          <Button
             type="submit"
+            size="icon"
             disabled={availableExercises.length === 0}
-            className="grid size-14 shrink-0 place-items-center rounded-2xl bg-lime-300 text-2xl font-black text-zinc-950 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-600"
+            className="size-14 shrink-0 rounded-2xl"
             aria-label="Añadir ejercicio"
           >
-            +
-          </button>
+            <PlusIcon className="size-5" />
+          </Button>
         </form>
-      </section>
+      </Card>
 
       {exerciseRows.length === 0 ? (
-        <section className="mt-12 rounded-3xl border border-dashed border-white/15 px-6 py-12 text-center">
-          <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-white/5 text-2xl">
+        <section className="mt-12 rounded-3xl border border-dashed border-border px-6 py-12 text-center">
+          <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-muted text-2xl">
             +
           </div>
-          <h2 className="mt-5 text-xl font-extrabold text-white">
+          <h2 className="mt-5 text-xl font-extrabold text-foreground">
             Añade tu primer ejercicio
           </h2>
-          <p className="mt-2 text-sm leading-6 text-zinc-500">
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
             Elige uno arriba y registra cada serie cuando la completes.
           </p>
         </section>
@@ -326,19 +342,19 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
             const suggestion = alreadyAtSuggestedWeight ? null : rawSuggestion;
 
             return (
-              <article
+              <Card
                 key={exercise.workoutExerciseId}
-                className={`overflow-hidden rounded-3xl border ${isComplete ? "border-lime-300/35 bg-lime-300/[0.04]" : "border-white/8 bg-white/[0.035]"}`}
+                className={`gap-0 overflow-hidden py-0 ${isComplete ? "border-primary/45 bg-primary/5" : ""}`}
               >
-                <div className="flex items-start gap-3 border-b border-white/8 p-5">
-                  <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-lime-300 text-sm font-black text-zinc-950">
+                <div className="flex items-start gap-3 border-b border-border p-5">
+                  <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-sm font-black text-primary-foreground">
                     {String(exerciseIndex + 1).padStart(2, "0")}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-lg font-extrabold text-white">
+                    <h2 className="truncate text-lg font-extrabold text-foreground">
                       {exercise.name}
                     </h2>
-                    <p className="mt-1 text-sm text-zinc-500">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {exercise.muscleGroup}
                       {target
                         ? ` · ${sets.length}/${target.targetSets} series`
@@ -352,7 +368,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                     <PendingButton
                       type="submit"
                       pendingLabel="…"
-                      className={`h-10 rounded-xl px-3 text-xs font-black ${isComplete ? "bg-lime-300 text-zinc-950" : "bg-white/5 text-zinc-400"}`}
+                      className={`h-10 rounded-xl px-3 text-xs font-black ${isComplete ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
                     >
                       {isComplete ? "✓ Hecho" : "Completar"}
                     </PendingButton>
@@ -361,69 +377,153 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
 
                 <div className="px-5 pt-4">
                   {target && (
-                    <p className="mb-2 rounded-xl bg-lime-300/8 px-3 py-2 text-xs font-semibold leading-5 text-lime-200">
-                      Objetivo: {target.targetSets} series de {target.targetRepsMin}
-                      {target.targetRepsMax !== target.targetRepsMin
-                        ? `–${target.targetRepsMax}`
-                        : ""} repeticiones · {remainingSets === 0 ? "objetivo alcanzado" : `faltan ${remainingSets}`}
-                    </p>
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary">
+                        Objetivo {target.targetSets}×{target.targetRepsMin}
+                        {target.targetRepsMax !== target.targetRepsMin
+                          ? `–${target.targetRepsMax}`
+                          : ""}
+                      </Badge>
+                      <Badge variant={remainingSets === 0 ? "default" : "outline"}>
+                        {remainingSets === 0
+                          ? "Objetivo alcanzado"
+                          : `Faltan ${remainingSets}`}
+                      </Badge>
+                    </div>
                   )}
                   {suggestion && (
-                    <p className="mb-2 rounded-xl bg-amber-300/10 px-3 py-2 text-xs font-semibold leading-5 text-amber-200">
-                      Toca subir peso: llevas {SESSIONS_TO_PROGRESS} sesiones
-                      cerrando el rango con {suggestion.fromWeight}{" "}
-                      {workout.weightUnit}. Prueba {suggestion.toWeight}{" "}
-                      {workout.weightUnit} y vuelve al mínimo de repeticiones.
-                    </p>
+                    <Alert className="mb-2">
+                      <TrendingUpIcon />
+                      <AlertTitle>Toca subir peso</AlertTitle>
+                      <AlertDescription>
+                        Llevas {SESSIONS_TO_PROGRESS} sesiones cerrando el rango con{" "}
+                        {suggestion.fromWeight} {workout.weightUnit}. Prueba{" "}
+                        {suggestion.toWeight} {workout.weightUnit} y vuelve al mínimo
+                        de repeticiones.
+                      </AlertDescription>
+                    </Alert>
                   )}
                   {reference && reference.sets.length > 0 ? (
-                    <p className="rounded-xl bg-sky-300/8 px-3 py-2 text-xs leading-5 text-sky-200">
-                      Última vez: {reference.sets
-                        .map((set) => `${Number(set.weight)}×${set.reps}`)
-                        .join(" · ")} {workout.weightUnit}
-                    </p>
+                    <Alert className="bg-muted/40">
+                      <HistoryIcon />
+                      <AlertTitle>Última vez</AlertTitle>
+                      <AlertDescription>
+                        {reference.sets
+                          .map((set) => `${Number(set.weight)}×${set.reps}`)
+                          .join(" · ")}{" "}
+                        {workout.weightUnit}
+                      </AlertDescription>
+                    </Alert>
                   ) : (
-                    <p className="text-xs text-zinc-600">Primera vez con este ejercicio</p>
+                    <p className="text-xs text-muted-foreground">
+                      Primera vez con este ejercicio
+                    </p>
                   )}
-                  <Link href={`/exercises/${exercise.exerciseId}`} className="mt-2 inline-block text-xs font-bold text-zinc-500 hover:text-lime-300">
+                  <Link href={`/exercises/${exercise.exerciseId}`} className="mt-2 inline-block text-xs font-bold text-muted-foreground hover:text-primary">
                     Ver progreso completo →
                   </Link>
                 </div>
 
                 {sets.length > 0 && (
                   <div className="px-5 pt-4">
-                    <div className="grid grid-cols-[2rem_1fr_1fr_2.5rem] gap-2 px-2 text-center text-[11px] font-bold uppercase tracking-wider text-zinc-600">
-                      <span>#</span>
-                      <span>Peso</span>
-                      <span>Reps</span>
-                      <span />
-                    </div>
-                    <div className="mt-2 space-y-2">
-                      {sets.map((set, index) => (
-                        <details key={set.id} className="rounded-xl bg-white/[0.04] px-2 py-3">
-                          <summary className="grid cursor-pointer list-none grid-cols-[2rem_1fr_1fr_2.5rem] items-center gap-2 text-center">
-                            <span className="text-sm font-bold text-zinc-500">{index + 1}</span>
-                            <span className="font-bold text-white">{Number(set.weight)} {workout.weightUnit}</span>
-                            <span className="font-bold text-white">{set.reps}</span>
-                            <span className="grid size-8 place-items-center rounded-lg text-zinc-500 hover:bg-white/5 hover:text-white" aria-label={`Editar serie ${index + 1}`}>•••</span>
-                          </summary>
-                          <div className="mt-3 border-t border-white/8 pt-3">
-                            <form action={updateSet} className="grid grid-cols-[1fr_1fr_auto] gap-2">
-                              <input type="hidden" name="workoutId" value={workout.id} />
-                              <input type="hidden" name="setId" value={set.id} />
-                              <input name="weight" type="number" min="0" max="99999" step="0.01" required defaultValue={Number(set.weight)} className="h-10 min-w-0 rounded-lg border border-white/10 bg-zinc-900 px-2 text-center font-bold text-white" aria-label="Peso" />
-                              <input name="reps" type="number" min="1" max="1000" required defaultValue={set.reps} className="h-10 min-w-0 rounded-lg border border-white/10 bg-zinc-900 px-2 text-center font-bold text-white" aria-label="Repeticiones" />
-                              <PendingButton type="submit" className="h-10 rounded-lg bg-white px-3 text-xs font-black text-zinc-950">Guardar</PendingButton>
-                            </form>
-                            <form action={deleteSet} className="mt-2">
-                              <input type="hidden" name="workoutId" value={workout.id} />
-                              <input type="hidden" name="setId" value={set.id} />
-                              <ConfirmSubmitButton type="submit" confirmation={`¿Eliminar la serie ${index + 1}?`} className="h-9 w-full rounded-lg text-xs font-bold text-red-300 hover:bg-red-400/10">Eliminar serie</ConfirmSubmitButton>
-                            </form>
-                          </div>
-                        </details>
-                      ))}
-                    </div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-10">#</TableHead>
+                          <TableHead>Peso</TableHead>
+                          <TableHead>Reps</TableHead>
+                          <TableHead className="w-10 text-right">Editar</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {sets.map((set, index) => (
+                          <TableRow key={set.id}>
+                            <TableCell className="text-muted-foreground">
+                              {index + 1}
+                            </TableCell>
+                            <TableCell className="font-semibold text-foreground">
+                              {Number(set.weight)} {workout.weightUnit}
+                            </TableCell>
+                            <TableCell className="font-semibold text-foreground">
+                              {set.reps}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Dialog>
+                                <DialogTrigger
+                                  className="grid size-8 place-items-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                                  aria-label={`Editar serie ${index + 1}`}
+                                >
+                                  <PencilIcon className="size-4" />
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-sm">
+                                  <DialogHeader>
+                                    <DialogTitle>Serie {index + 1}</DialogTitle>
+                                    <DialogDescription>
+                                      {exercise.name} · {Number(set.weight)}{" "}
+                                      {workout.weightUnit} × {set.reps} repeticiones
+                                    </DialogDescription>
+                                  </DialogHeader>
+
+                                  <form action={updateSet} className="grid gap-3">
+                                    <input type="hidden" name="workoutId" value={workout.id} />
+                                    <input type="hidden" name="setId" value={set.id} />
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div className="grid gap-2">
+                                        <Label htmlFor={`weight-${set.id}`}>Peso</Label>
+                                        <Input
+                                          id={`weight-${set.id}`}
+                                          name="weight"
+                                          type="number"
+                                          inputMode="decimal"
+                                          min="0"
+                                          max="99999"
+                                          step="0.01"
+                                          required
+                                          defaultValue={Number(set.weight)}
+                                          className="text-center font-semibold"
+                                        />
+                                      </div>
+                                      <div className="grid gap-2">
+                                        <Label htmlFor={`reps-${set.id}`}>Repeticiones</Label>
+                                        <Input
+                                          id={`reps-${set.id}`}
+                                          name="reps"
+                                          type="number"
+                                          inputMode="numeric"
+                                          min="1"
+                                          max="1000"
+                                          required
+                                          defaultValue={set.reps}
+                                          className="text-center font-semibold"
+                                        />
+                                      </div>
+                                    </div>
+                                    <PendingButton type="submit" className="w-full">
+                                      Guardar cambios
+                                    </PendingButton>
+                                  </form>
+
+                                  <DialogFooter>
+                                    <form action={deleteSet} className="w-full">
+                                      <input type="hidden" name="workoutId" value={workout.id} />
+                                      <input type="hidden" name="setId" value={set.id} />
+                                      <ConfirmSubmitButton
+                                        type="submit"
+                                        variant="destructive"
+                                        className="w-full"
+                                        confirmation={`¿Eliminar la serie ${index + 1}? No se puede deshacer.`}
+                                      >
+                                        Eliminar serie
+                                      </ConfirmSubmitButton>
+                                    </form>
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                 )}
 
@@ -433,13 +533,13 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                   defaultWeight={lastKnownSet ? Number(lastKnownSet.weight) : null}
                   defaultReps={lastKnownSet?.reps ?? null}
                 />
-              </article>
+              </Card>
             );
           })}
         </div>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-white/8 bg-zinc-950/95 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-background/95 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur">
         <form action={finishWorkout} className="mx-auto max-w-md">
           <input type="hidden" name="workoutId" value={workout.id} />
           <ConfirmSubmitButton
@@ -447,14 +547,14 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
             disabled={totalSets === 0}
             confirmation={`¿Finalizar toda la sesión? Has completado ${completedExercises} de ${exerciseRows.length} ejercicios.`}
             pendingLabel="Finalizando…"
-            className="h-14 w-full rounded-2xl bg-white text-base font-black text-zinc-950 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-600"
+            className="h-14 w-full rounded-2xl bg-foreground text-base font-black text-background transition hover:bg-foreground/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
           >
             {totalSets === 0
               ? "Registra una serie para terminar"
               : `Finalizar sesión completa · ${totalSets} ${totalSets === 1 ? "serie" : "series"}`}
           </ConfirmSubmitButton>
           {totalSets > 0 && (
-            <p className="mt-2 text-center text-xs text-zinc-500">
+            <p className="mt-2 text-center text-xs text-muted-foreground">
               {completedExercises}/{exerciseRows.length} ejercicios marcados como completados.
             </p>
           )}

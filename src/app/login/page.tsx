@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation";
 
 import { auth, signIn } from "@/auth";
+import { TriangleAlertIcon } from "lucide-react";
+
+import { PendingButton } from "@/components/pending-button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default async function LoginPage() {
   const session = await auth();
@@ -18,18 +22,18 @@ export default async function LoginPage() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-between px-5 pb-10 pt-8">
       <div>
-        <div className="grid size-14 place-items-center rounded-2xl bg-lime-300 text-xl font-black text-zinc-950">
+        <div className="grid size-14 place-items-center rounded-2xl bg-primary text-xl font-black text-primary-foreground">
           GP
         </div>
 
         <div className="mt-12">
-          <p className="text-sm font-bold uppercase tracking-[0.16em] text-lime-300">
+          <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">
             Gym Progress
           </p>
-          <h1 className="mt-3 text-5xl font-black leading-[0.94] tracking-[-0.055em] text-white">
+          <h1 className="mt-3 text-5xl font-black leading-[0.94] tracking-[-0.055em] text-foreground">
             Cada serie cuenta.
           </h1>
-          <p className="mt-5 max-w-sm text-base leading-7 text-zinc-400">
+          <p className="mt-5 max-w-sm text-base leading-7 text-muted-foreground">
             Registra tu entrenamiento, recupera lo que hiciste la última vez y
             llega a tu siguiente sesión con un objetivo claro.
           </p>
@@ -43,26 +47,32 @@ export default async function LoginPage() {
             await signIn("google", { redirectTo: "/" });
           }}
         >
-          <button
+          <PendingButton
             type="submit"
+            size="lg"
             disabled={!googleConfigured}
-            className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-white px-5 text-base font-bold text-zinc-950 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
+            pendingLabel="Conectando…"
+            className="h-14 w-full rounded-2xl text-base font-semibold"
           >
-            <span aria-hidden="true" className="text-lg">
+            <span aria-hidden="true" className="text-lg font-bold">
               G
             </span>
             Continuar con Google
-          </button>
+          </PendingButton>
         </form>
 
         {!googleConfigured && (
-          <div className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/8 p-4 text-sm leading-6 text-amber-100">
-            Añade las credenciales de Google a <code>.env.local</code> para
-            habilitar el inicio de sesión.
-          </div>
+          <Alert className="mt-4">
+            <TriangleAlertIcon />
+            <AlertTitle>Falta configurar Google</AlertTitle>
+            <AlertDescription>
+              Añade las credenciales de Google a <code>.env.local</code> para
+              habilitar el inicio de sesión.
+            </AlertDescription>
+          </Alert>
         )}
 
-        <p className="mt-6 text-center text-xs leading-5 text-zinc-600">
+        <p className="mt-6 text-center text-xs leading-5 text-muted-foreground">
           Tus entrenamientos permanecen asociados únicamente a tu cuenta.
         </p>
       </div>

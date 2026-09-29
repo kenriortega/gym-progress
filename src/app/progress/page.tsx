@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { exercises, workoutExercises, workouts, workoutSets } from "@/db/schema";
+import { AppHeader } from "@/components/app-header";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function ProgressPage() {
   const session = await auth();
@@ -29,35 +32,37 @@ export default async function ProgressPage() {
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-md px-5 pb-12 pt-6">
-      <header className="flex items-center gap-4">
-        <Link href="/" className="grid size-11 place-items-center rounded-full border border-white/10 text-xl text-zinc-300" aria-label="Volver al inicio">←</Link>
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-lime-300">Marcas personales</p>
-          <h1 className="mt-1 text-2xl font-black tracking-tight text-white">Progreso por ejercicio</h1>
-        </div>
-      </header>
+      <AppHeader backHref="/" eyebrow="Marcas personales" title="Progreso por ejercicio" />
 
       {summaries.length > 0 ? (
         <section className="mt-8 space-y-3">
           {summaries.map((exercise) => (
-            <Link key={exercise.id} href={`/exercises/${exercise.id}`} className="flex items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.035] p-4 transition hover:border-lime-300/30">
-              <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-lime-300/10 text-sm font-black text-lime-300">PR</div>
-              <div className="min-w-0 flex-1">
-                <h2 className="truncate font-extrabold text-white">{exercise.name}</h2>
-                <p className="mt-1 text-sm text-zinc-500">{exercise.muscleGroup} · {exercise.workoutCount} {exercise.workoutCount === 1 ? "sesión" : "sesiones"}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-black text-white">{Number(exercise.bestWeight)} kg</p>
-                <p className="mt-1 text-xs text-zinc-600">máximo</p>
-              </div>
+            <Link key={exercise.id} href={`/exercises/${exercise.id}`}>
+              <Card className="flex-row items-center gap-4 p-4 transition hover:border-foreground/25">
+                <Badge variant="secondary" className="size-12 shrink-0 justify-center rounded-xl text-xs font-black">
+                  PR
+                </Badge>
+                <div className="min-w-0 flex-1">
+                  <h2 className="truncate font-semibold text-foreground">{exercise.name}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{exercise.muscleGroup} · {exercise.workoutCount} {exercise.workoutCount === 1 ? "sesión" : "sesiones"}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-foreground">{Number(exercise.bestWeight)} kg</p>
+                  <p className="mt-1 text-xs text-muted-foreground">máximo</p>
+                </div>
+              </Card>
             </Link>
           ))}
         </section>
       ) : (
-        <section className="mt-10 rounded-3xl border border-dashed border-white/12 px-6 py-12 text-center">
-          <h2 className="text-lg font-extrabold text-white">Aún no hay progreso calculado</h2>
-          <p className="mt-2 text-sm leading-6 text-zinc-500">Finaliza una sesión para comenzar a ver tus récords y evolución.</p>
-        </section>
+        <Card className="mt-10 border-dashed px-6 py-12 text-center">
+          <CardHeader>
+            <CardTitle>Aún no hay progreso calculado</CardTitle>
+            <CardDescription>
+              Finaliza una sesión para comenzar a ver tus récords y evolución.
+            </CardDescription>
+          </CardHeader>
+        </Card>
       )}
     </main>
   );

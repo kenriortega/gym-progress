@@ -1,10 +1,22 @@
 import { and, asc, count, desc, eq, isNull } from "drizzle-orm";
 import Link from "next/link";
+import { ChevronRightIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { startWorkout } from "@/app/actions/workouts";
-import { auth, signOut } from "@/auth";
+import { auth } from "@/auth";
 import { db } from "@/db";
+import { AppHeader } from "@/components/app-header";
+import { greetingName } from "@/lib/display-name";
+import { PendingButton } from "@/components/pending-button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   exercises,
   trainingPlanExercises,
@@ -14,7 +26,6 @@ import {
   workoutSets,
 } from "@/db/schema";
 
-const accents = ["bg-lime-300", "bg-orange-300", "bg-sky-300"];
 const weekdays = [
   "Domingo",
   "Lunes",
@@ -41,7 +52,6 @@ export default async function Home() {
   }
 
   const displayName = session.user.name ?? session.user.email ?? "Atleta";
-  const initial = displayName.charAt(0).toUpperCase();
 
   const [activeWorkout] = await db
     .select({
@@ -151,32 +161,13 @@ export default async function Home() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pb-10 pt-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-zinc-400">Tu progreso, serie a serie</p>
-          <h1 className="mt-1 text-3xl font-black tracking-[-0.04em] text-white">
-            Hola, {displayName.split(" ")[0]}
-          </h1>
-        </div>
-        <form
-          action={async () => {
-            "use server";
-            await signOut({ redirectTo: "/login" });
-          }}
-        >
-          <button
-            type="submit"
-            aria-label="Cerrar sesión"
-            title="Cerrar sesión"
-            className="grid size-11 place-items-center rounded-full border border-white/10 bg-white/5 text-lg font-bold transition hover:border-lime-300/50 hover:text-lime-300"
-          >
-            {initial}
-          </button>
-        </form>
-      </header>
+      <AppHeader
+        eyebrow="Tu progreso, serie a serie"
+        title={`Hola, ${greetingName(displayName)}`}
+      />
 
-      <section className="mt-8 overflow-hidden rounded-[2rem] bg-lime-300 p-6 text-zinc-950 shadow-[0_24px_70px_-30px_rgba(190,242,100,0.65)]">
-        <p className="text-sm font-bold uppercase tracking-[0.16em] text-zinc-700">
+      <Card className="mt-8 gap-0 overflow-hidden bg-primary p-6 text-primary-foreground">
+        <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary-foreground/75">
           {activeWorkout
             ? "Sesión en curso"
             : todayPlan
@@ -192,7 +183,7 @@ export default async function Home() {
                 ? "Elige tu plan de hoy."
                 : "Organiza tu semana."}
         </h2>
-        <p className="mt-4 max-w-xs text-sm font-medium leading-6 text-zinc-700">
+        <p className="mt-4 max-w-xs text-sm font-medium leading-6 text-primary-foreground/75">
           {activeWorkout
             ? "Tus series están guardadas. Continúa desde el siguiente ejercicio."
             : todayPlan
@@ -202,42 +193,46 @@ export default async function Home() {
                 : "Crea un plan por día con tus ejercicios, series y repeticiones objetivo."}
         </p>
         {activeWorkout ? (
-          <Link
-            href={`/workout/${activeWorkout.id}`}
-            className="mt-7 flex h-14 w-full items-center justify-center rounded-2xl bg-zinc-950 px-5 text-base font-bold text-white transition hover:bg-zinc-800"
+          <Button
+            size="lg"
+            className="mt-7 h-14 w-full rounded-2xl bg-background text-base font-semibold text-foreground hover:bg-background/90"
+            render={<Link href={`/workout/${activeWorkout.id}`} />}
           >
             Continuar entreno
-          </Link>
+          </Button>
         ) : todayPlan ? (
           <form action={startWorkout}>
             <input type="hidden" name="planId" value={todayPlan.id} />
-            <button
+            <PendingButton
               type="submit"
+              size="lg"
               disabled={todayPlan.exerciseCount === 0}
-              className="mt-7 flex h-14 w-full items-center justify-center rounded-2xl bg-zinc-950 px-5 text-base font-bold text-white transition hover:bg-zinc-800"
+              pendingLabel="Preparando…"
+              className="mt-7 h-14 w-full rounded-2xl bg-background text-base font-semibold text-foreground hover:bg-background/90"
             >
               Empezar {todayPlan.name}
-            </button>
+            </PendingButton>
           </form>
         ) : (
-          <Link
-            href={plans.length > 0 ? "#planes" : "/plans"}
-            className="mt-7 flex h-14 w-full items-center justify-center rounded-2xl bg-zinc-950 px-5 text-base font-bold text-white transition hover:bg-zinc-800"
+          <Button
+            size="lg"
+            className="mt-7 h-14 w-full rounded-2xl bg-background text-base font-semibold text-foreground hover:bg-background/90"
+            render={<Link href={plans.length > 0 ? "#planes" : "/plans"} />}
           >
             {plans.length > 0 ? "Elegir un plan" : "Crear mi primer plan"}
-          </Link>
+          </Button>
         )}
-      </section>
+      </Card>
 
       <section id="planes" className="mt-8 scroll-mt-5">
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-sm font-medium text-zinc-500">Tu semana</p>
-            <h2 className="mt-1 text-xl font-extrabold tracking-tight text-white">
+            <p className="text-sm font-medium text-muted-foreground">Tu semana</p>
+            <h2 className="mt-1 text-xl font-extrabold tracking-tight text-foreground">
               Planes de entrenamiento
             </h2>
           </div>
-          <Link href="/plans" className="text-sm font-bold text-lime-300">
+          <Link href="/plans" className="text-sm font-bold text-primary">
             Gestionar
           </Link>
         </div>
@@ -245,58 +240,58 @@ export default async function Home() {
         {plans.length > 0 ? (
           <div className="mt-4 space-y-3">
             {plans.map((plan) => (
-              <article
+              <Card
                 key={plan.id}
-                className={`rounded-2xl border p-4 ${
-                  plan.id === todayPlan?.id
-                    ? "border-lime-300/40 bg-lime-300/[0.07]"
-                    : "border-white/8 bg-white/[0.035]"
+                className={`p-4 ${
+                  plan.id === todayPlan?.id ? "border-foreground/30 bg-muted/40" : ""
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/5 text-xs font-black uppercase text-lime-300">
+                  <Badge
+                    variant="secondary"
+                    className="size-11 shrink-0 justify-center rounded-xl text-xs font-bold uppercase"
+                  >
                     {plan.weekday === null
                       ? "Libre"
                       : weekdays[plan.weekday].slice(0, 3)}
-                  </div>
+                  </Badge>
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate font-extrabold text-white">{plan.name}</h3>
-                    <p className="mt-1 text-sm text-zinc-500">
+                    <h3 className="truncate font-semibold text-foreground">{plan.name}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {plan.exerciseCount} {plan.exerciseCount === 1 ? "ejercicio" : "ejercicios"}
                     </p>
                   </div>
                   {!activeWorkout && plan.exerciseCount > 0 ? (
                     <form action={startWorkout}>
                       <input type="hidden" name="planId" value={plan.id} />
-                      <button
-                        type="submit"
-                        className="rounded-xl bg-white px-4 py-2 text-sm font-black text-zinc-950"
-                      >
+                      <PendingButton type="submit" size="sm" pendingLabel="…">
                         Iniciar
-                      </button>
+                      </PendingButton>
                     </form>
                   ) : (
-                    <Link
-                      href={`/plans/${plan.id}`}
-                      className="grid size-10 place-items-center rounded-xl bg-white/5 text-zinc-400"
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       aria-label={`Editar ${plan.name}`}
+                      render={<Link href={`/plans/${plan.id}`} />}
                     >
-                      →
-                    </Link>
+                      <ChevronRightIcon className="size-4" />
+                    </Button>
                   )}
                 </div>
-              </article>
+              </Card>
             ))}
           </div>
         ) : (
-          <Link
-            href="/plans"
-            className="mt-4 block rounded-2xl border border-dashed border-white/12 px-5 py-7 text-center"
-          >
-            <p className="font-bold text-zinc-300">Crea tu primer plan semanal</p>
-            <p className="mt-2 text-sm leading-6 text-zinc-600">
-              La app cargará todos sus ejercicios al iniciar la sesión.
-            </p>
+          <Link href="/plans" className="mt-4 block">
+            <Card className="border-dashed px-5 py-7 text-center">
+              <CardHeader>
+                <CardTitle className="text-base">Crea tu primer plan semanal</CardTitle>
+                <CardDescription>
+                  La app cargará todos sus ejercicios al iniciar la sesión.
+                </CardDescription>
+              </CardHeader>
+            </Card>
           </Link>
         )}
       </section>
@@ -304,20 +299,20 @@ export default async function Home() {
       <section className="mt-8">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-zinc-500">Tu referencia rápida</p>
-            <h2 className="mt-1 text-xl font-extrabold tracking-tight text-white">
+            <p className="text-sm font-medium text-muted-foreground">Tu referencia rápida</p>
+            <h2 className="mt-1 text-xl font-extrabold tracking-tight text-foreground">
               Último entrenamiento
             </h2>
           </div>
           <div className="shrink-0 text-right">
             {lastWorkout && (
-              <p className="text-sm font-semibold text-lime-300">
+              <p className="text-sm font-semibold text-primary">
                 {relativeDate(lastWorkout.performedAt)}
               </p>
             )}
             <Link
               href="/history"
-              className="mt-1 inline-block text-sm font-bold text-zinc-400 transition hover:text-white"
+              className="mt-1 inline-block text-sm font-bold text-muted-foreground transition hover:text-foreground"
             >
               Ver historial
             </Link>
@@ -327,38 +322,39 @@ export default async function Home() {
         {exerciseSummary.length > 0 ? (
           <div className="mt-4 space-y-3">
             {exerciseSummary.map((exercise, index) => (
-              <article
+              <Card
                 key={exercise.id}
-                className="flex items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.035] p-4"
+                className="flex-row items-center gap-4 p-4"
               >
-                <div
-                  className={`grid size-11 shrink-0 place-items-center rounded-xl ${accents[index % accents.length]} font-black text-zinc-950`}
+                <Badge
+                  variant="secondary"
+                  className="size-11 shrink-0 justify-center rounded-xl font-bold"
                 >
                   {String(index + 1).padStart(2, "0")}
-                </div>
+                </Badge>
                 <div className="min-w-0 flex-1">
-                  <h3 className="truncate font-bold text-white">{exercise.name}</h3>
-                  <p className="mt-1 text-sm text-zinc-400">
+                  <h3 className="truncate font-semibold text-foreground">{exercise.name}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {exercise.sets} {exercise.sets === 1 ? "serie" : "series"}
                     {exercise.sets > 0 && lastWorkout
                       ? ` · hasta ${exercise.maxWeight} ${lastWorkout.weightUnit}`
                       : ""}
                   </p>
                 </div>
-              </article>
+              </Card>
             ))}
           </div>
         ) : (
-          <div className="mt-4 rounded-2xl border border-dashed border-white/12 px-5 py-8 text-center">
-            <p className="font-bold text-zinc-300">Aún no hay entrenamientos terminados</p>
-            <p className="mt-2 text-sm leading-6 text-zinc-600">
+          <div className="mt-4 rounded-2xl border border-dashed border-border px-5 py-8 text-center">
+            <p className="font-bold text-muted-foreground">Aún no hay entrenamientos terminados</p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Tu primera sesión aparecerá aquí como referencia para la siguiente.
             </p>
           </div>
         )}
       </section>
 
-      <footer className="mt-auto pt-10 text-center text-xs leading-5 text-zinc-600">
+      <footer className="mt-auto pt-10 text-center text-xs leading-5 text-muted-foreground">
         Tu progreso se guarda automáticamente después de cada serie
       </footer>
     </main>

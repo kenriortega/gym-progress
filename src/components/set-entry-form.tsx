@@ -2,6 +2,22 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import {
   addSetWithState,
@@ -22,13 +38,9 @@ function SubmitSeriesButton() {
   const { pending } = useFormStatus();
 
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="mt-6 h-12 rounded-xl bg-lime-300 text-sm font-black text-zinc-950 transition hover:bg-lime-200 disabled:cursor-wait disabled:bg-zinc-700 disabled:text-zinc-400"
-    >
+    <Button type="submit" disabled={pending} className="mt-6 h-12">
       {pending ? "Guardando…" : "+ Serie"}
-    </button>
+    </Button>
   );
 }
 
@@ -73,6 +85,15 @@ export function SetEntryForm({
   }
 
   useEffect(() => {
+    if (state.status === "idle" || state.savedAt === 0) return;
+    if (state.status === "success") {
+      toast.success(state.message);
+    } else {
+      toast.error(state.message);
+    }
+  }, [state.savedAt, state.status, state.message]);
+
+  useEffect(() => {
     if (remaining <= 0) return;
     const timer = window.setInterval(() => {
       setRemaining((current) => Math.max(0, current - 1));
@@ -84,7 +105,7 @@ export function SetEntryForm({
   const seconds = remaining % 60;
 
   return (
-    <div className="border-t border-white/8 p-5">
+    <div className="border-t border-border p-5">
       <form action={formAction}>
         <input type="hidden" name="workoutId" value={workoutId} />
         <input
@@ -93,9 +114,9 @@ export function SetEntryForm({
           value={workoutExerciseId}
         />
         <div className="grid grid-cols-[1fr_1fr_4.5rem] gap-2">
-          <label className="text-xs font-bold text-zinc-500">
+          <label className="text-xs font-bold text-muted-foreground">
             PESO KG
-            <input
+            <Input
               name="weight"
               type="number"
               inputMode="decimal"
@@ -105,12 +126,12 @@ export function SetEntryForm({
               required
               value={weight}
               onChange={(event) => setWeight(event.target.value)}
-              className="mt-2 h-12 w-full rounded-xl border border-white/10 bg-zinc-900 px-3 text-center text-lg font-bold text-white outline-none focus:border-lime-300"
+              className="mt-2 h-12 text-center text-lg font-semibold"
             />
           </label>
-          <label className="text-xs font-bold text-zinc-500">
+          <label className="text-xs font-bold text-muted-foreground">
             REPS
-            <input
+            <Input
               name="reps"
               type="number"
               inputMode="numeric"
@@ -120,30 +141,19 @@ export function SetEntryForm({
               required
               value={reps}
               onChange={(event) => setReps(event.target.value)}
-              className="mt-2 h-12 w-full rounded-xl border border-white/10 bg-zinc-900 px-3 text-center text-lg font-bold text-white outline-none focus:border-lime-300"
+              className="mt-2 h-12 text-center text-lg font-semibold"
             />
           </label>
           <SubmitSeriesButton />
         </div>
 
-        {state.status !== "idle" && (
-          <p
-            aria-live="polite"
-            className={`mt-3 rounded-xl px-3 py-2 text-sm font-semibold ${
-              state.status === "success"
-                ? "bg-lime-300/10 text-lime-200"
-                : "bg-red-400/10 text-red-300"
-            }`}
-          >
-            {state.message}
-          </p>
-        )}
       </form>
 
-      <details className="mt-3 rounded-xl border border-white/8 bg-black/10 p-3">
-        <summary className="cursor-pointer text-sm font-bold text-zinc-400">
+      <Collapsible className="mt-3 rounded-xl border border-border bg-muted/40 p-3">
+        <CollapsibleTrigger className="w-full text-left text-sm font-medium text-muted-foreground">
           Calcular el peso en kg
-        </summary>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
         <div className="mt-4 grid grid-cols-2 gap-2" role="group" aria-label="Cómo está cargado el peso">
           {(
             [
@@ -151,90 +161,94 @@ export function SetEntryForm({
               ["single", "Un lado o mancuerna"],
             ] as Array<[LoadMode, string]>
           ).map(([mode, label]) => (
-            <button
+            <Button
               key={mode}
               type="button"
+              variant={loadMode === mode ? "default" : "secondary"}
               aria-pressed={loadMode === mode}
               onClick={() => {
                 setLoadMode(mode);
                 setBarKg(mode === "perSide" ? "20" : "0");
               }}
-              className={`h-10 rounded-xl text-xs font-black transition ${
-                loadMode === mode
-                  ? "bg-sky-300 text-zinc-950"
-                  : "bg-white/5 text-zinc-400 hover:bg-white/10"
-              }`}
+              className="h-10 text-xs"
             >
               {label}
-            </button>
+            </Button>
           ))}
         </div>
 
         <div className="mt-3 grid grid-cols-3 gap-2">
-          <label className="text-[11px] font-bold text-zinc-500">
+          <label className="text-[11px] font-bold text-muted-foreground">
             {loadMode === "perSide" ? "BARRA KG" : "MANGO KG"}
-            <input
+            <Input
               type="number"
               min="0"
               step="0.01"
               value={barKg}
               onChange={(event) => setBarKg(event.target.value)}
-              className="mt-2 h-11 w-full rounded-xl border border-white/10 bg-zinc-900 px-2 text-center font-bold text-white"
+              className="mt-2 h-11 text-center font-semibold"
             />
           </label>
-          <label className="text-[11px] font-bold text-zinc-500">
+          <label className="text-[11px] font-bold text-muted-foreground">
             {loadMode === "perSide" ? "KG POR LADO" : "KG"}
-            <input
+            <Input
               type="number"
               min="0"
               step="0.01"
               value={kgPerSide}
               onChange={(event) => setKgPerSide(event.target.value)}
-              className="mt-2 h-11 w-full rounded-xl border border-white/10 bg-zinc-900 px-2 text-center font-bold text-white"
+              className="mt-2 h-11 text-center font-semibold"
             />
           </label>
-          <label className="text-[11px] font-bold text-zinc-500">
+          <label className="text-[11px] font-bold text-muted-foreground">
             {loadMode === "perSide" ? "LB POR LADO" : "LB"}
-            <input
+            <Input
               type="number"
               min="0"
               step="0.01"
               value={lbPerSide}
               onChange={(event) => setLbPerSide(event.target.value)}
-              className="mt-2 h-11 w-full rounded-xl border border-white/10 bg-zinc-900 px-2 text-center font-bold text-white"
+              className="mt-2 h-11 text-center font-semibold"
             />
           </label>
         </div>
-        <p className="mt-3 text-xs leading-5 text-zinc-500">
+        <p className="mt-3 text-xs leading-5 text-muted-foreground">
           {loadMode === "perSide"
             ? "Total = barra + los dos lados. Las libras se convierten automáticamente."
             : "Total = mango + los discos que indiques, una sola vez. Deja el mango en 0 si solo quieres convertir un disco suelto."}
         </p>
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={() => setWeight(calculatedWeight.toFixed(2))}
-          className="mt-3 h-11 w-full rounded-xl bg-sky-300 text-sm font-black text-zinc-950"
+          className="mt-3 h-11 w-full"
         >
           Usar {calculatedWeight.toFixed(2)} kg
-        </button>
-      </details>
+        </Button>
+        </CollapsibleContent>
+      </Collapsible>
 
-      <div className="mt-3 flex items-center justify-between rounded-xl bg-white/[0.03] px-3 py-2">
-        <label className="text-xs font-semibold text-zinc-500">
+      <div className="mt-3 flex items-center justify-between rounded-xl bg-card px-3 py-2">
+        <label className="text-xs font-semibold text-muted-foreground">
           Descanso
-          <select
-            value={restSeconds}
-            onChange={(event) => setRestSeconds(Number(event.target.value))}
-            className="ml-2 rounded-lg border border-white/10 bg-zinc-900 px-2 py-1 text-white"
+          <Select
+            value={String(restSeconds)}
+            onValueChange={(value) => setRestSeconds(Number(value))}
           >
-            <option value={60}>1:00</option>
-            <option value={90}>1:30</option>
-            <option value={120}>2:00</option>
-            <option value={180}>3:00</option>
-          </select>
+            <SelectTrigger className="ml-2 h-8 w-24" aria-label="Tiempo de descanso">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[60, 90, 120, 180].map((seconds) => (
+                <SelectItem key={seconds} value={String(seconds)}>
+                  {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, "0")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </label>
         <span
-          className={`font-mono text-sm font-black ${remaining > 0 ? "text-lime-300" : "text-zinc-600"}`}
+          className={`font-mono text-sm font-black ${remaining > 0 ? "text-primary" : "text-muted-foreground"}`}
         >
           {remaining > 0
             ? `${minutes}:${String(seconds).padStart(2, "0")}`

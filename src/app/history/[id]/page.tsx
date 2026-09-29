@@ -1,9 +1,19 @@
 import { and, asc, eq } from "drizzle-orm";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { AppHeader } from "@/components/app-header";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   exercises,
   trainingPlans,
@@ -132,27 +142,11 @@ export default async function HistoryDetailPage({
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-md px-5 pb-12 pt-6">
-      <header className="flex items-center gap-4">
-        <Link
-          href="/history"
-          className="grid size-11 place-items-center rounded-full border border-white/10 text-xl text-zinc-300"
-          aria-label="Volver al historial"
-        >
-          ←
-        </Link>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-lime-300">
-            Entrenamiento completado
-          </p>
-          <h1 className="mt-1 truncate text-2xl font-black tracking-tight text-white">
-            {workout.planName ?? "Sesión libre"}
-          </h1>
-        </div>
-      </header>
+      <AppHeader backHref="/history" eyebrow="Entrenamiento completado" title={workout.planName ?? "Sesión libre"} />
 
-      <section className="mt-7 rounded-3xl bg-lime-300 p-5 text-zinc-950">
+      <section className="mt-7 rounded-3xl bg-primary p-5 text-primary-foreground">
         <p className="capitalize font-extrabold">{dateLabel}</p>
-        <p className="mt-2 text-sm font-semibold text-zinc-700">
+        <p className="mt-2 text-sm font-semibold text-primary-foreground/75">
           {workoutExerciseList.length} {workoutExerciseList.length === 1 ? "ejercicio" : "ejercicios"}
           {" · "}
           {totalSets} {totalSets === 1 ? "serie" : "series"}
@@ -161,64 +155,77 @@ export default async function HistoryDetailPage({
 
       <section className="mt-6 space-y-4">
         {workoutExerciseList.map((exercise, exerciseIndex) => (
-          <article
+          <Card
             key={exercise.id}
-            className="overflow-hidden rounded-3xl border border-white/8 bg-white/[0.035]"
+            className="gap-0 overflow-hidden py-0"
           >
-            <div className="flex items-center gap-3 border-b border-white/8 p-5">
-              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-lime-300 text-sm font-black text-zinc-950">
+            <div className="flex items-center gap-3 border-b border-border p-5">
+              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-sm font-black text-primary-foreground">
                 {String(exerciseIndex + 1).padStart(2, "0")}
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="truncate font-extrabold text-white">{exercise.name}</h2>
-                <p className="mt-1 text-sm text-zinc-500">{exercise.muscleGroup}</p>
+                <h2 className="truncate font-extrabold text-foreground">{exercise.name}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{exercise.muscleGroup}</p>
                 {exercise.targetSets !== null && (
-                  <p className="mt-1 text-xs font-semibold text-lime-200/70">
-                    Objetivo de aquel día: {exercise.targetSets}×
-                    {exercise.targetRepsMin}
-                    {exercise.targetRepsMax !== exercise.targetRepsMin
-                      ? `–${exercise.targetRepsMax}`
-                      : ""}
-                    {" · "}
-                    {exercise.sets.length >= exercise.targetSets
-                      ? "cumplido"
-                      : `quedaron ${exercise.targetSets - exercise.sets.length}`}
-                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary">
+                      Objetivo {exercise.targetSets}×{exercise.targetRepsMin}
+                      {exercise.targetRepsMax !== exercise.targetRepsMin
+                        ? `–${exercise.targetRepsMax}`
+                        : ""}
+                    </Badge>
+                    <Badge
+                      variant={
+                        exercise.sets.length >= exercise.targetSets
+                          ? "default"
+                          : "outline"
+                      }
+                    >
+                      {exercise.sets.length >= exercise.targetSets
+                        ? "Cumplido"
+                        : `Quedaron ${exercise.targetSets - exercise.sets.length}`}
+                    </Badge>
+                  </div>
                 )}
               </div>
-              <span className="text-sm font-bold text-zinc-400">
+              <Badge variant="outline">
                 {exercise.sets.length} {exercise.sets.length === 1 ? "serie" : "series"}
-              </span>
+              </Badge>
             </div>
 
             {exercise.sets.length > 0 ? (
-              <div className="p-5 pt-4">
-                <div className="grid grid-cols-[2rem_1fr_1fr] gap-2 px-2 text-center text-[11px] font-bold uppercase tracking-wider text-zinc-600">
-                  <span>#</span>
-                  <span>Peso</span>
-                  <span>Reps</span>
-                </div>
-                <div className="mt-2 space-y-2">
-                  {exercise.sets.map((set, setIndex) => (
-                    <div
-                      key={set.id}
-                      className="grid grid-cols-[2rem_1fr_1fr] items-center gap-2 rounded-xl bg-white/[0.04] px-2 py-3 text-center"
-                    >
-                      <span className="text-sm font-bold text-zinc-500">
-                        {setIndex + 1}
-                      </span>
-                      <span className="font-bold text-white">
-                        {Number(set.weight)} {workout.weightUnit}
-                      </span>
-                      <span className="font-bold text-white">{set.reps}</span>
-                    </div>
-                  ))}
-                </div>
+              <div className="px-5 pb-2">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10">#</TableHead>
+                      <TableHead>Peso</TableHead>
+                      <TableHead>Reps</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {exercise.sets.map((set, setIndex) => (
+                      <TableRow key={set.id}>
+                        <TableCell className="text-muted-foreground">
+                          {setIndex + 1}
+                        </TableCell>
+                        <TableCell className="font-semibold text-foreground">
+                          {Number(set.weight)} {workout.weightUnit}
+                        </TableCell>
+                        <TableCell className="font-semibold text-foreground">
+                          {set.reps}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             ) : (
-              <p className="p-5 text-sm text-zinc-600">No se registraron series.</p>
+              <p className="p-5 text-sm text-muted-foreground">
+                No se registraron series.
+              </p>
             )}
-          </article>
+          </Card>
         ))}
       </section>
     </main>
