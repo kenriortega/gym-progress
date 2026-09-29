@@ -193,13 +193,22 @@ export default async function Home() {
                 : "Crea un plan por día con tus ejercicios, series y repeticiones objetivo."}
         </p>
         {activeWorkout ? (
-          <Button
-            size="lg"
-            className="mt-7 h-14 w-full rounded-2xl bg-background text-base font-semibold text-foreground hover:bg-background/90"
-            render={<Link href={`/workout/${activeWorkout.id}`} />}
-          >
-            Continuar entreno
-          </Button>
+          <div className="mt-7 grid gap-2">
+            <Button
+              size="lg"
+              className="h-14 w-full rounded-2xl bg-background text-base font-semibold text-foreground hover:bg-background/90"
+              render={<Link href={`/workout/${activeWorkout.id}`} />}
+            >
+              Continuar entreno
+            </Button>
+            <Button
+              variant="ghost"
+              className="h-10 w-full text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              render={<Link href="/entreno" />}
+            >
+              Modo sin cobertura
+            </Button>
+          </div>
         ) : todayPlan ? (
           <form action={startWorkout}>
             <input type="hidden" name="planId" value={todayPlan.id} />

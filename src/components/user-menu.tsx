@@ -15,6 +15,7 @@ import {
   PaletteIcon,
   SunIcon,
   TrendingUpIcon,
+  WifiOffIcon,
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
@@ -55,6 +56,7 @@ type NavItem = {
 const NAV_SECTIONS: NavItem[][] = [
   [
     { href: "/", label: "Inicio", Icon: HouseIcon },
+    { href: "/entreno", label: "Modo sin cobertura", Icon: WifiOffIcon },
     { href: "/plans", label: "Planes", Icon: CalendarDaysIcon },
   ],
   [
