@@ -23,6 +23,18 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL=postgresql://build:build@localhost:5432/build
 RUN npm run build
 
+# Etapa aparte para las migraciones. drizzle-kit necesita sus dependencias
+# completas (esbuild, entre otras) para leer drizzle.config.ts, y meterlas en
+# la imagen de la app anularía la ventaja de la salida standalone.
+FROM node:22-alpine AS migrator
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json drizzle.config.ts ./
+COPY drizzle ./drizzle
+COPY src/db ./src/db
+CMD ["npx", "drizzle-kit", "migrate"]
+
 FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
@@ -41,15 +53,3 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
 CMD ["node", "server.js"]
-
-# Etapa aparte para las migraciones. drizzle-kit necesita sus dependencias
-# completas (esbuild, entre otras) para leer drizzle.config.ts, y meterlas en
-# la imagen de la app anularía la ventaja de la salida standalone.
-FROM node:22-alpine AS migrator
-WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=deps /app/node_modules ./node_modules
-COPY package.json drizzle.config.ts ./
-COPY drizzle ./drizzle
-COPY src/db ./src/db
-CMD ["npx", "drizzle-kit", "migrate"]

@@ -73,6 +73,8 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
+      # Explícito: si se omite, Docker construye la última etapa del fichero.
+      target: runner
       args:
         NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:?falta la clave de server actions}
     restart: unless-stopped
