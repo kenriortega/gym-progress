@@ -2,6 +2,11 @@ import withSerwistInit from "@serwist/next";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Solo al construir la imagen de Docker: empaqueta un servidor mínimo.
+  // En Vercel no hace falta y se deja fuera.
+  ...(process.env.DOCKER_BUILD === "1"
+    ? { output: "standalone" as const }
+    : {}),
   env: {
     // Se evalúan al compilar, así que quedan fijadas en el despliegue.
     // VERCEL_GIT_COMMIT_SHA lo inyecta Vercel; en local no existe.

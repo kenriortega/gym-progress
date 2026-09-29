@@ -1,0 +1,131 @@
+# Gym Progress en un VPS con Dokploy.
+#
+# Postgres → PgBouncer → dos instancias de la app.
+#
+# PgBouncer existe porque cada petición de Next abre su propia conexión y
+# Postgres admite 100 por defecto: con dos instancias y varias personas a la
+# vez se agotan. PgBouncer reparte unas pocas conexiones reales entre muchas
+# de aplicación.
+#
+# Antes de desplegar, crea un archivo .env junto a este con:
+#   POSTGRES_PASSWORD=...                (openssl rand -base64 24)
+#   AUTH_SECRET=...                      (npx auth secret)
+#   AUTH_GOOGLE_ID=...
+#   AUTH_GOOGLE_SECRET=...
+#   NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=  (openssl rand -base64 32)
+#   APP_DOMAIN=gym.tudominio.com
+#
+# Migraciones, una vez tras cada despliegue:
+#   docker compose run --rm migraciones
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: gym_progress
+      POSTGRES_USER: gym_progress
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?falta POSTGRES_PASSWORD}
+      # Sin esto, el contenedor arranca con trust y acepta cualquier contraseña.
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    volumes:
+      - datos:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gym_progress -d gym_progress"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [interna]
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: gym_progress
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: gym_progress
+      # "transaction" es el modo correcto para funciones sin estado: devuelve
+      # la conexión al terminar cada transacción, no al cerrar la sesión.
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: "200"
+      DEFAULT_POOL_SIZE: "20"
+      AUTH_TYPE: scram-sha-256
+      # En modo transaction debe ir vacío: PgBouncer ya devuelve la conexión
+      # limpia al terminar cada transacción, y un DISCARD ALL aquí sobra.
+      SERVER_RESET_QUERY: ""
+      # El driver de Node envía estos parámetros al conectar y PgBouncer los
+      # rechazaría si no se ignoran.
+      IGNORE_STARTUP_PARAMETERS: extra_float_digits,options
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U gym_progress"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [interna]
+
+  app-1: &app
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:?falta la clave de server actions}
+    restart: unless-stopped
+    environment:
+      # A través de PgBouncer, no directo a Postgres.
+      DATABASE_URL: postgresql://gym_progress:${POSTGRES_PASSWORD}@pgbouncer:5432/gym_progress
+      AUTH_SECRET: ${AUTH_SECRET:?falta AUTH_SECRET}
+      AUTH_TRUST_HOST: "true"
+      AUTH_URL: https://${APP_DOMAIN}
+      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:?falta AUTH_GOOGLE_ID}
+      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:?falta AUTH_GOOGLE_SECRET}
+      # La misma clave en las dos instancias, o las server actions fallan
+      # cuando una descifra lo que cifró la otra.
+      NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY}
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+    networks: [interna, dokploy-network]
+    labels:
+      # Dokploy trae Traefik: él reparte entre las dos instancias.
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.gym.rule=Host(`${APP_DOMAIN}`)
+      - traefik.http.routers.gym.entrypoints=websecure
+      - traefik.http.routers.gym.tls.certresolver=letsencrypt
+      - traefik.http.services.gym.loadbalancer.server.port=3000
+
+  app-2:
+    <<: *app
+
+  # Un solo uso: aplica las migraciones pendientes y termina.
+  # Va directo a Postgres, sin PgBouncer: los cambios de esquema necesitan
+  # una sesión estable.
+  migraciones:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: migrator
+    restart: "no"
+    profiles: [herramientas]
+    environment:
+      DATABASE_URL: postgresql://gym_progress:${POSTGRES_PASSWORD}@postgres:5432/gym_progress
+    networks: [interna]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  datos:
+
+networks:
+  interna:
+    driver: bridge
+  # La crea Dokploy. Fuera de Dokploy, quita esta red y publica un puerto.
+  dokploy-network:
+    external: true
