@@ -74,10 +74,18 @@ type UserMenuProps = {
   name: string;
   email: string | null;
   image: string | null;
+  /** Identificador del despliegue, para saber si falta una actualización. */
+  version: string;
   signOutAction: () => Promise<void>;
 };
 
-export function UserMenu({ name, email, image, signOutAction }: UserMenuProps) {
+export function UserMenu({
+  name,
+  email,
+  image,
+  version,
+  signOutAction,
+}: UserMenuProps) {
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
   const [confirmingSignOut, setConfirmingSignOut] = useState(false);
@@ -168,6 +176,13 @@ export function UserMenu({ name, email, image, signOutAction }: UserMenuProps) {
             <LogOutIcon className="size-4" />
             Cerrar sesión
           </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          <p className="px-2 py-1.5 text-[11px] leading-4 text-muted-foreground">
+            Versión{" "}
+            <span className="font-mono font-medium text-foreground">{version}</span>
+          </p>
         </DropdownMenuContent>
       </DropdownMenu>
 
