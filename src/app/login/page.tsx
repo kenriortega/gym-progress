@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth, signIn } from "@/auth";
@@ -74,6 +75,16 @@ export default async function LoginPage() {
 
         <p className="mt-6 text-center text-xs leading-5 text-muted-foreground">
           Tus entrenamientos permanecen asociados únicamente a tu cuenta.
+        </p>
+
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          <Link href="/privacidad" className="underline hover:text-foreground">
+            Política de privacidad
+          </Link>
+          {" · "}
+          <Link href="/terminos" className="underline hover:text-foreground">
+            Condiciones del servicio
+          </Link>
         </p>
       </div>
     </main>
