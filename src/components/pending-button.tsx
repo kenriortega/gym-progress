@@ -2,7 +2,9 @@
 
 import { useFormStatus } from "react-dom";
 
-type PendingButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+import { Button } from "@/components/ui/button";
+
+type PendingButtonProps = React.ComponentProps<typeof Button> & {
   pendingLabel?: string;
 };
 
@@ -15,8 +17,8 @@ export function PendingButton({
   const { pending } = useFormStatus();
 
   return (
-    <button {...props} disabled={disabled || pending}>
+    <Button {...props} disabled={disabled || pending}>
       {pending ? pendingLabel : children}
-    </button>
+    </Button>
   );
 }
