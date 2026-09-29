@@ -15,11 +15,14 @@ const nextConfig: NextConfig = {
   },
 };
 
+const esDesarrollo = process.env.NODE_ENV === "development";
+
 const withSerwist = withSerwistInit({
   swSrc: "src/app/sw.ts",
   swDest: "public/sw.js",
-  // En desarrollo estorba: cachearía versiones viejas mientras editas.
-  disable: process.env.NODE_ENV === "development",
 });
 
-export default withSerwist(nextConfig);
+// Serwist configura webpack, y `next dev` usa Turbopack por defecto en Next 16.
+// En desarrollo no queremos el service worker de todas formas: cachearía
+// versiones viejas mientras se edita.
+export default esDesarrollo ? nextConfig : withSerwist(nextConfig);

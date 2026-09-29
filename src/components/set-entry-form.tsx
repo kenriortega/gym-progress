@@ -2,7 +2,10 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+
+import { contar, encolar, sincronizar } from "@/lib/offline-queue";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -65,6 +68,8 @@ export function SetEntryForm({
   defaultReps,
 }: SetEntryFormProps) {
   const [state, formAction] = useActionState(addSetWithState, initialState);
+  const router = useRouter();
+  const [enCola, setEnCola] = useState(0);
   const [weight, setWeight] = useState(defaultWeight?.toString() ?? "");
   const [reps, setReps] = useState(defaultReps?.toString() ?? "");
   const [loadMode, setLoadMode] = useState<LoadMode>("perSide");
@@ -101,6 +106,31 @@ export function SetEntryForm({
   }, [state.savedAt, state.status, state.message]);
 
   useEffect(() => {
+    let vivo = true;
+    contar().then((n) => vivo && setEnCola(n));
+
+    const alVolver = async () => {
+      const { enviadas, quedan } = await sincronizar();
+      if (!vivo) return;
+      setEnCola(quedan);
+      if (enviadas > 0) {
+        toast.success(
+          `${enviadas} ${enviadas === 1 ? "serie enviada" : "series enviadas"}`,
+        );
+        router.refresh();
+      }
+    };
+
+    window.addEventListener("online", alVolver);
+    if (navigator.onLine) void alVolver();
+
+    return () => {
+      vivo = false;
+      window.removeEventListener("online", alVolver);
+    };
+  }, [router]);
+
+  useEffect(() => {
     if (remaining <= 0) return;
     const timer = window.setInterval(() => {
       setRemaining((current) => Math.max(0, current - 1));
@@ -113,7 +143,36 @@ export function SetEntryForm({
 
   return (
     <div className="border-t border-border p-5">
-      <form action={formAction}>
+      <form
+        action={async (formData: FormData) => {
+          // Un id propio por serie: si acaba reenviándose, no se duplica.
+          const setId = crypto.randomUUID();
+          formData.set("setId", setId);
+
+          if (navigator.onLine) {
+            formAction(formData);
+            return;
+          }
+
+          // Sin red la server action se quedaría en memoria y se perdería al
+          // cerrar la app. La cola en el móvil sí sobrevive.
+          await encolar({
+            id: setId,
+            kind: "addSet",
+            workoutId,
+            workoutExerciseId,
+            setId,
+            weight: Number(formData.get("weight")),
+            reps: Number(formData.get("reps")),
+            createdAt: Date.now(),
+          });
+          setEnCola(await contar());
+          setRemaining(restSeconds);
+          toast.success("Serie guardada en el móvil", {
+            description: "Se enviará sola cuando vuelva la conexión.",
+          });
+        }}
+      >
         <input type="hidden" name="workoutId" value={workoutId} />
         <input
           type="hidden"
@@ -155,6 +214,17 @@ export function SetEntryForm({
         </div>
 
       </form>
+
+      {enCola > 0 && (
+        <p
+          aria-live="polite"
+          className="mt-3 rounded-xl bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-200"
+        >
+          {enCola} {enCola === 1 ? "serie guardada" : "series guardadas"} en el
+          móvil, sin enviar todavía. No cierres sesión hasta que vuelva la
+          conexión.
+        </p>
+      )}
 
       <Collapsible className="mt-3 rounded-xl border border-border bg-muted/40 p-3">
         <CollapsibleTrigger className="w-full text-left text-sm font-medium text-muted-foreground">
