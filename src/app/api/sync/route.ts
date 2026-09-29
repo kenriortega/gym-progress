@@ -32,6 +32,14 @@ export async function POST(request: Request) {
 
   const m = cuerpo as Record<string, unknown>;
 
+  if (m?.kind === "deleteSet") {
+    return borrarSerie(userId, m);
+  }
+
+  if (m?.kind === "finishWorkout") {
+    return finalizar(userId, m);
+  }
+
   if (m?.kind !== "addSet") {
     return NextResponse.json({ error: "Operación no soportada" }, { status: 400 });
   }
@@ -105,6 +113,63 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Fallo al sincronizar una serie", error);
+    return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
+  }
+}
+
+/** Borrar es idempotente por naturaleza: si ya no está, el resultado es el mismo. */
+async function borrarSerie(userId: string, m: Record<string, unknown>) {
+  const workoutId = String(m.workoutId ?? "");
+  const setId = String(m.setId ?? "");
+
+  if (!UUID.test(workoutId) || !UUID.test(setId)) {
+    return NextResponse.json({ error: "Identificadores inválidos" }, { status: 400 });
+  }
+
+  try {
+    await db.delete(workoutSets).where(
+      and(
+        eq(workoutSets.id, setId),
+        sql`exists (
+          select 1 from ${workoutExercises}
+          join ${workouts} on ${workouts.id} = ${workoutExercises.workoutId}
+          where ${workoutExercises.id} = ${workoutSets.workoutExerciseId}
+            and ${workoutExercises.workoutId} = ${workoutId}
+            and ${workouts.userId} = ${userId}
+            and ${workouts.status} = 'active'
+        )`,
+      ),
+    );
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Fallo al borrar una serie", error);
+    return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
+  }
+}
+
+/** Finalizar dos veces no debe fallar: si ya está completada, se acepta igual. */
+async function finalizar(userId: string, m: Record<string, unknown>) {
+  const workoutId = String(m.workoutId ?? "");
+
+  if (!UUID.test(workoutId)) {
+    return NextResponse.json({ error: "Identificador inválido" }, { status: 400 });
+  }
+
+  try {
+    const ahora = new Date();
+    await db
+      .update(workouts)
+      .set({ status: "completed", completedAt: ahora, performedAt: ahora })
+      .where(
+        and(
+          eq(workouts.id, workoutId),
+          eq(workouts.userId, userId),
+          eq(workouts.status, "active"),
+        ),
+      );
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Fallo al finalizar el entrenamiento", error);
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
   }
 }

@@ -197,16 +197,16 @@ export default async function Home() {
             <Button
               size="lg"
               className="h-14 w-full rounded-2xl bg-background text-base font-semibold text-foreground hover:bg-background/90"
-              render={<Link href={`/workout/${activeWorkout.id}`} />}
+              render={<Link href="/entreno" />}
             >
               Continuar entreno
             </Button>
             <Button
               variant="ghost"
               className="h-10 w-full text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
-              render={<Link href="/entreno" />}
+              render={<Link href={`/workout/${activeWorkout.id}`} />}
             >
-              Modo sin cobertura
+              Ajustes de la sesión
             </Button>
           </div>
         ) : todayPlan ? (

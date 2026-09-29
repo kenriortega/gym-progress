@@ -8,16 +8,30 @@
  * Cada operación lleva un id generado aquí, así que reenviarla no duplica nada.
  */
 
-export type QueuedMutation = {
-  id: string;
-  kind: "addSet";
-  workoutId: string;
-  workoutExerciseId: string;
-  setId: string;
-  weight: number;
-  reps: number;
-  createdAt: number;
-};
+export type QueuedMutation =
+  | {
+      id: string;
+      kind: "addSet";
+      workoutId: string;
+      workoutExerciseId: string;
+      setId: string;
+      weight: number;
+      reps: number;
+      createdAt: number;
+    }
+  | {
+      id: string;
+      kind: "deleteSet";
+      workoutId: string;
+      setId: string;
+      createdAt: number;
+    }
+  | {
+      id: string;
+      kind: "finishWorkout";
+      workoutId: string;
+      createdAt: number;
+    };
 
 const DB_NAME = "gym-progress";
 const DB_VERSION = 2;

@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { HistoryIcon, PlusIcon, WifiOffIcon } from "lucide-react";
+import { FlagIcon, HistoryIcon, PlusIcon, Trash2Icon, WifiOffIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { PlateCalculator } from "@/components/plate-calculator";
+import { RestTimer } from "@/components/rest-timer";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScreenSkeleton } from "@/components/screen-skeleton";
 import {
+  borrarSesion,
   contar,
   encolar,
   guardarSesion,
@@ -128,6 +132,54 @@ export default function EntrenoPage() {
     [sesion],
   );
 
+  const borrarSerie = useCallback(
+    async (workoutExerciseId: string, setId: string) => {
+      if (!sesion) return;
+
+      setSesion((actual) =>
+        actual
+          ? {
+              ...actual,
+              exercises: actual.exercises.map((e) =>
+                e.workoutExerciseId === workoutExerciseId
+                  ? { ...e, sets: e.sets.filter((s) => s.id !== setId) }
+                  : e,
+              ),
+            }
+          : actual,
+      );
+
+      await encolar({
+        id: crypto.randomUUID(),
+        kind: "deleteSet",
+        workoutId: sesion.workoutId,
+        setId,
+        createdAt: Date.now(),
+      });
+      setPendientes((await sincronizar()).quedan);
+    },
+    [sesion],
+  );
+
+  const finalizar = useCallback(async () => {
+    if (!sesion) return;
+    await encolar({
+      id: crypto.randomUUID(),
+      kind: "finishWorkout",
+      workoutId: sesion.workoutId,
+      createdAt: Date.now(),
+    });
+    const { quedan } = await sincronizar();
+    setPendientes(quedan);
+    await borrarSesion();
+    setSesion(null);
+    toast.success(
+      quedan === 0
+        ? "Entrenamiento finalizado"
+        : "Finalizado. Se enviará al volver la conexión.",
+    );
+  }, [sesion]);
+
   if (cargando) return <ScreenSkeleton />;
 
   if (!sesion) {
@@ -190,13 +242,33 @@ export default function EntrenoPage() {
             indice={indice}
             unidad={sesion.weightUnit}
             onRegistrar={registrar}
+            onBorrar={borrarSerie}
           />
         ))}
       </div>
 
-      <p className="mt-8 text-center text-xs leading-5 text-muted-foreground">
-        Para editar series, marcar ejercicios o finalizar, entra en la pantalla
-        completa desde el inicio. Eso necesita conexión.
+      <form
+        className="mt-8"
+        action={async () => {
+          await finalizar();
+        }}
+      >
+        <ConfirmSubmitButton
+          type="submit"
+          size="lg"
+          className="h-14 w-full"
+          title="¿Finalizar el entrenamiento?"
+          confirmation="Se guardará como completado y dejará de aparecer aquí."
+          pendingLabel="Finalizando…"
+        >
+          <FlagIcon className="size-4" />
+          Finalizar sesión
+        </ConfirmSubmitButton>
+      </form>
+
+      <p className="mt-4 text-center text-xs leading-5 text-muted-foreground">
+        Para reordenar ejercicios o cambiar objetivos, entra desde el inicio.
+        Eso necesita conexión.
       </p>
     </main>
   );
@@ -207,6 +279,7 @@ function TarjetaEjercicio({
   indice,
   unidad,
   onRegistrar,
+  onBorrar,
 }: {
   ejercicio: WorkoutSnapshot["exercises"][number];
   indice: number;
@@ -216,11 +289,13 @@ function TarjetaEjercicio({
     peso: number,
     reps: number,
   ) => Promise<void>;
+  onBorrar: (workoutExerciseId: string, setId: string) => Promise<void>;
 }) {
   const ultima = ejercicio.sets.at(-1) ?? ejercicio.previous.at(-1);
   const [peso, setPeso] = useState(ultima ? String(ultima.weight) : "");
   const [reps, setReps] = useState(ultima ? String(ultima.reps) : "");
   const [guardando, setGuardando] = useState(false);
+  const [guardadas, setGuardadas] = useState(0);
 
   const faltan =
     ejercicio.targetSets !== null
@@ -273,9 +348,17 @@ function TarjetaEjercicio({
               className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-sm"
             >
               <span className="text-muted-foreground">{i + 1}</span>
-              <span className="font-semibold text-foreground">
+              <span className="flex-1 text-right font-semibold text-foreground">
                 {serie.weight} {unidad} × {serie.reps}
               </span>
+              <button
+                type="button"
+                aria-label={`Borrar serie ${i + 1}`}
+                onClick={() => void onBorrar(ejercicio.workoutExerciseId, serie.id)}
+                className="ml-3 grid size-7 place-items-center rounded-md text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2Icon className="size-3.5" />
+              </button>
             </li>
           ))}
         </ul>
@@ -293,6 +376,7 @@ function TarjetaEjercicio({
           }
           setGuardando(true);
           await onRegistrar(ejercicio, p, r);
+          setGuardadas((n) => n + 1);
           setGuardando(false);
         }}
       >
@@ -326,6 +410,11 @@ function TarjetaEjercicio({
           {guardando ? "…" : <PlusIcon className="size-4" />}
         </Button>
       </form>
+
+      <div className="px-5 pb-5">
+        <PlateCalculator onUse={(kg) => setPeso(kg.toFixed(2))} />
+        <RestTimer restartKey={guardadas} />
+      </div>
     </Card>
   );
 }
