@@ -1,15 +1,20 @@
-import { and, asc, count, eq, isNull } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import Link from "next/link";
-import { ChevronRightIcon } from "lucide-react";
+import { ArchiveIcon, ArchiveRestoreIcon, ChevronRightIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 
-import { createPlan } from "@/app/actions/plans";
+import { createPlan, unarchivePlan } from "@/app/actions/plans";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { trainingPlanExercises, trainingPlans } from "@/db/schema";
 import { FormSelect } from "@/components/form-select";
 import { PendingButton } from "@/components/pending-button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import {
   Card,
@@ -57,6 +62,34 @@ export default async function PlansPage() {
     )
     .groupBy(trainingPlans.id)
     .orderBy(asc(trainingPlans.weekday), asc(trainingPlans.name));
+
+  const archivados = await db
+    .select({
+      id: trainingPlans.id,
+      name: trainingPlans.name,
+      weekday: trainingPlans.weekday,
+      archivedAt: trainingPlans.archivedAt,
+      exerciseCount: count(trainingPlanExercises.id),
+    })
+    .from(trainingPlans)
+    .leftJoin(
+      trainingPlanExercises,
+      eq(trainingPlanExercises.planId, trainingPlans.id),
+    )
+    .where(
+      and(
+        eq(trainingPlans.userId, session.user.id),
+        isNotNull(trainingPlans.archivedAt),
+      ),
+    )
+    .groupBy(trainingPlans.id)
+    .orderBy(desc(trainingPlans.archivedAt));
+
+  const formatoFecha = new Intl.DateTimeFormat("es", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-md px-5 pb-12 pt-6">
@@ -141,6 +174,65 @@ export default async function PlansPage() {
           </Card>
         )}
       </section>
+
+      {archivados.length > 0 && (
+        <section className="mt-10">
+          <Collapsible>
+            <CollapsibleTrigger className="flex w-full items-center gap-2 text-left text-sm font-medium text-muted-foreground">
+              <ArchiveIcon className="size-4" />
+              Planes archivados
+              <Badge variant="outline" className="ml-auto">
+                {archivados.length}
+              </Badge>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="mt-4 space-y-3">
+                {archivados.map((plan) => (
+                  <Card key={plan.id} className="gap-3 p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="truncate font-semibold text-foreground">
+                          {plan.name}
+                        </h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {plan.weekday === null
+                            ? "Sin día fijo"
+                            : weekdays[plan.weekday]}
+                          {" · "}
+                          {plan.exerciseCount}{" "}
+                          {plan.exerciseCount === 1 ? "ejercicio" : "ejercicios"}
+                        </p>
+                        {plan.archivedAt && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Archivado el {formatoFecha.format(plan.archivedAt)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <form action={unarchivePlan}>
+                      <input type="hidden" name="planId" value={plan.id} />
+                      <PendingButton
+                        type="submit"
+                        variant="outline"
+                        className="h-10 w-full"
+                        pendingLabel="Restaurando…"
+                      >
+                        <ArchiveRestoreIcon className="size-4" />
+                        Restaurar plan
+                      </PendingButton>
+                    </form>
+                  </Card>
+                ))}
+              </div>
+              <p className="mt-4 text-xs leading-5 text-muted-foreground">
+                Archivar un plan no borra nada: sus entrenamientos anteriores
+                siguen en el historial. Al restaurarlo vuelve a aparecer en tu
+                semana.
+              </p>
+            </CollapsibleContent>
+          </Collapsible>
+        </section>
+      )}
     </main>
   );
 }
