@@ -39,6 +39,21 @@ function requiredUuid(formData: FormData, field: string) {
   return value;
 }
 
+/** Id generado en el móvil. Si falta, lo pone Postgres como hasta ahora. */
+function optionalUuid(formData: FormData, field: string) {
+  const value = formData.get(field);
+
+  if (value === null || value === "") {
+    return null;
+  }
+
+  if (typeof value !== "string" || !UUID_PATTERN.test(value)) {
+    throw new Error(`El campo ${field} no es válido.`);
+  }
+
+  return value;
+}
+
 function parseSetValues(formData: FormData) {
   const reps = Number(formData.get("reps"));
   const weight = Number(formData.get("weight"));
@@ -252,6 +267,7 @@ export async function addSet(formData: FormData) {
   const userId = await requireUserId();
   const workoutId = requiredUuid(formData, "workoutId");
   const workoutExerciseId = requiredUuid(formData, "workoutExerciseId");
+  const setId = optionalUuid(formData, "setId");
   const { reps, weight, rpe } = parseSetValues(formData);
 
   await db.transaction(async (transaction) => {
@@ -278,14 +294,20 @@ export async function addSet(formData: FormData) {
       .from(workoutSets)
       .where(eq(workoutSets.workoutExerciseId, workoutExerciseId));
 
-    await transaction.insert(workoutSets).values({
-      workoutExerciseId,
-      position: Number(lastPosition?.value ?? -1) + 1,
-      reps,
-      weight: weight.toFixed(2),
-      rpe: rpe?.toFixed(1) ?? null,
-      completedAt: new Date(),
-    });
+    // El móvil puede haber generado el id sin conexión. Reenviar la misma
+    // serie no debe duplicarla: por eso el insert es idempotente por id.
+    await transaction
+      .insert(workoutSets)
+      .values({
+        ...(setId ? { id: setId } : {}),
+        workoutExerciseId,
+        position: Number(lastPosition?.value ?? -1) + 1,
+        reps,
+        weight: weight.toFixed(2),
+        rpe: rpe?.toFixed(1) ?? null,
+        completedAt: new Date(),
+      })
+      .onConflictDoNothing({ target: workoutSets.id });
   });
 
   revalidatePath(`/workout/${workoutId}`);
