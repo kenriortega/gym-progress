@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import {
   CalendarDaysIcon,
   CheckIcon,
+  CircleHelpIcon,
   ClockIcon,
   HouseIcon,
   LaptopIcon,
@@ -60,6 +61,7 @@ const NAV_SECTIONS: NavItem[][] = [
     { href: "/progress", label: "Progreso", Icon: TrendingUpIcon },
     { href: "/history", label: "Historial", Icon: ClockIcon },
   ],
+  [{ href: "/ayuda", label: "Cómo usarla", Icon: CircleHelpIcon }],
 ];
 
 const THEMES = [
