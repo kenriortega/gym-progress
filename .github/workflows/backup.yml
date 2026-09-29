@@ -1,0 +1,60 @@
+# Copia de seguridad diaria de la base de datos de producción.
+#
+# NO ESTÁ EN USO todavía. Para activarlo:
+#   1. Añade el secreto DATABASE_URL_UNPOOLED en GitHub:
+#      Settings → Secrets and variables → Actions → New repository secret.
+#      El valor está en .env.neon (la URL SIN "-pooler").
+#   2. Quita el comentario de la línea `schedule:`.
+#
+# Mientras tanto se puede lanzar a mano desde la pestaña Actions.
+#
+# Aviso: los artefactos de GitHub son accesibles para quien tenga acceso al
+# repositorio. Son datos reales de personas, así que no lo actives en un
+# repositorio público.
+
+name: Copia de seguridad
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: "0 4 * * *" # cada día a las 04:00 UTC
+
+jobs:
+  volcado:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Instalar cliente de PostgreSQL 18
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /usr/share/keyrings/pgdg.gpg
+          sudo sed -i 's|deb |deb [signed-by=/usr/share/keyrings/pgdg.gpg] |' /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-18
+
+      - name: Volcar la base de datos
+        env:
+          URL: ${{ secrets.DATABASE_URL_UNPOOLED }}
+        run: |
+          if [ -z "$URL" ]; then
+            echo "Falta el secreto DATABASE_URL_UNPOOLED." >&2
+            exit 1
+          fi
+          mkdir -p backups
+          FICHERO="backups/gym-progress-$(date +%Y%m%d-%H%M%S).sql.gz"
+          pg_dump "$URL" --no-owner --no-privileges | gzip > "$FICHERO"
+          echo "FICHERO=$FICHERO" >> "$GITHUB_ENV"
+
+          # Una copia sin las tablas esperadas no sirve de nada.
+          TABLAS=$(gunzip -c "$FICHERO" | grep -c "^CREATE TABLE" || true)
+          echo "Tablas en la copia: $TABLAS"
+          if [ "$TABLAS" -lt 9 ]; then
+            echo "La copia parece incompleta." >&2
+            exit 1
+          fi
+
+      - name: Guardar el artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: copia-${{ github.run_id }}
+          path: ${{ env.FICHERO }}
+          retention-days: 30
