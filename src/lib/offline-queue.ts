@@ -20,8 +20,9 @@ export type QueuedMutation = {
 };
 
 const DB_NAME = "gym-progress";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE = "cola";
+const STORE_SNAPSHOT = "sesion";
 
 function abrir(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -30,6 +31,9 @@ function abrir(): Promise<IDBDatabase> {
       const db = peticion.result;
       if (!db.objectStoreNames.contains(STORE)) {
         db.createObjectStore(STORE, { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains(STORE_SNAPSHOT)) {
+        db.createObjectStore(STORE_SNAPSHOT);
       }
     };
     peticion.onsuccess = () => resolve(peticion.result);
@@ -40,12 +44,13 @@ function abrir(): Promise<IDBDatabase> {
 function transaccion<T>(
   modo: IDBTransactionMode,
   operacion: (store: IDBObjectStore) => IDBRequest<T>,
+  almacen: string = STORE,
 ): Promise<T> {
   return abrir().then(
     (db) =>
       new Promise<T>((resolve, reject) => {
-        const tx = db.transaction(STORE, modo);
-        const peticion = operacion(tx.objectStore(STORE));
+        const tx = db.transaction(almacen, modo);
+        const peticion = operacion(tx.objectStore(almacen));
         peticion.onsuccess = () => resolve(peticion.result);
         peticion.onerror = () => reject(peticion.error);
         tx.oncomplete = () => db.close();
@@ -124,4 +129,37 @@ export async function sincronizar(): Promise<{ enviadas: number; quedan: number 
   }
 
   return { enviadas, quedan: (await pendientes()).length };
+}
+
+/** Guarda la sesión activa para poder pintarla sin conexión. */
+export async function guardarSesion(snapshot: unknown): Promise<void> {
+  if (!hayAlmacenamiento()) return;
+  try {
+    await transaccion("readwrite", (store) => store.put(snapshot, "activa"), STORE_SNAPSHOT);
+  } catch {
+    // Almacenamiento lleno o bloqueado: seguimos sin copia local.
+  }
+}
+
+export async function leerSesion<T>(): Promise<T | null> {
+  if (!hayAlmacenamiento()) return null;
+  try {
+    const valor = await transaccion<T | undefined>(
+      "readonly",
+      (store) => store.get("activa") as IDBRequest<T | undefined>,
+      STORE_SNAPSHOT,
+    );
+    return valor ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function borrarSesion(): Promise<void> {
+  if (!hayAlmacenamiento()) return;
+  try {
+    await transaccion("readwrite", (store) => store.delete("activa"), STORE_SNAPSHOT);
+  } catch {
+    // nada que hacer
+  }
 }
