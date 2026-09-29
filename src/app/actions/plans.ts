@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, isNull, or, sql } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -392,4 +392,55 @@ export async function archivePlan(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/plans");
   redirect("/plans");
+}
+
+export async function unarchivePlan(formData: FormData) {
+  const userId = await requireUserId();
+  const planId = requiredUuid(formData, "planId");
+
+  const [plan] = await db
+    .select({ id: trainingPlans.id, name: trainingPlans.name })
+    .from(trainingPlans)
+    .where(
+      and(
+        eq(trainingPlans.id, planId),
+        eq(trainingPlans.userId, userId),
+        isNotNull(trainingPlans.archivedAt),
+      ),
+    )
+    .limit(1);
+
+  if (!plan) {
+    throw new Error("Ese plan no está archivado o no es tuyo.");
+  }
+
+  // El nombre solo puede repetirse entre planes archivados: la restricción de
+  // unicidad se aplica únicamente a los activos. Sin esta comprobación, la
+  // restauración fallaría con un error de base de datos poco entendible.
+  const [choque] = await db
+    .select({ id: trainingPlans.id })
+    .from(trainingPlans)
+    .where(
+      and(
+        eq(trainingPlans.userId, userId),
+        isNull(trainingPlans.archivedAt),
+        sql`lower(${trainingPlans.name}) = lower(${plan.name})`,
+      ),
+    )
+    .limit(1);
+
+  if (choque) {
+    throw new Error(
+      `Ya tienes un plan activo llamado "${plan.name}". Renómbralo antes de restaurar este.`,
+    );
+  }
+
+  await db
+    .update(trainingPlans)
+    .set({ archivedAt: null, updatedAt: new Date() })
+    .where(and(eq(trainingPlans.id, planId), eq(trainingPlans.userId, userId)));
+
+  revalidatePath("/");
+  revalidatePath("/plans");
+  redirect(`/plans/${planId}`);
 }
