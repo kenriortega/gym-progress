@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { auth, signOut } from "@/auth";
 import { UserMenu } from "@/components/user-menu";
+import { getAppVersion } from "@/lib/version";
 
 type AppHeaderProps = {
   /** Texto pequeño sobre el título. */
@@ -47,6 +48,7 @@ export async function AppHeader({ eyebrow, title, backHref, action }: AppHeaderP
         name={displayName}
         email={user?.email ?? null}
         image={user?.image ?? null}
+        version={getAppVersion().label}
         signOutAction={async () => {
           "use server";
           await signOut({ redirectTo: "/login" });
