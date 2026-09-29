@@ -26,6 +26,13 @@ import {
 
 const LB_TO_KG = 0.45359237;
 
+const REST_OPTIONS: Record<string, string> = {
+  "60": "1:00",
+  "90": "1:30",
+  "120": "2:00",
+  "180": "3:00",
+};
+
 type LoadMode = "perSide" | "single";
 
 const initialState: SetActionState = {
@@ -233,15 +240,16 @@ export function SetEntryForm({
           Descanso
           <Select
             value={String(restSeconds)}
+            items={REST_OPTIONS}
             onValueChange={(value) => setRestSeconds(Number(value))}
           >
             <SelectTrigger className="ml-2 h-8 w-24" aria-label="Tiempo de descanso">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {[60, 90, 120, 180].map((seconds) => (
-                <SelectItem key={seconds} value={String(seconds)}>
-                  {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, "0")}
+              {Object.entries(REST_OPTIONS).map(([seconds, label]) => (
+                <SelectItem key={seconds} value={seconds}>
+                  {label}
                 </SelectItem>
               ))}
             </SelectContent>

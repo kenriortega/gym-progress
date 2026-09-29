@@ -49,8 +49,20 @@ export function FormSelect({
     return acc;
   }, new Map());
 
+  // Base UI necesita este mapa para que el disparador muestre la etiqueta y no
+  // el valor crudo (el número del día o el uuid del ejercicio).
+  const items = Object.fromEntries(
+    options.map((option) => [option.value, option.label]),
+  );
+
   return (
-    <Select name={name} defaultValue={defaultValue} disabled={disabled} required={required}>
+    <Select
+      name={name}
+      items={items}
+      defaultValue={defaultValue}
+      disabled={disabled}
+      required={required}
+    >
       <SelectTrigger
         id={id}
         aria-label={props["aria-label"]}
