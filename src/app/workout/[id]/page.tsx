@@ -53,6 +53,9 @@ import {
   type ProgressionSuggestion,
 } from "@/lib/progression";
 
+/** Sesiones que se miran hacia atrás para medir la racha en el tope. */
+const PROGRESSION_LOOKBACK = 8;
+
 type ExerciseReference = {
   date: Date;
   sets: Array<{ reps: number; weight: string }>;
@@ -102,6 +105,7 @@ async function getProgressionSuggestion(
   const recent = await db
     .select({
       workoutExerciseId: workoutExercises.id,
+      performedAt: workouts.performedAt,
       targetSets: workoutExercises.targetSets,
       targetRepsMax: workoutExercises.targetRepsMax,
     })
@@ -116,7 +120,7 @@ async function getProgressionSuggestion(
       ),
     )
     .orderBy(desc(workouts.performedAt))
-    .limit(SESSIONS_TO_PROGRESS);
+    .limit(PROGRESSION_LOOKBACK);
 
   if (recent.length < SESSIONS_TO_PROGRESS) {
     return null;
@@ -130,6 +134,7 @@ async function getProgressionSuggestion(
         .where(eq(workoutSets.workoutExerciseId, entry.workoutExerciseId));
 
       return {
+        performedAt: entry.performedAt,
         targetSets: entry.targetSets,
         targetRepsMax: entry.targetRepsMax,
         sets: sets.map((set) => ({ reps: set.reps, weight: Number(set.weight) })),
@@ -396,10 +401,10 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                       <TrendingUpIcon />
                       <AlertTitle>Toca subir peso</AlertTitle>
                       <AlertDescription>
-                        Llevas {SESSIONS_TO_PROGRESS} sesiones cerrando el rango con{" "}
-                        {suggestion.fromWeight} {workout.weightUnit}. Prueba{" "}
-                        {suggestion.toWeight} {workout.weightUnit} y vuelve al mínimo
-                        de repeticiones.
+                        Llevas {suggestion.sessions} sesiones y {suggestion.days}{" "}
+                        días cerrando el rango con {suggestion.fromWeight}{" "}
+                        {workout.weightUnit}. Prueba {suggestion.toWeight}{" "}
+                        {workout.weightUnit} y vuelve al mínimo de repeticiones.
                       </AlertDescription>
                     </Alert>
                   )}
