@@ -1,11 +1,23 @@
 import { and, asc, count, eq, isNull } from "drizzle-orm";
 import Link from "next/link";
+import { ChevronRightIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { createPlan } from "@/app/actions/plans";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { trainingPlanExercises, trainingPlans } from "@/db/schema";
+import { FormSelect } from "@/components/form-select";
+import { PendingButton } from "@/components/pending-button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { AppHeader } from "@/components/app-header";
 
 const weekdays = [
   "Domingo",
@@ -48,104 +60,85 @@ export default async function PlansPage() {
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-md px-5 pb-12 pt-6">
-      <header className="flex items-center gap-4">
-        <Link
-          href="/"
-          className="grid size-11 place-items-center rounded-full border border-white/10 text-xl text-zinc-300"
-          aria-label="Volver al inicio"
-        >
-          ←
-        </Link>
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-lime-300">
-            Organización
-          </p>
-          <h1 className="mt-1 text-2xl font-black tracking-tight text-white">
-            Planes de entrenamiento
-          </h1>
-        </div>
-      </header>
+      <AppHeader backHref="/" eyebrow="Organización" title="Planes de entrenamiento" />
 
-      <section className="mt-8 rounded-3xl bg-lime-300 p-5 text-zinc-950">
-        <h2 className="text-xl font-black">Crear un día de entrenamiento</h2>
-        <p className="mt-2 text-sm leading-6 text-zinc-700">
-          Ponle un nombre, asigna un día y después añade los ejercicios en orden.
-        </p>
+      <Card className="mt-8 bg-primary p-5 text-primary-foreground">
+        <CardHeader className="p-0">
+          <CardTitle className="text-xl">Crear un día de entrenamiento</CardTitle>
+          <CardDescription className="text-primary-foreground/75">
+            Ponle un nombre, asigna un día y después añade los ejercicios en orden.
+          </CardDescription>
+        </CardHeader>
         <form action={createPlan} className="mt-5 space-y-3">
-          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">
+          <label className="block text-xs font-bold uppercase tracking-wider text-primary-foreground/75">
             Nombre
-            <input
+            <Input
               name="name"
               required
               minLength={2}
               maxLength={100}
               placeholder="Ej. Piernas y core"
-              className="mt-2 h-12 w-full rounded-xl border border-zinc-950/15 bg-white/70 px-4 text-base font-bold text-zinc-950 outline-none placeholder:text-zinc-500 focus:border-zinc-950"
+              className="mt-2 h-12 border-primary-foreground/20 bg-primary-foreground/10 text-base text-primary-foreground placeholder:text-primary-foreground/50"
             />
           </label>
-          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">
+          <label className="block text-xs font-bold uppercase tracking-wider text-primary-foreground/75">
             Día de la semana
-            <select
+            <FormSelect
               name="weekday"
-              defaultValue=""
-              className="mt-2 h-12 w-full rounded-xl border border-zinc-950/15 bg-white/70 px-4 text-base font-bold text-zinc-950 outline-none focus:border-zinc-950"
-            >
-              <option value="">Sin día fijo</option>
-              {weekdays.map((day, index) => (
-                <option key={day} value={index}>
-                  {day}
-                </option>
-              ))}
-            </select>
+              placeholder="Sin día fijo"
+              options={weekdays.map((day, index) => ({ value: String(index), label: day }))}
+              className="mt-2 h-12 w-full rounded-xl border-primary-foreground/20 bg-primary-foreground/10 px-4 text-base font-bold text-primary-foreground"
+              aria-label="Día de la semana"
+            />
           </label>
-          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">
+          <label className="block text-xs font-bold uppercase tracking-wider text-primary-foreground/75">
             Nota opcional
-            <input
+            <Input
               name="description"
               maxLength={500}
               placeholder="Ej. Fuerza y técnica"
-              className="mt-2 h-12 w-full rounded-xl border border-zinc-950/15 bg-white/70 px-4 text-base font-medium text-zinc-950 outline-none placeholder:text-zinc-500 focus:border-zinc-950"
+              className="mt-2 h-12 border-primary-foreground/20 bg-primary-foreground/10 text-base text-primary-foreground placeholder:text-primary-foreground/50"
             />
           </label>
-          <button
+          <PendingButton
             type="submit"
-            className="h-12 w-full rounded-xl bg-zinc-950 text-sm font-black text-white"
+            className="h-12 w-full bg-background font-semibold text-foreground hover:bg-background/90"
           >
             Crear y añadir ejercicios
-          </button>
+          </PendingButton>
         </form>
-      </section>
+      </Card>
 
       <section className="mt-8">
-        <h2 className="text-lg font-extrabold text-white">Tus planes</h2>
+        <h2 className="text-lg font-extrabold text-foreground">Tus planes</h2>
         {plans.length > 0 ? (
           <div className="mt-4 space-y-3">
             {plans.map((plan) => (
-              <Link
-                key={plan.id}
-                href={`/plans/${plan.id}`}
-                className="flex items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.035] p-4 transition hover:border-lime-300/30"
-              >
-                <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/5 text-lg font-black text-lime-300">
-                  {plan.exerciseCount}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="truncate font-extrabold text-white">{plan.name}</h3>
-                  <p className="mt-1 text-sm text-zinc-500">
+              <Link key={plan.id} href={`/plans/${plan.id}`} className="block">
+                <Card className="flex-row items-center gap-4 p-4 transition hover:border-foreground/25">
+                  <Badge variant="secondary" className="size-11 shrink-0 justify-center rounded-xl text-base font-bold">
+                    {plan.exerciseCount}
+                  </Badge>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate font-semibold text-foreground">{plan.name}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {plan.weekday === null ? "Sin día fijo" : weekdays[plan.weekday]}
                     {plan.exerciseCount === 1
                       ? " · 1 ejercicio"
                       : ` · ${plan.exerciseCount} ejercicios`}
                   </p>
                 </div>
-                <span className="text-zinc-600">→</span>
+                  <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
+                </Card>
               </Link>
             ))}
           </div>
         ) : (
-          <p className="mt-4 rounded-2xl border border-dashed border-white/12 p-6 text-center text-sm leading-6 text-zinc-500">
-            Crea tu primer plan para que la app prepare automáticamente los ejercicios del día.
-          </p>
+          <Card className="mt-4 border-dashed p-6 text-center">
+            <CardDescription>
+              Crea tu primer plan para que la app prepare automáticamente los ejercicios del día.
+            </CardDescription>
+          </Card>
         )}
       </section>
     </main>
