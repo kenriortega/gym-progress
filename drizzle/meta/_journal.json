@@ -1,0 +1,111 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790693178537,
+      "tag": "0000_outgoing_mentor",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790693191279,
+      "tag": "0001_seed-exercises",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790694043841,
+      "tag": "0002_lyrical_echo",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790697930020,
+      "tag": "0003_true_ben_grimm",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790698830792,
+      "tag": "0004_seed-leg-exercises",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790699089312,
+      "tag": "0005_seed-back-exercises",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790699242574,
+      "tag": "0006_seed-biceps-exercises",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790699408999,
+      "tag": "0007_seed-chest-exercises",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790699564432,
+      "tag": "0008_seed-more-leg-exercises",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790699663224,
+      "tag": "0009_seed-triceps-exercises",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790699788715,
+      "tag": "0010_seed-dips-exercise",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790699943448,
+      "tag": "0011_seed-dumbbell-shoulder-exercises",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790701653259,
+      "tag": "0012_elite_gideon",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790702678132,
+      "tag": "0013_hot_spacker_dave",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790702685676,
+      "tag": "0014_backfill-workout-targets",
+      "breakpoints": true
+    }
+  ]
+}

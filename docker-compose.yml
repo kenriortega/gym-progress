@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gym-progress-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: gym_progress
+      POSTGRES_USER: gym_progress
+      POSTGRES_PASSWORD: local_only_change_me
+    ports:
+      - "5432:5432"
+    volumes:
+      - gym_progress_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gym_progress -d gym_progress"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  gym_progress_data:
