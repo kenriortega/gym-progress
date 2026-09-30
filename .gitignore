@@ -43,3 +43,5 @@ next-env.d.ts
 .neon
 public/sw*.js
 backups/
+artifacts
+*.swift
