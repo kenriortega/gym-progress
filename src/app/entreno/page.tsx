@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { FlagIcon, HistoryIcon, PlusIcon, Trash2Icon, WifiOffIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -24,6 +23,7 @@ import {
   sincronizar,
 } from "@/lib/offline-queue";
 import type { WorkoutSnapshot } from "@/app/api/snapshot/route";
+import { ButtonLink } from "@/components/button-link";
 
 /**
  * Pantalla de entrenamiento que funciona sin cobertura.
@@ -193,9 +193,9 @@ export default function EntrenoPage() {
             luego te quedes sin cobertura.
           </AlertDescription>
         </Alert>
-        <Button className="mt-6 h-12" render={<Link href="/" />}>
+        <ButtonLink href="/" className="mt-6 h-12">
           Ir al inicio
-        </Button>
+        </ButtonLink>
       </main>
     );
   }
@@ -211,9 +211,9 @@ export default function EntrenoPage() {
             {sesion.planName ?? "Sesión libre"}
           </h1>
         </div>
-        <Button variant="outline" size="sm" render={<Link href="/" />}>
+        <ButtonLink href="/" variant="outline" size="sm">
           Inicio
-        </Button>
+        </ButtonLink>
       </header>
 
       {sinRed && (

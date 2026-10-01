@@ -10,7 +10,7 @@ import { AppHeader } from "@/components/app-header";
 import { greetingName } from "@/lib/display-name";
 import { PendingButton } from "@/components/pending-button";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/button-link";
 import {
   Card,
   CardDescription,
@@ -194,20 +194,20 @@ export default async function Home() {
         </p>
         {activeWorkout ? (
           <div className="mt-7 grid gap-2">
-            <Button
+            <ButtonLink
+              href="/entreno"
               size="lg"
               className="h-14 w-full rounded-2xl bg-background text-base font-semibold text-foreground hover:bg-background/90"
-              render={<Link href="/entreno" />}
             >
               Continuar entreno
-            </Button>
-            <Button
+            </ButtonLink>
+            <ButtonLink
+              href={`/workout/${activeWorkout.id}`}
               variant="ghost"
               className="h-10 w-full text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
-              render={<Link href={`/workout/${activeWorkout.id}`} />}
             >
               Ajustes de la sesión
-            </Button>
+            </ButtonLink>
           </div>
         ) : todayPlan ? (
           <form action={startWorkout}>
@@ -223,13 +223,13 @@ export default async function Home() {
             </PendingButton>
           </form>
         ) : (
-          <Button
+          <ButtonLink
+            href={plans.length > 0 ? "#planes" : "/plans"}
             size="lg"
             className="mt-7 h-14 w-full rounded-2xl bg-background text-base font-semibold text-foreground hover:bg-background/90"
-            render={<Link href={plans.length > 0 ? "#planes" : "/plans"} />}
           >
             {plans.length > 0 ? "Elegir un plan" : "Crear mi primer plan"}
-          </Button>
+          </ButtonLink>
         )}
       </Card>
 
@@ -278,14 +278,14 @@ export default async function Home() {
                       </PendingButton>
                     </form>
                   ) : (
-                    <Button
+                    <ButtonLink
+                      href={`/plans/${plan.id}`}
                       variant="ghost"
                       size="icon"
                       aria-label={`Editar ${plan.name}`}
-                      render={<Link href={`/plans/${plan.id}`} />}
                     >
                       <ChevronRightIcon className="size-4" />
-                    </Button>
+                    </ButtonLink>
                   )}
                 </div>
               </Card>
