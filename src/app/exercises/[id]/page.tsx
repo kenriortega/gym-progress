@@ -60,7 +60,7 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
   const dateFormatter = new Intl.DateTimeFormat("es", { day: "numeric", month: "short", year: "2-digit" });
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-md px-5 pb-12 pt-6">
+    <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-12 pt-6">
       <AppHeader backHref="/progress" eyebrow={exercise.muscleGroup} title={exercise.name} />
 
       {bestSet ? (

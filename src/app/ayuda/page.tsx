@@ -88,7 +88,7 @@ export default async function HelpPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-md px-5 pb-12 pt-6">
+    <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-12 pt-6">
       <AppHeader backHref="/" eyebrow="Guía rápida" title="Cómo usarla" />
       <Card className="mt-7 bg-primary p-5 text-primary-foreground">
         <CardHeader className="p-0">
@@ -105,7 +105,7 @@ export default async function HelpPage() {
         <h2 className="text-lg font-semibold text-foreground">
           Tu día, en cuatro pasos
         </h2>
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
           {STEPS.map((step, index) => (
             <div key={step.title} className="relative">
               <Badge className="absolute -left-1 -top-1 z-10 size-6 justify-center rounded-full p-0 text-[11px]">
@@ -120,7 +120,7 @@ export default async function HelpPage() {
         <h2 className="text-lg font-semibold text-foreground">
           Lo que hace por ti
         </h2>
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
           {HELPERS.map((helper) => (
             <StepCard key={helper.title} {...helper} />
           ))}

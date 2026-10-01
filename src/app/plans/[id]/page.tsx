@@ -68,7 +68,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
   const availableExercises = catalog.filter((exercise) => !includedIds.has(exercise.id));
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-md px-5 pb-12 pt-6">
+    <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-12 pt-6">
       <AppHeader backHref="/plans" eyebrow="Configurar plan" title={plan.name} />
 
       <form action={startWorkout} className="mt-6">

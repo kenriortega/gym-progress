@@ -184,7 +184,7 @@ export default function EntrenoPage() {
 
   if (!sesion) {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-5 py-10">
+      <main className="mx-auto flex min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col justify-center px-5 py-10">
         <Alert>
           <WifiOffIcon />
           <AlertTitle>No hay entrenamiento guardado</AlertTitle>
@@ -201,7 +201,7 @@ export default function EntrenoPage() {
   }
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-md px-5 pb-16 pt-6">
+    <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-16 pt-6">
       <header className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">
@@ -234,7 +234,7 @@ export default function EntrenoPage() {
         </p>
       )}
 
-      <div className="mt-6 space-y-4">
+      <div className="mt-6 grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
         {sesion.exercises.map((ejercicio, indice) => (
           <TarjetaEjercicio
             key={ejercicio.workoutExerciseId}
