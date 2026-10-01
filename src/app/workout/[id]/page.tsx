@@ -356,7 +356,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                     {String(exerciseIndex + 1).padStart(2, "0")}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-lg font-extrabold text-foreground">
+                    <h2 className="text-lg font-extrabold leading-tight text-balance text-foreground">
                       {exercise.name}
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -545,7 +545,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
       )}
 
       <div className="fixed inset-x-0 bottom-0 border-t border-border bg-background/95 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur">
-        <form action={finishWorkout} className="mx-auto max-w-md">
+        <form action={finishWorkout} className="mx-auto max-w-md md:max-w-sm">
           <input type="hidden" name="workoutId" value={workout.id} />
           <ConfirmSubmitButton
             type="submit"
