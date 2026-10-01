@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { FlagIcon, HistoryIcon, PlusIcon, Trash2Icon, WifiOffIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -338,6 +340,13 @@ function TarjetaEjercicio({
             </AlertDescription>
           </Alert>
         )}
+
+        <Link
+          href={`/exercises/${ejercicio.exerciseId}`}
+          className="inline-block text-xs font-bold text-muted-foreground transition hover:text-primary"
+        >
+          Ver progreso y gráfica →
+        </Link>
       </div>
 
       {ejercicio.sets.length > 0 && (
