@@ -37,7 +37,7 @@ export async function AppHeader({ eyebrow, title, backHref, action }: AppHeaderP
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="mt-1 truncate text-2xl font-black tracking-tight text-foreground">
+        <h1 className="mt-1 truncate text-2xl font-black tracking-tight text-foreground md:text-3xl">
           {title}
         </h1>
       </div>

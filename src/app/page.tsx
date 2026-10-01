@@ -174,7 +174,7 @@ export default async function Home() {
               ? `Plan de ${weekdays[todayPlan.weekday!]}`
               : "Tu entrenamiento"}
         </p>
-        <h2 className="mt-3 max-w-[12ch] text-4xl font-black leading-[0.95] tracking-[-0.05em]">
+        <h2 className="mt-3 max-w-[12ch] text-4xl font-black leading-[0.95] tracking-[-0.05em] md:max-w-[16ch] md:text-5xl lg:text-6xl">
           {activeWorkout
             ? activeWorkout.planName ?? "Sigue donde lo dejaste."
             : todayPlan
@@ -183,7 +183,7 @@ export default async function Home() {
                 ? "Elige tu plan de hoy."
                 : "Organiza tu semana."}
         </h2>
-        <p className="mt-4 max-w-xs text-sm font-medium leading-6 text-primary-foreground/75">
+        <p className="mt-4 max-w-xs text-sm font-medium leading-6 text-primary-foreground/75 md:max-w-lg md:text-base md:leading-7">
           {activeWorkout
             ? "Tus series están guardadas. Continúa desde el siguiente ejercicio."
             : todayPlan

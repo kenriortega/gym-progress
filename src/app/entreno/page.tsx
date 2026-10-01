@@ -309,7 +309,7 @@ function TarjetaEjercicio({
           {String(indice + 1).padStart(2, "0")}
         </Badge>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-lg font-semibold text-foreground">
+          <h2 className="text-lg font-semibold leading-tight text-balance text-foreground">
             {ejercicio.name}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">

@@ -31,7 +31,7 @@ export default async function LoginPage() {
           <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">
             Gym Progress
           </p>
-          <h1 className="mt-3 text-5xl font-black leading-[0.94] tracking-[-0.055em] text-foreground">
+          <h1 className="mt-3 text-5xl font-black leading-[0.94] tracking-[-0.055em] text-foreground sm:text-6xl">
             Cada serie cuenta.
           </h1>
           <p className="mt-5 max-w-sm text-base leading-7 text-muted-foreground">
