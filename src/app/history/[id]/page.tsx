@@ -141,7 +141,7 @@ export default async function HistoryDetailPage({
   }).format(workout.performedAt);
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-md px-5 pb-12 pt-6">
+    <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-12 pt-6">
       <AppHeader backHref="/history" eyebrow="Entrenamiento completado" title={workout.planName ?? "Sesión libre"} />
 
       <section className="mt-7 rounded-3xl bg-primary p-5 text-primary-foreground">
@@ -153,7 +153,7 @@ export default async function HistoryDetailPage({
         </p>
       </section>
 
-      <section className="mt-6 space-y-4">
+      <section className="mt-6 grid items-start gap-4 md:grid-cols-2">
         {workoutExerciseList.map((exercise, exerciseIndex) => (
           <Card
             key={exercise.id}

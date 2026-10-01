@@ -92,7 +92,7 @@ export default async function PlansPage() {
   });
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-md px-5 pb-12 pt-6">
+    <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-12 pt-6">
       <AppHeader backHref="/" eyebrow="Organización" title="Planes de entrenamiento" />
 
       <Card className="mt-8 bg-primary p-5 text-primary-foreground">
@@ -145,7 +145,7 @@ export default async function PlansPage() {
       <section className="mt-8">
         <h2 className="text-lg font-extrabold text-foreground">Tus planes</h2>
         {plans.length > 0 ? (
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
             {plans.map((plan) => (
               <Link key={plan.id} href={`/plans/${plan.id}`} className="block">
                 <Card className="flex-row items-center gap-4 p-4 transition hover:border-foreground/25">
@@ -186,7 +186,7 @@ export default async function PlansPage() {
               </Badge>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="mt-4 space-y-3">
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
                 {archivados.map((plan) => (
                   <Card key={plan.id} className="gap-3 p-4">
                     <div className="flex items-start gap-3">

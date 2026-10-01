@@ -31,11 +31,11 @@ export default async function ProgressPage() {
     .orderBy(desc(max(workouts.performedAt)));
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-md px-5 pb-12 pt-6">
+    <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-12 pt-6">
       <AppHeader backHref="/" eyebrow="Marcas personales" title="Progreso por ejercicio" />
 
       {summaries.length > 0 ? (
-        <section className="mt-8 space-y-3">
+        <section className="mt-8 grid gap-3 md:grid-cols-2">
           {summaries.map((exercise) => (
             <Link key={exercise.id} href={`/exercises/${exercise.id}`}>
               <Card className="flex-row items-center gap-4 p-4 transition hover:border-foreground/25">

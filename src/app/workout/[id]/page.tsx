@@ -258,7 +258,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
   }).format(workout.performedAt);
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-md px-5 pb-32 pt-6">
+    <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-32 pt-6">
       <AppHeader
         backHref="/"
         eyebrow="En curso"
@@ -321,7 +321,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
           </p>
         </section>
       ) : (
-        <div className="mt-6 space-y-5">
+        <div className="mt-6 grid items-start gap-5 md:grid-cols-2 xl:grid-cols-3">
           {exerciseRows.map((exercise, exerciseIndex) => {
             const sets = setRows.filter(
               (set) => set.workoutExerciseId === exercise.workoutExerciseId,

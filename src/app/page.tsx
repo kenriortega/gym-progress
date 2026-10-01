@@ -160,7 +160,7 @@ export default async function Home() {
   ).sort((a, b) => a.position - b.position);
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pb-10 pt-6">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-5 pb-10 pt-6">
       <AppHeader
         eyebrow="Tu progreso, serie a serie"
         title={`Hola, ${greetingName(displayName)}`}
@@ -247,7 +247,7 @@ export default async function Home() {
         </div>
 
         {plans.length > 0 ? (
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
             {plans.map((plan) => (
               <Card
                 key={plan.id}
@@ -329,7 +329,7 @@ export default async function Home() {
         </div>
 
         {exerciseSummary.length > 0 ? (
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
             {exerciseSummary.map((exercise, index) => (
               <Card
                 key={exercise.id}
