@@ -7,7 +7,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/button-link";
 import {
   Card,
   CardContent,
@@ -102,7 +102,7 @@ export default async function HistoryPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button render={<Link href="/" />}>Volver al inicio</Button>
+            <ButtonLink href="/">Volver al inicio</ButtonLink>
           </CardContent>
         </Card>
       )}

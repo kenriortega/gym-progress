@@ -1,11 +1,11 @@
 "use client";
 
 import { RefreshCwIcon, TriangleAlertIcon } from "lucide-react";
-import Link from "next/link";
 import { useEffect } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/button-link";
 
 export default function Error({
   error,
@@ -34,14 +34,9 @@ export default function Error({
           <RefreshCwIcon className="size-4" />
           Reintentar
         </Button>
-        <Button
-          variant="outline"
-          size="lg"
-          className="h-12"
-          render={<Link href="/" />}
-        >
+        <ButtonLink href="/" variant="outline" size="lg" className="h-12">
           Volver al inicio
-        </Button>
+        </ButtonLink>
       </div>
 
       {error.digest ? (
