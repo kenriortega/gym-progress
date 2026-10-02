@@ -103,7 +103,7 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
             <h2 className="text-lg font-semibold text-foreground">Sesiones</h2>
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               {[...sessionList].reverse().map((item) => (
-                <Link key={item.id} href={`/history/${item.id}`} className="block">
+                <Link key={item.id} href={`/history/${item.id}`} className="block min-w-0">
                   <Card className="gap-2 p-4 transition hover:border-foreground/25">
                     <div className="flex items-center justify-between">
                       <p className="font-semibold capitalize text-foreground">{dateFormatter.format(item.date)}</p>

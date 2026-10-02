@@ -70,7 +70,7 @@ export default async function HistoryPage() {
       {history.length > 0 ? (
         <section className="mt-8 grid gap-3 md:grid-cols-2">
           {history.map((workout, index) => (
-            <Link key={workout.id} href={`/history/${workout.id}`} className="block">
+            <Link key={workout.id} href={`/history/${workout.id}`} className="block min-w-0">
               <Card className="flex-row items-start gap-4 p-5 transition hover:border-foreground/25">
                 <Badge className="size-11 shrink-0 justify-center rounded-xl text-sm font-bold">
                   {String(history.length - index).padStart(2, "0")}
