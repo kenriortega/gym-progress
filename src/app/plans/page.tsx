@@ -23,6 +23,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { AppHeader } from "@/components/app-header";
+import { PlanTemplates } from "@/components/plan-templates";
 
 const weekdays = [
   "Domingo",
@@ -174,6 +175,10 @@ export default async function PlansPage() {
           </Card>
         )}
       </section>
+
+      <PlanTemplates
+        titulo={plans.length === 0 ? "Empieza con un plan hecho" : "Más planes listos para copiar"}
+      />
 
       {archivados.length > 0 && (
         <section className="mt-10">

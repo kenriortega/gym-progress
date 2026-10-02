@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/button-link";
 import {
   Card,
+  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -292,16 +293,17 @@ export default async function Home() {
             ))}
           </div>
         ) : (
-          <Link href="/plans" className="mt-4 block">
-            <Card className="border-dashed px-5 py-7 text-center">
-              <CardHeader>
-                <CardTitle className="text-base">Crea tu primer plan semanal</CardTitle>
-                <CardDescription>
-                  La app cargará todos sus ejercicios al iniciar la sesión.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
+          <Card className="mt-4 border-dashed px-5 py-7 text-center">
+            <CardHeader>
+              <CardTitle className="text-base">Aún no tienes ningún plan</CardTitle>
+              <CardDescription>
+                Puedes crear uno desde cero o copiar uno ya hecho y ajustarlo.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap justify-center gap-2">
+              <ButtonLink href="/plans">Ver planes de ejemplo</ButtonLink>
+            </CardContent>
+          </Card>
         )}
       </section>
 
