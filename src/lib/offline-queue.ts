@@ -17,6 +17,8 @@ export type QueuedMutation =
       setId: string;
       weight: number;
       reps: number;
+      /** Esfuerzo percibido, de 1 a 10. Opcional. */
+      rpe?: number | null;
       createdAt: number;
     }
   | {

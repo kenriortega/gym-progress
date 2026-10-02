@@ -49,6 +49,11 @@ export async function POST(request: Request) {
   const setId = String(m.setId ?? "");
   const reps = Number(m.reps);
   const weight = Number(m.weight);
+  const rpeCrudo = m.rpe;
+  const rpe =
+    rpeCrudo === null || rpeCrudo === undefined || rpeCrudo === ""
+      ? null
+      : Number(rpeCrudo);
 
   if (!UUID.test(workoutId) || !UUID.test(workoutExerciseId) || !UUID.test(setId)) {
     return NextResponse.json({ error: "Identificadores inválidos" }, { status: 400 });
@@ -60,6 +65,10 @@ export async function POST(request: Request) {
 
   if (!Number.isFinite(weight) || weight < 0 || weight > 99999) {
     return NextResponse.json({ error: "Peso inválido" }, { status: 400 });
+  }
+
+  if (rpe !== null && (!Number.isFinite(rpe) || rpe < 1 || rpe > 10)) {
+    return NextResponse.json({ error: "RPE inválido" }, { status: 400 });
   }
 
   try {
@@ -95,6 +104,7 @@ export async function POST(request: Request) {
           position: Number(ultima?.value ?? -1) + 1,
           reps,
           weight: weight.toFixed(2),
+          rpe: rpe === null ? null : rpe.toFixed(1),
           completedAt: new Date(),
         })
         .onConflictDoNothing({ target: workoutSets.id });

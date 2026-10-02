@@ -90,7 +90,12 @@ export default function EntrenoPage() {
   }, [refrescar]);
 
   const registrar = useCallback(
-    async (ejercicio: WorkoutSnapshot["exercises"][number], peso: number, reps: number) => {
+    async (
+      ejercicio: WorkoutSnapshot["exercises"][number],
+      peso: number,
+      reps: number,
+      rpe: number | null,
+    ) => {
       if (!sesion) return;
 
       const setId = crypto.randomUUID();
@@ -122,6 +127,7 @@ export default function EntrenoPage() {
         setId,
         weight: peso,
         reps,
+        rpe,
         createdAt: Date.now(),
       });
 
@@ -290,12 +296,14 @@ function TarjetaEjercicio({
     ejercicio: WorkoutSnapshot["exercises"][number],
     peso: number,
     reps: number,
+    rpe: number | null,
   ) => Promise<void>;
   onBorrar: (workoutExerciseId: string, setId: string) => Promise<void>;
 }) {
   const ultima = ejercicio.sets.at(-1) ?? ejercicio.previous.at(-1);
   const [peso, setPeso] = useState(ultima ? String(ultima.weight) : "");
   const [reps, setReps] = useState(ultima ? String(ultima.reps) : "");
+  const [rpe, setRpe] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [guardadas, setGuardadas] = useState(0);
 
@@ -383,8 +391,13 @@ function TarjetaEjercicio({
             toast.error("Revisa el peso y las repeticiones.");
             return;
           }
+          const esfuerzo = rpe === "" ? null : Number(rpe);
+          if (esfuerzo !== null && (esfuerzo < 1 || esfuerzo > 10)) {
+            toast.error("El RPE va de 1 a 10.");
+            return;
+          }
           setGuardando(true);
-          await onRegistrar(ejercicio, p, r);
+          await onRegistrar(ejercicio, p, r, esfuerzo);
           setGuardadas((n) => n + 1);
           setGuardando(false);
         }}
@@ -418,6 +431,23 @@ function TarjetaEjercicio({
         <Button type="submit" disabled={guardando} className="mt-5 h-12">
           {guardando ? "…" : <PlusIcon className="size-4" />}
         </Button>
+
+        <div className="col-span-3 grid gap-1">
+          <Label className="text-[11px] text-muted-foreground">
+            RPE · esfuerzo del 1 al 10 (opcional)
+          </Label>
+          <Input
+            type="number"
+            inputMode="decimal"
+            min="1"
+            max="10"
+            step="0.5"
+            placeholder="—"
+            value={rpe}
+            onChange={(e) => setRpe(e.target.value)}
+            className="h-10 text-center"
+          />
+        </div>
       </form>
 
       <div className="px-5 pb-5">

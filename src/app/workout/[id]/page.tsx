@@ -18,6 +18,7 @@ import {
   finishWorkout,
   toggleExerciseComplete,
   updateSet,
+  updateWorkoutNotes,
 } from "@/app/actions/workouts";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { PendingButton } from "@/components/pending-button";
@@ -28,6 +29,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -274,6 +281,27 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
       />
 
       <p className="mt-6 capitalize text-sm text-muted-foreground">{dateLabel}</p>
+
+      <Collapsible className="mt-6 rounded-xl border border-border bg-card p-4">
+        <CollapsibleTrigger className="w-full text-left text-sm font-medium text-muted-foreground">
+          Nota de la sesión{workout.notes ? " · escrita" : ""}
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <form action={updateWorkoutNotes} className="mt-3 grid gap-2">
+            <input type="hidden" name="workoutId" value={workout.id} />
+            <Textarea
+              name="notes"
+              defaultValue={workout.notes ?? ""}
+              maxLength={2000}
+              rows={3}
+              placeholder="Cómo fue, molestias, cambios de máquina…"
+            />
+            <PendingButton type="submit" variant="outline" className="h-10">
+              Guardar nota
+            </PendingButton>
+          </form>
+        </CollapsibleContent>
+      </Collapsible>
 
       <Card className="mt-6 p-4">
         <form action={addExercise} className="flex gap-2">

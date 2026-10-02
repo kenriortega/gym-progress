@@ -214,6 +214,11 @@ export default async function HistoryDetailPage({
                         </TableCell>
                         <TableCell className="font-semibold text-foreground">
                           {set.reps}
+                          {set.rpe ? (
+                            <span className="ml-2 font-normal text-muted-foreground">
+                              RPE {Number(set.rpe)}
+                            </span>
+                          ) : null}
                         </TableCell>
                       </TableRow>
                     ))}
