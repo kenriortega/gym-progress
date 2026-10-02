@@ -21,7 +21,8 @@ const SECTIONS: LegalSection[] = [
     paragraphs: [
       "De tu cuenta de Google, únicamente tu nombre, tu dirección de correo y la URL de tu foto de perfil. Es lo mínimo que permite identificarte al entrar. No pedimos acceso a tu correo, tu calendario, tus contactos ni tus archivos.",
       "De tu uso de la aplicación: los planes de entrenamiento que creas, los ejercicios que registras, y el peso, las repeticiones y la fecha de cada serie.",
-      "No usamos cookies de publicidad ni herramientas de analítica. No recogemos tu ubicación.",
+      "Usamos Vercel Web Analytics para saber cuántas personas entran y qué pantallas se usan. No instala cookies ni crea un identificador que te siga entre visitas: solo cuenta visitas de forma agregada y anónima.",
+      "No usamos cookies de publicidad. No recogemos tu ubicación ni vendemos datos a nadie.",
     ],
   },
   {
@@ -70,7 +71,7 @@ export default function PrivacyPage() {
     <LegalPage
       eyebrow="Gym Progress"
       title="Política de privacidad"
-      updatedAt="29 de septiembre de 2026"
+      updatedAt="1 de octubre de 2026"
       intro="Gym Progress guarda lo mínimo imprescindible para funcionar: quién eres y qué levantaste. Nada más, y nada se comparte con terceros."
       sections={SECTIONS}
     />
