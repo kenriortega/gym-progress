@@ -3,6 +3,8 @@ import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
+import { Analytics } from "@vercel/analytics/next";
+
 import { ThemeProvider } from "@/components/theme-provider";
 import { OfflineBanner } from "@/components/offline-banner";
 import { ServiceWorkerProvider } from "@/components/serwist-provider";
@@ -52,6 +54,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <OfflineBanner />
           {children}
           <Toaster />
+          <Analytics />
         </ThemeProvider>
         </ServiceWorkerProvider>
       </body>
