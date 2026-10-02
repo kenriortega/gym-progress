@@ -37,17 +37,17 @@ export default async function ProgressPage() {
       {summaries.length > 0 ? (
         <section className="mt-8 grid gap-3 md:grid-cols-2">
           {summaries.map((exercise) => (
-            <Link key={exercise.id} href={`/exercises/${exercise.id}`}>
+            <Link key={exercise.id} href={`/exercises/${exercise.id}`} className="block min-w-0">
               <Card className="flex-row items-center gap-4 p-4 transition hover:border-foreground/25">
                 <Badge variant="secondary" className="size-12 shrink-0 justify-center rounded-xl text-xs font-black">
                   PR
                 </Badge>
                 <div className="min-w-0 flex-1">
                   <h2 className="truncate font-semibold text-foreground">{exercise.name}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">{exercise.muscleGroup} · {exercise.workoutCount} {exercise.workoutCount === 1 ? "sesión" : "sesiones"}</p>
+                  <p className="mt-1 truncate text-sm text-muted-foreground">{exercise.muscleGroup} · {exercise.workoutCount} {exercise.workoutCount === 1 ? "sesión" : "sesiones"}</p>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-foreground">{Number(exercise.bestWeight)} kg</p>
+                <div className="shrink-0 text-right">
+                  <p className="whitespace-nowrap font-bold text-foreground">{Number(exercise.bestWeight)} kg</p>
                   <p className="mt-1 text-xs text-muted-foreground">máximo</p>
                 </div>
               </Card>

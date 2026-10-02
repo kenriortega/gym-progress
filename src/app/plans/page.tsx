@@ -148,7 +148,7 @@ export default async function PlansPage() {
         {plans.length > 0 ? (
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             {plans.map((plan) => (
-              <Link key={plan.id} href={`/plans/${plan.id}`} className="block">
+              <Link key={plan.id} href={`/plans/${plan.id}`} className="block min-w-0">
                 <Card className="flex-row items-center gap-4 p-4 transition hover:border-foreground/25">
                   <Badge variant="secondary" className="size-11 shrink-0 justify-center rounded-xl text-base font-bold">
                     {plan.exerciseCount}
