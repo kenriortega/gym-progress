@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { findTemplate } from "@/lib/plan-templates";
 import { db } from "@/db";
 import {
   exercises,
@@ -439,6 +440,86 @@ export async function unarchivePlan(formData: FormData) {
     .update(trainingPlans)
     .set({ archivedAt: null, updatedAt: new Date() })
     .where(and(eq(trainingPlans.id, planId), eq(trainingPlans.userId, userId)));
+
+  revalidatePath("/");
+  revalidatePath("/plans");
+  redirect(`/plans/${planId}`);
+}
+
+export async function createPlanFromTemplate(formData: FormData) {
+  const userId = await requireUserId();
+  const templateId = String(formData.get("templateId") ?? "");
+  const template = findTemplate(templateId);
+
+  if (!template) {
+    throw new Error("Esa plantilla no existe.");
+  }
+
+  // El nombre debe ser único entre los planes activos. Si ya usaste la
+  // plantilla, se numera en vez de fallar.
+  const existentes = await db
+    .select({ name: trainingPlans.name })
+    .from(trainingPlans)
+    .where(
+      and(eq(trainingPlans.userId, userId), isNull(trainingPlans.archivedAt)),
+    );
+
+  const usados = new Set(existentes.map((p) => p.name.toLowerCase()));
+  let name = template.name;
+  for (let n = 2; usados.has(name.toLowerCase()); n += 1) {
+    name = `${template.name} ${n}`;
+  }
+
+  const planId = await db.transaction(async (transaction) => {
+    const [plan] = await transaction
+      .insert(trainingPlans)
+      .values({
+        userId,
+        name,
+        description: template.description,
+        weekday: template.weekday,
+      })
+      .returning({ id: trainingPlans.id });
+
+    // Los ejercicios se buscan por nombre en el catálogo. Si alguno no está,
+    // se omite: un plan con un ejercicio menos sigue sirviendo.
+    const catalogo = await transaction
+      .select({ id: exercises.id, name: exercises.name })
+      .from(exercises)
+      .where(
+        and(
+          isNull(exercises.archivedAt),
+          or(isNull(exercises.userId), eq(exercises.userId, userId)),
+        ),
+      );
+
+    const porNombre = new Map(
+      catalogo.map((e) => [e.name.toLowerCase(), e.id]),
+    );
+
+    const filas = template.exercises
+      .map((ejercicio, indice) => {
+        const exerciseId = porNombre.get(ejercicio.name.toLowerCase());
+        if (!exerciseId) return null;
+        return {
+          planId: plan.id,
+          exerciseId,
+          position: indice,
+          targetSets: ejercicio.sets,
+          targetRepsMin: ejercicio.repsMin,
+          targetRepsMax: ejercicio.repsMax,
+        };
+      })
+      .filter((fila) => fila !== null)
+      // Las posiciones deben ser consecutivas aunque se haya omitido alguno.
+      .map((fila, indice) => ({ ...fila, position: indice }));
+
+    if (filas.length > 0) {
+      await transaction.insert(trainingPlanExercises).values(filas);
+    }
+
+    return plan.id;
+  });
 
   revalidatePath("/");
   revalidatePath("/plans");
