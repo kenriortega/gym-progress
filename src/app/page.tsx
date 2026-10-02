@@ -313,15 +313,15 @@ export default async function Home() {
               Último entrenamiento
             </h2>
           </div>
-          <div className="shrink-0 text-right">
+          <div className="flex shrink-0 items-center gap-3">
             {lastWorkout && (
-              <p className="text-sm font-semibold text-primary">
+              <Badge variant="secondary">
                 {relativeDate(lastWorkout.performedAt)}
-              </p>
+              </Badge>
             )}
             <Link
               href="/history"
-              className="mt-1 inline-block text-sm font-bold text-muted-foreground transition hover:text-foreground"
+              className="text-sm font-bold text-muted-foreground transition hover:text-foreground"
             >
               Ver historial
             </Link>

@@ -236,7 +236,7 @@ export default function EntrenoPage() {
         </p>
       )}
 
-      <div className="mt-6 grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-6 grid items-start gap-4 md:grid-cols-2">
         {sesion.exercises.map((ejercicio, indice) => (
           <TarjetaEjercicio
             key={ejercicio.workoutExerciseId}

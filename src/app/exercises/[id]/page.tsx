@@ -65,7 +65,7 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
 
       {bestSet ? (
         <>
-          <section className="mt-7 grid grid-cols-2 gap-3">
+          <section className="mt-7 grid grid-cols-2 gap-3 md:gap-4">
             <Card className="gap-1 bg-primary p-4 text-primary-foreground">
               <p className="text-xs font-medium uppercase tracking-wider text-primary-foreground/75">Récord de peso</p>
               <p className="text-3xl font-bold tabular-nums">{bestSet.weight} kg</p>
@@ -101,7 +101,7 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
 
           <section className="mt-6">
             <h2 className="text-lg font-semibold text-foreground">Sesiones</h2>
-            <div className="mt-3 space-y-3">
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
               {[...sessionList].reverse().map((item) => (
                 <Link key={item.id} href={`/history/${item.id}`} className="block">
                   <Card className="gap-2 p-4 transition hover:border-foreground/25">

@@ -109,7 +109,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
         </div>
 
         {plannedExercises.length > 0 ? (
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
             {plannedExercises.map((exercise, index) => (
               <Card key={exercise.id} className="p-4">
                 <div className="flex items-center gap-3">
