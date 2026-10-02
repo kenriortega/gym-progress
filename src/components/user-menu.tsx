@@ -13,6 +13,7 @@ import {
   LaptopIcon,
   LogOutIcon,
   MoonIcon,
+  SettingsIcon,
   PaletteIcon,
   SunIcon,
   TrendingUpIcon,
@@ -63,7 +64,10 @@ const NAV_SECTIONS: NavItem[][] = [
     { href: "/progress", label: "Progreso", Icon: TrendingUpIcon },
     { href: "/history", label: "Historial", Icon: ClockIcon },
   ],
-  [{ href: "/ayuda", label: "Cómo usarla", Icon: CircleHelpIcon }],
+  [
+    { href: "/ajustes", label: "Ajustes", Icon: SettingsIcon },
+    { href: "/ayuda", label: "Cómo usarla", Icon: CircleHelpIcon },
+  ],
 ];
 
 const THEMES = [

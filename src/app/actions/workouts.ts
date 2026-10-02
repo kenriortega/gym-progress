@@ -447,3 +447,26 @@ export async function finishWorkout(formData: FormData) {
   revalidatePath("/");
   redirect("/");
 }
+
+export async function updateWorkoutNotes(formData: FormData) {
+  const userId = await requireUserId();
+  const workoutId = requiredUuid(formData, "workoutId");
+  const raw = String(formData.get("notes") ?? "").trim();
+
+  if (raw.length > 2000) {
+    throw new Error("La nota no puede pasar de 2000 caracteres.");
+  }
+
+  await db
+    .update(workouts)
+    .set({ notes: raw || null, updatedAt: new Date() })
+    .where(
+      and(
+        eq(workouts.id, workoutId),
+        eq(workouts.userId, userId),
+        eq(workouts.status, "active"),
+      ),
+    );
+
+  revalidatePath(`/workout/${workoutId}`);
+}
