@@ -1,8 +1,15 @@
+import { UsersIcon, VenusIcon } from "lucide-react";
+
 import { createPlanFromTemplate } from "@/app/actions/plans";
 import { PendingButton } from "@/components/pending-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { PLAN_TEMPLATES } from "@/lib/plan-templates";
+import { PLAN_TEMPLATES, type TemplateAudience } from "@/lib/plan-templates";
+
+const ENFOQUE: Record<TemplateAudience, { etiqueta: string; Icon: typeof VenusIcon }> = {
+  mixto: { etiqueta: "Mixto", Icon: UsersIcon },
+  mujeres: { etiqueta: "Mujeres", Icon: VenusIcon },
+};
 
 const DIAS = [
   "Domingo",
@@ -18,6 +25,16 @@ const DIAS = [
  * Planes listos para copiar. Lo que frena a alguien que entra por primera vez
  * no es la app, es tener que decidir qué ejercicios hacer y en qué orden.
  */
+function EnfoqueBadge({ enfoque }: { enfoque: TemplateAudience }) {
+  const { etiqueta, Icon } = ENFOQUE[enfoque];
+  return (
+    <Badge variant={enfoque === "mujeres" ? "default" : "secondary"}>
+      <Icon className="size-3" />
+      {etiqueta}
+    </Badge>
+  );
+}
+
 export function PlanTemplates({ titulo }: { titulo?: string }) {
   return (
     <section className="mt-8">
@@ -39,11 +56,14 @@ export function PlanTemplates({ titulo }: { titulo?: string }) {
                   {plantilla.audience}
                 </p>
               </div>
-              <Badge variant="outline" className="shrink-0">
-                {plantilla.weekday === null
-                  ? "Sin día"
-                  : DIAS[plantilla.weekday].slice(0, 3)}
-              </Badge>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <EnfoqueBadge enfoque={plantilla.gender} />
+                <Badge variant="outline">
+                  {plantilla.weekday === null
+                    ? "Sin día"
+                    : DIAS[plantilla.weekday].slice(0, 3)}
+                </Badge>
+              </div>
             </div>
 
             <CardDescription>{plantilla.description}</CardDescription>
