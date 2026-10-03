@@ -22,7 +22,11 @@ export type PickerExercise = {
   muscleGroup: string;
 };
 
-/** Grupos del catálogo, más uno de escape para lo que no encaje. */
+/**
+ * Grupos del catálogo, más dos de escape. Deben coincidir con los que usa la
+ * tabla de ejercicios: si no, el progreso quedaría repartido entre "Abdomen"
+ * y "Core" como si fueran cosas distintas.
+ */
 const GRUPOS = [
   "Pecho",
   "Espalda",
@@ -31,7 +35,7 @@ const GRUPOS = [
   "Hombros",
   "Bíceps",
   "Tríceps",
-  "Core",
+  "Abdomen",
   "Cardio",
   "Otros",
 ];
