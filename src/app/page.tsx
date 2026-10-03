@@ -11,6 +11,7 @@ import { greetingName } from "@/lib/display-name";
 import { PendingButton } from "@/components/pending-button";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/button-link";
+import { ChangelogDialog } from "@/components/changelog-dialog";
 import {
   Card,
   CardContent,
@@ -162,6 +163,8 @@ export default async function Home() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col px-5 pb-10 pt-6">
+      <ChangelogDialog />
+
       <AppHeader
         eyebrow="Tu progreso, serie a serie"
         title={`Hola, ${greetingName(displayName)}`}
