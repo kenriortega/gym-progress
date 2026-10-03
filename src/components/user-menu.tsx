@@ -14,13 +14,15 @@ import {
   LogOutIcon,
   MoonIcon,
   SettingsIcon,
+  SparklesIcon,
   PaletteIcon,
   SunIcon,
   TrendingUpIcon,
   type LucideIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
+import { hayNovedades, subscribirNovedades } from "@/lib/changelog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -65,6 +67,7 @@ const NAV_SECTIONS: NavItem[][] = [
     { href: "/history", label: "Historial", Icon: ClockIcon },
   ],
   [
+    { href: "/novedades", label: "Novedades", Icon: SparklesIcon },
     { href: "/ajustes", label: "Ajustes", Icon: SettingsIcon },
     { href: "/ayuda", label: "Cómo usarla", Icon: CircleHelpIcon },
   ],
@@ -95,6 +98,12 @@ export function UserMenu({
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
   const [confirmingSignOut, setConfirmingSignOut] = useState(false);
+  // En el servidor siempre false: sin localStorage no hay nada que saber.
+  const novedades = useSyncExternalStore(
+    subscribirNovedades,
+    hayNovedades,
+    () => false,
+  );
 
   const initials =
     name
@@ -110,12 +119,20 @@ export function UserMenu({
           className="rounded-full outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           aria-label="Abrir menú"
         >
+          <span className="relative block">
+          {novedades && (
+            <span
+              aria-hidden
+              className="absolute -right-0.5 -top-0.5 z-10 size-3 rounded-full border-2 border-background bg-primary"
+            />
+          )}
           <Avatar className="size-11 border border-border shadow-sm transition hover:border-primary/60">
             {image ? <AvatarImage src={image} alt="" /> : null}
             <AvatarFallback className="bg-secondary text-sm font-black tracking-tight text-secondary-foreground">
               {initials}
             </AvatarFallback>
           </Avatar>
+          </span>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end" className="w-60">
@@ -147,7 +164,9 @@ export function UserMenu({
                 >
                   <Icon className="size-4" />
                   <span className="flex-1">{label}</span>
-                  {pathname === href ? (
+                  {href === "/novedades" && novedades ? (
+                    <span aria-label="sin leer" className="size-2 rounded-full bg-primary" />
+                  ) : pathname === href ? (
                     <CheckIcon className="size-4 text-primary" />
                   ) : null}
                 </DropdownMenuItem>
