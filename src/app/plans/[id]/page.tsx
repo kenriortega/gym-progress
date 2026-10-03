@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { db } from "@/db";
 import { exercises, trainingPlanExercises, trainingPlans } from "@/db/schema";
 import { AppHeader } from "@/components/app-header";
+import { ExercisePicker } from "@/components/exercise-picker";
 
 const weekdays = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
@@ -173,17 +174,12 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
         <CardTitle className="text-lg">Añadir ejercicio</CardTitle>
         <form action={addPlanExercise} className="mt-4 space-y-3">
           <input type="hidden" name="planId" value={plan.id} />
-          <FormSelect
-            name="exerciseId"
-            required
-            disabled={availableExercises.length === 0}
-            placeholder={availableExercises.length > 0 ? "Selecciona un ejercicio" : "Todos añadidos"}
-            options={availableExercises.map((exercise) => ({
-              value: exercise.id,
-              label: exercise.name,
-              group: exercise.muscleGroup,
+          <ExercisePicker
+            exercises={availableExercises.map((exercise) => ({
+              id: exercise.id,
+              name: exercise.name,
+              muscleGroup: exercise.muscleGroup,
             }))}
-            aria-label="Ejercicio"
           />
           <div className="grid grid-cols-3 gap-2">
             {[

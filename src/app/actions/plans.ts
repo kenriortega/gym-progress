@@ -102,10 +102,65 @@ export async function updatePlan(formData: FormData) {
   revalidatePath(`/plans/${planId}`);
 }
 
+/**
+ * Resuelve el ejercicio del formulario: o viene elegido del catálogo, o viene
+ * escrito a mano y hay que crearlo.
+ *
+ * Si ya existe uno con ese nombre —del sistema o tuyo— se reutiliza en vez de
+ * duplicarlo: el índice único lo impediría de todas formas, y acabar con dos
+ * "Press Smith" rompería el historial en dos mitades.
+ */
+async function resolverEjercicio(
+  transaction: typeof db,
+  userId: string,
+  formData: FormData,
+): Promise<string> {
+  const idElegido = formData.get("exerciseId");
+  if (typeof idElegido === "string" && idElegido !== "") {
+    if (!UUID_PATTERN.test(idElegido)) {
+      throw new Error("El ejercicio elegido no es válido.");
+    }
+    return idElegido;
+  }
+
+  const nombre = String(formData.get("exerciseName") ?? "").trim();
+  const grupo = String(formData.get("muscleGroup") ?? "").trim();
+
+  if (nombre.length < 2 || nombre.length > 100) {
+    throw new Error("El nombre del ejercicio debe tener entre 2 y 100 caracteres.");
+  }
+
+  if (grupo.length < 2 || grupo.length > 60) {
+    throw new Error("Elige un grupo muscular para el ejercicio.");
+  }
+
+  const [existente] = await transaction
+    .select({ id: exercises.id })
+    .from(exercises)
+    .where(
+      and(
+        isNull(exercises.archivedAt),
+        or(isNull(exercises.userId), eq(exercises.userId, userId)),
+        sql`lower(${exercises.name}) = lower(${nombre})`,
+      ),
+    )
+    .limit(1);
+
+  if (existente) {
+    return existente.id;
+  }
+
+  const [creado] = await transaction
+    .insert(exercises)
+    .values({ userId, name: nombre, muscleGroup: grupo })
+    .returning({ id: exercises.id });
+
+  return creado.id;
+}
+
 export async function addPlanExercise(formData: FormData) {
   const userId = await requireUserId();
   const planId = requiredUuid(formData, "planId");
-  const exerciseId = requiredUuid(formData, "exerciseId");
   const targetSets = Number(formData.get("targetSets"));
   const targetRepsMin = Number(formData.get("targetRepsMin"));
   const targetRepsMax = Number(formData.get("targetRepsMax"));
@@ -136,6 +191,12 @@ export async function addPlanExercise(formData: FormData) {
         ),
       )
       .limit(1);
+
+    const exerciseId = await resolverEjercicio(
+      transaction as unknown as typeof db,
+      userId,
+      formData,
+    );
 
     const [exercise] = await transaction
       .select({ id: exercises.id })
