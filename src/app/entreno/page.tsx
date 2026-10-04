@@ -26,6 +26,10 @@ import {
 } from "@/lib/offline-queue";
 import type { WorkoutSnapshot } from "@/app/api/snapshot/route";
 import { ButtonLink } from "@/components/button-link";
+import {
+  ExerciseProgress,
+  SessionProgress,
+} from "@/components/session-progress";
 
 /**
  * Pantalla de entrenamiento que funciona sin cobertura.
@@ -242,6 +246,14 @@ export default function EntrenoPage() {
         </p>
       )}
 
+      <SessionProgress
+        ejercicios={sesion.exercises.map((e) => ({
+          name: e.name,
+          targetSets: e.targetSets,
+          setsDone: e.sets.length,
+        }))}
+      />
+
       <div className="mt-6 grid items-start gap-4 md:grid-cols-2">
         {sesion.exercises.map((ejercicio, indice) => (
           <TarjetaEjercicio
@@ -333,9 +345,15 @@ function TarjetaEjercicio({
 
       <div className="space-y-2 px-5 pt-4">
         {faltan !== null && (
-          <Badge variant={faltan === 0 ? "default" : "outline"}>
-            {faltan === 0 ? "Objetivo alcanzado" : `Faltan ${faltan}`}
-          </Badge>
+          <div className="space-y-2">
+            <Badge variant={faltan === 0 ? "default" : "outline"}>
+              {faltan === 0 ? "Objetivo alcanzado" : `Faltan ${faltan}`}
+            </Badge>
+            <ExerciseProgress
+              setsDone={ejercicio.sets.length}
+              targetSets={ejercicio.targetSets}
+            />
+          </div>
         )}
 
         {ejercicio.previous.length > 0 && (

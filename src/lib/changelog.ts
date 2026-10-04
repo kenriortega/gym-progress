@@ -19,6 +19,15 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "2026-10-04",
+    date: "4 de octubre de 2026",
+    title: "Ves cuánto llevas de la sesión",
+    items: [
+      "La pantalla de entrenamiento muestra arriba cuánto llevas hecho: cuántas series de las que te propusiste y cuántos ejercicios has terminado.",
+      "Cada ejercicio lleva su propia barra, para ver de un vistazo cuáles te faltan.",
+    ],
+  },
+  {
     id: "2026-10-03",
     date: "3 de octubre de 2026",
     title: "Ejercicios propios y más planes",
