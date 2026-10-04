@@ -537,13 +537,13 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                                   </form>
 
                                   <DialogFooter>
-                                    <form action={deleteSet} className="w-full">
+                                    <form action={deleteSet} className="w-full sm:w-auto">
                                       <input type="hidden" name="workoutId" value={workout.id} />
                                       <input type="hidden" name="setId" value={set.id} />
                                       <ConfirmSubmitButton
                                         type="submit"
                                         variant="destructive"
-                                        className="w-full"
+                                        className="w-full sm:w-auto"
                                         confirmation={`¿Eliminar la serie ${index + 1}? No se puede deshacer.`}
                                       >
                                         Eliminar serie
