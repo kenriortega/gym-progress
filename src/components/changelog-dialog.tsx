@@ -67,17 +67,17 @@ export function ChangelogDialog() {
           ))}
         </ul>
 
-        <DialogFooter className="gap-2">
+        <DialogFooter>
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full sm:w-auto"
             nativeButton={false}
             render={<Link href="/novedades" />}
             onClick={() => marcarVistas()}
           >
             Ver todas
           </Button>
-          <Button className="w-full" onClick={() => marcarVistas()}>
+          <Button className="w-full sm:w-auto" onClick={() => marcarVistas()}>
             Entendido
           </Button>
         </DialogFooter>
