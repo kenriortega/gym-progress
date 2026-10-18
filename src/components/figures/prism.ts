@@ -138,3 +138,39 @@ export function sectionArc(axis: "x" | "y", section: Section, along: number, P: 
 
 /** A run of world points as one path, for cables and rules. */
 export const runOf = (points: Point3[], P: Projection) => pathOf(points.map((point) => iso(point, P)), false);
+
+/**
+ * A thick straight bar between two points of the section plane, as a section of
+ * its own: the way to draw anything that runs at an angle — an inclined rail, a
+ * sled riding it, a back pad, a brace.
+ */
+export function barSection(
+  [ax, az]: [number, number],
+  [bx, bz]: [number, number],
+  half: number,
+  overhang = 0,
+): Section {
+  const dx = bx - ax;
+  const dz = bz - az;
+  const length = Math.hypot(dx, dz) || 1;
+  const ux = dx / length;
+  const uz = dz / length;
+  const nx = -uz * half;
+  const nz = ux * half;
+  const a: [number, number] = [ax - ux * overhang, az - uz * overhang];
+  const b: [number, number] = [bx + ux * overhang, bz + uz * overhang];
+  return [
+    [a[0] + nx, a[1] + nz],
+    [b[0] + nx, b[1] + nz],
+    [b[0] - nx, b[1] - nz],
+    [a[0] - nx, a[1] - nz],
+  ];
+}
+
+/** The unit direction from one section point to another. */
+export function directionOf([ax, az]: [number, number], [bx, bz]: [number, number]): [number, number] {
+  const dx = bx - ax;
+  const dz = bz - az;
+  const length = Math.hypot(dx, dz) || 1;
+  return [dx / length, dz / length];
+}

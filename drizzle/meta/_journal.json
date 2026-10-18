@@ -134,6 +134,13 @@
       "when": 1792283846417,
       "tag": "0018_seed-cable-station-equipment",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792283847417,
+      "tag": "0019_seed-leg-press-equipment",
+      "breakpoints": true
     }
   ]
 }

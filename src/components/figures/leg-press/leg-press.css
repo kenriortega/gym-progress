@@ -1,0 +1,46 @@
+.pr {
+  border-radius: 10px;
+  cursor: grab;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.pr:active {
+  cursor: grabbing;
+}
+
+.pr:focus-visible {
+  outline: 1px solid var(--anatomy-muted);
+  outline-offset: 6px;
+}
+
+.pr .iso-svg {
+  overflow: visible;
+}
+
+.pr-cable {
+  stroke-linecap: round;
+}
+
+.pr [data-plate] {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pr * {
+    transition: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .pr {
+    overflow: hidden;
+  }
+
+  .iso-plate .pr .iso-svg {
+    width: 114%;
+    margin: -3% -7% -2%;
+  }
+}

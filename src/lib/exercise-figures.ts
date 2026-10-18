@@ -11,6 +11,8 @@ const FIGURES: Record<string, () => Promise<ComponentType>> = {
     import("@/components/figures/lat-pulldown/figure").then((module) => module.LatPulldownFigure),
   "cable-station": () =>
     import("@/components/figures/cable-station/figure").then((module) => module.CableStationFigure),
+  "leg-press": () =>
+    import("@/components/figures/leg-press/figure").then((module) => module.LegPressFigure),
 };
 
 /**
@@ -32,6 +34,7 @@ const NAMES_TO_EQUIPMENT: Record<string, string> = {
   "extension-de-triceps-en-polea-con-barra-recta": "cable-station",
   "extension-de-triceps-en-polea-con-agarre-inverso": "cable-station",
   "extension-de-triceps-sobre-la-cabeza-con-cuerda": "cable-station",
+  "prensa-de-piernas": "leg-press",
 };
 
 const normaliseName = (name: string) =>
