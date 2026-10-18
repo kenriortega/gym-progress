@@ -15,7 +15,10 @@ const host = process.env.NEXT_PUBLIC_POSTHOG_HOST;
 
 if (token && host) {
   posthog.init(token, {
+    // `host` es la ruta del proxy inverso (/ingest), así que el SDK no puede
+    // deducir a qué dominio de PostHog enlazar: se lo decimos a mano.
     api_host: host,
+    ui_host: "https://us.posthog.com",
     defaults: "2026-05-30",
 
     // Lo que sigue son los valores que trae `defaults`, puestos a mano para

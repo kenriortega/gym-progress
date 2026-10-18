@@ -13,6 +13,30 @@ const nextConfig: NextConfig = {
     APP_BUILD_TIME: new Date().toISOString(),
     APP_COMMIT: process.env.VERCEL_GIT_COMMIT_SHA ?? "",
   },
+  // Proxy inverso de PostHog: la analítica sale por nuestro propio dominio,
+  // así los bloqueadores de rastreo no la cortan. El orden importa, las dos
+  // reglas concretas van antes del comodín. Si cambias de región, aquí van
+  // eu-assets.i.posthog.com y eu.i.posthog.com, y en
+  // src/instrumentation-client.ts el `ui_host`.
+  async rewrites() {
+    return [
+      {
+        source: "/ingest/static/:path*",
+        destination: "https://us-assets.i.posthog.com/static/:path*",
+      },
+      {
+        source: "/ingest/array/:path*",
+        destination: "https://us-assets.i.posthog.com/array/:path*",
+      },
+      {
+        source: "/ingest/:path*",
+        destination: "https://us.i.posthog.com/:path*",
+      },
+    ];
+  },
+  // PostHog captura en rutas con barra final (/ingest/e/) y por defecto Next
+  // las redirige a la versión sin barra, lo que rompería el envío.
+  skipTrailingSlashRedirect: true,
   experimental: {
     // Mantiene pendientes las navegaciones y server actions que fallan por red
     // y las reintenta al volver la conexión, en vez de lanzar un error.
