@@ -21,7 +21,8 @@ const SECTIONS: LegalSection[] = [
     paragraphs: [
       "De tu cuenta de Google, únicamente tu nombre, tu dirección de correo y la URL de tu foto de perfil. Es lo mínimo que permite identificarte al entrar. No pedimos acceso a tu correo, tu calendario, tus contactos ni tus archivos.",
       "De tu uso de la aplicación: los planes de entrenamiento que creas, los ejercicios que registras, y el peso, las repeticiones y la fecha de cada serie.",
-      "Usamos Vercel Web Analytics para saber cuántas personas entran y qué pantallas se usan. No instala cookies ni crea un identificador que te siga entre visitas: solo cuenta visitas de forma agregada y anónima.",
+      "Usamos PostHog para saber cuántas personas entran y qué pantallas se usan. Guarda en tu navegador un identificador propio: es lo que permite distinguir una visita nueva de alguien que ya había entrado antes. No es una cookie de publicidad y no se comparte con nadie.",
+      "Registra las pantallas que abres y los botones que pulsas, nunca el contenido de lo que escribes. Las direcciones se limpian antes de salir de tu navegador: de una dirección como /workout/<identificador> solo sale /workout/[id], así que no queda registrado a qué entrenamiento concreto entraste. Tampoco se graba tu pantalla.",
       "No usamos cookies de publicidad. No recogemos tu ubicación ni vendemos datos a nadie.",
     ],
   },
@@ -35,7 +36,7 @@ const SECTIONS: LegalSection[] = [
   {
     title: "Dónde se guardan",
     paragraphs: [
-      "En una base de datos PostgreSQL alojada en Neon, en servidores de Estados Unidos, y la aplicación se sirve desde Vercel. Ambos actúan como proveedores de infraestructura y están sujetos a sus propias políticas de privacidad.",
+      "En una base de datos PostgreSQL alojada en Neon, en servidores de Estados Unidos, y la aplicación se sirve desde Vercel. Los datos de uso que recoge la analítica se guardan en PostHog, también en Estados Unidos. Los tres actúan como proveedores de infraestructura y están sujetos a sus propias políticas de privacidad.",
       "La conexión con la base de datos va cifrada, y el acceso a la aplicación se sirve siempre por HTTPS.",
     ],
   },
