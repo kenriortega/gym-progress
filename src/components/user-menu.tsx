@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
+  BookOpenIcon,
   CalendarDaysIcon,
   CheckIcon,
   CircleHelpIcon,
@@ -65,6 +66,7 @@ const NAV_SECTIONS: NavItem[][] = [
   [
     { href: "/progress", label: "Progreso", Icon: TrendingUpIcon },
     { href: "/history", label: "Historial", Icon: ClockIcon },
+    { href: "/ejercicios", label: "Ejercicios", Icon: BookOpenIcon },
   ],
   [
     { href: "/novedades", label: "Novedades", Icon: SparklesIcon },
