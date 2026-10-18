@@ -26,6 +26,8 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Los ejercicios de máquina traen ahora un dibujo del aparato que puedes mover con el dedo. Tiras de la barra y ves subir los discos que marca el pin; tocas otro disco y cambia el peso. Están el jalón con barra, la columna de poleas, la prensa de piernas y la extensión de cuádriceps.",
       "Cada dibujo cuenta lo que no se ve a simple vista: por qué los rodillos te sujetan los muslos en el jalón, hasta dónde te deja bajar la prensa con los pestillos puestos, o por qué la extensión pesa casi el doble con la rodilla doblada que estirada.",
       "Nueva sección Ejercicios en el menú, con el catálogo entero por grupo muscular. Antes solo veías los que ya habías entrenado, así que no había forma de mirar una máquina antes de usarla por primera vez.",
+      "Cada ejercicio lleva ahora el dibujo de un cuerpo con el músculo que trabaja marcado en verde, en el catálogo y en su propia página. Son diez: pecho, espalda, piernas, glúteos, hombros, bíceps, tríceps, abdomen, cardio y el resto. Los de espalda, tríceps y glúteos se ven por detrás, que es donde está el músculo.",
+      "En la página de un ejercicio, «Mejor volumen» explica mejor qué mide: los kilos que moviste en una sesión, sumando peso por repeticiones de todas las series.",
       "La gráfica de evolución se lee mejor: ahora se nota el cambio de una sesión a la siguiente, y si todavía tienes menos de tres te dice directamente cuánto has subido desde la anterior.",
     ],
   },
