@@ -1,5 +1,6 @@
 import {
   CalculatorIcon,
+  CirclePlayIcon,
   ClipboardListIcon,
   FlagIcon,
   HistoryIcon,
@@ -19,6 +20,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+/** El Short con el recorrido de la app. Enlace, no incrustado: la página se
+ *  abre sin cargar el reproductor de YouTube ni sus cookies. */
+const VIDEO_URL = "https://www.youtube.com/shorts/8XOjCTnx7pQ";
+
 type Step = {
   Icon: LucideIcon;
   title: string;
@@ -101,6 +106,29 @@ export default async function HelpPage() {
           </CardDescription>
         </CardHeader>
       </Card>
+      <a
+        href={VIDEO_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 block rounded-xl transition hover:opacity-90"
+      >
+        <Card className="flex-row items-center gap-4 p-4">
+          <Badge
+            variant="secondary"
+            className="size-10 shrink-0 justify-center rounded-xl"
+          >
+            <CirclePlayIcon className="size-4" />
+          </Badge>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-foreground">Véla en un minuto</h3>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              Un vídeo corto con el recorrido completo: armar el plan, entrenar y
+              anotar las series. Se abre en YouTube.
+            </p>
+          </div>
+        </Card>
+      </a>
+
       <section className="mt-8">
         <h2 className="text-lg font-semibold text-foreground">
           Tu día, en cuatro pasos
