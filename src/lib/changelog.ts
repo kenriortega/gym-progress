@@ -19,6 +19,17 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "2026-10-18",
+    date: "18 de octubre de 2026",
+    title: "Mira cómo funciona el aparato",
+    items: [
+      "Los ejercicios de máquina traen ahora un dibujo del aparato que puedes mover con el dedo. Tiras de la barra y ves subir los discos que marca el pin; tocas otro disco y cambia el peso. Están el jalón con barra, la columna de poleas, la prensa de piernas y la extensión de cuádriceps.",
+      "Cada dibujo cuenta lo que no se ve a simple vista: por qué los rodillos te sujetan los muslos en el jalón, hasta dónde te deja bajar la prensa con los pestillos puestos, o por qué la extensión pesa casi el doble con la rodilla doblada que estirada.",
+      "Nueva sección Ejercicios en el menú, con el catálogo entero por grupo muscular. Antes solo veías los que ya habías entrenado, así que no había forma de mirar una máquina antes de usarla por primera vez.",
+      "La gráfica de evolución se lee mejor: ahora se nota el cambio de una sesión a la siguiente, y si todavía tienes menos de tres te dice directamente cuánto has subido desde la anterior.",
+    ],
+  },
+  {
     id: "2026-10-04",
     date: "4 de octubre de 2026",
     title: "Ves cuánto llevas de la sesión",
