@@ -38,6 +38,16 @@ if (token && host) {
     // desde su CDN en cada carga para nada.
     disable_surveys: true,
 
+    // Ruido para una app de un solo usuario: las métricas de rendimiento
+    // mandaban varios $web_vitals por pantalla (y se bajaban su script
+    // aparte), y los mapas de calor y los clics muertos no
+    // dicen nada cuando solo hay una persona usando la app.
+    // `capture_performance` además manda sobre lo que esté activado en los
+    // ajustes del proyecto.
+    capture_performance: false,
+    capture_heatmaps: false,
+    capture_dead_clicks: false,
+
     before_send: (event: CaptureResult): CaptureResult => {
       redactProperties(event.properties);
       if (event.$set) redactProperties(event.$set);
