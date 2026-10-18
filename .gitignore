@@ -45,3 +45,5 @@ public/sw*.js
 backups/
 artifacts
 *.swift
+.agents/
+.claude/
