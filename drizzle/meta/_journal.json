@@ -113,6 +113,20 @@
       "when": 1791051502057,
       "tag": "0015_seed-abdomen-exercises",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792283845416,
+      "tag": "0016_slim_ma_gnuci",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792283845417,
+      "tag": "0017_backfill-equipment-keys",
+      "breakpoints": true
     }
   ]
 }

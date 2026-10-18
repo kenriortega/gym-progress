@@ -85,6 +85,14 @@ export const exercises = pgTable(
     userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 100 }).notNull(),
     muscleGroup: varchar("muscle_group", { length: 60 }).notNull(),
+    /**
+     * Stable key for the apparatus this exercise uses, so renaming the exercise
+     * does not silently drop its interactive figure. Nullable: most exercises
+     * have no figure, and the ones a user creates never get one assigned.
+     * Values live in the figure registry (`src/lib/exercise-figures.ts`), not in
+     * the database, so adding a figure needs no migration.
+     */
+    equipmentKey: varchar("equipment_key", { length: 60 }),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     ...timestamps,
   },

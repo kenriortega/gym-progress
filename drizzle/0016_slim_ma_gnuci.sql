@@ -1,0 +1,1 @@
+ALTER TABLE "exercises" ADD COLUMN "equipment_key" varchar(60);
