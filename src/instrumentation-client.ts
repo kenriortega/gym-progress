@@ -48,6 +48,12 @@ if (token && host) {
     capture_heatmaps: false,
     capture_dead_clicks: false,
 
+    // Errores no controlados y promesas rechazadas. Se activa aquí y no en
+    // los ajustes del proyecto, para que no cambie sin pasar por el repo.
+    // `capture_console_errors` se queda en false, su valor por defecto: las
+    // pantallas de error ya hacen console.error y llegaría todo dos veces.
+    capture_exceptions: true,
+
     before_send: (event: CaptureResult): CaptureResult => {
       redactProperties(event.properties);
       if (event.$set) redactProperties(event.$set);

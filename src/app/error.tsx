@@ -1,6 +1,7 @@
 "use client";
 
 import { RefreshCwIcon, TriangleAlertIcon } from "lucide-react";
+import posthog from "posthog-js";
 import { useEffect } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -16,6 +17,7 @@ export default function Error({
 }) {
   useEffect(() => {
     console.error(error);
+    posthog.captureException(error);
   }, [error]);
 
   return (
