@@ -9,6 +9,8 @@ import type { ComponentType } from "react";
 const FIGURES: Record<string, () => Promise<ComponentType>> = {
   "lat-pulldown": () =>
     import("@/components/figures/lat-pulldown/figure").then((module) => module.LatPulldownFigure),
+  "cable-station": () =>
+    import("@/components/figures/cable-station/figure").then((module) => module.CableStationFigure),
 };
 
 /**
@@ -26,6 +28,10 @@ const FIGURES: Record<string, () => Promise<ComponentType>> = {
  */
 const NAMES_TO_EQUIPMENT: Record<string, string> = {
   "jalon-con-barra": "lat-pulldown",
+  "crunch-en-polea-alta": "cable-station",
+  "extension-de-triceps-en-polea-con-barra-recta": "cable-station",
+  "extension-de-triceps-en-polea-con-agarre-inverso": "cable-station",
+  "extension-de-triceps-sobre-la-cabeza-con-cuerda": "cable-station",
 };
 
 const normaliseName = (name: string) =>

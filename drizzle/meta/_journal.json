@@ -127,6 +127,13 @@
       "when": 1792283845417,
       "tag": "0017_backfill-equipment-keys",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792283846417,
+      "tag": "0018_seed-cable-station-equipment",
+      "breakpoints": true
     }
   ]
 }
