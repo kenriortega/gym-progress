@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { exercises } from "@/db/schema";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
+import { MuscleIcon } from "@/components/muscle-icon";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { hasFigure } from "@/lib/exercise-figures";
 
@@ -68,8 +69,11 @@ export default async function ExerciseGlossaryPage() {
 
           {sorted.map(([group, items]) => (
             <section key={group} className="mt-8">
-              <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-lg font-semibold text-foreground">{group}</h2>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                  <MuscleIcon group={group} className="h-7 w-auto" />
+                  {group}
+                </h2>
                 <span className="shrink-0 text-xs text-muted-foreground">
                   {items.length} {items.length === 1 ? "ejercicio" : "ejercicios"}
                 </span>
@@ -78,6 +82,10 @@ export default async function ExerciseGlossaryPage() {
                 {items.map((item) => (
                   <Link key={item.id} href={`/exercises/${item.id}`} className="block min-w-0">
                     <Card className="flex-row items-center gap-3 p-4 transition hover:border-foreground/25">
+                      <MuscleIcon
+                        group={item.muscleGroup}
+                        className="h-10 w-auto shrink-0 text-muted-foreground"
+                      />
                       <div className="min-w-0 flex-1">
                         <h3 className="truncate font-semibold text-foreground">{item.name}</h3>
                         <p className="mt-1 truncate text-sm text-muted-foreground">

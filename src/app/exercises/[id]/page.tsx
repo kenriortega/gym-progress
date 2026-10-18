@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { exercises, workoutExercises, workouts, workoutSets } from "@/db/schema";
 import { AppHeader } from "@/components/app-header";
 import { ExerciseFigure } from "@/components/exercise-figure";
+import { MuscleIcon } from "@/components/muscle-icon";
 import { Badge } from "@/components/ui/badge";
 import { hasFigure } from "@/lib/exercise-figures";
 import {
@@ -107,7 +108,12 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-12 pt-6">
-      <AppHeader backHref="/progress" eyebrow={exercise.muscleGroup} title={exercise.name} />
+      <AppHeader
+        backHref="/progress"
+        eyebrow={exercise.muscleGroup}
+        title={exercise.name}
+        icon={<MuscleIcon group={exercise.muscleGroup} className="h-12 w-auto text-foreground" />}
+      />
 
       {hasFigure(exercise.equipmentKey, exercise.name) ? (
         <Card className="mt-6 p-5">

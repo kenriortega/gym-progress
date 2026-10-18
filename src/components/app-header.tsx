@@ -12,9 +12,12 @@ type AppHeaderProps = {
   backHref?: string;
   /** Contenido opcional a la izquierda del menú (contadores, insignias…). */
   action?: React.ReactNode;
+  /** Pieza opcional entre la flecha de volver y el título, para el icono del
+   * grupo muscular. */
+  icon?: React.ReactNode;
 };
 
-export async function AppHeader({ eyebrow, title, backHref, action }: AppHeaderProps) {
+export async function AppHeader({ eyebrow, title, backHref, action, icon }: AppHeaderProps) {
   const session = await auth();
   const user = session?.user;
   const displayName = user?.name ?? user?.email ?? "Atleta";
@@ -30,6 +33,8 @@ export async function AppHeader({ eyebrow, title, backHref, action }: AppHeaderP
           ←
         </Link>
       ) : null}
+
+      {icon ? <div className="shrink-0">{icon}</div> : null}
 
       <div className="min-w-0 flex-1">
         {eyebrow ? (
