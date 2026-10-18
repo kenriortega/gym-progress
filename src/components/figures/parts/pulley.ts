@@ -27,20 +27,34 @@ export interface SheaveSpec {
 }
 
 export function sheaveOf(spec: SheaveSpec, P: Projection) {
-  const [cx, , cz] = spec.centre;
+  // The centre's y matters: a cam machine hangs its idler out to one side, and
+  // a sheave built around y = 0 would float away from its own cable.
+  const [cx, cy, cz] = spec.centre;
   const flange = (from: number, to: number) =>
-    prismAlong("y", circleSection(cx, cz, spec.radius, 44), from, to, P);
+    prismAlong("y", circleSection(cx, cz, spec.radius, 44), cy + from, cy + to, P);
   return {
     cheeks: [-spec.cheekHalf - 2.4, spec.cheekHalf].map((y) =>
-      slabOf({ x: cx - 3.6, y, w: 7.2, d: 2.4, r: 3 }, spec.mountZ, spec.mountHeight, P, 6, 0.4),
+      slabOf({ x: cx - 3.6, y: cy + y, w: 7.2, d: 2.4, r: 3 }, spec.mountZ, spec.mountHeight, P, 6, 0.4),
     ),
     far: flange(-spec.half, -spec.half + 1.2),
-    core: prismAlong("y", circleSection(cx, cz, spec.radius - 1.7, 44), -spec.half + 1.2, spec.half - 1.2, P),
+    core: prismAlong(
+      "y",
+      circleSection(cx, cz, spec.radius - 1.7, 44),
+      cy - spec.half + 1.2,
+      cy + spec.half - 1.2,
+      P,
+    ),
     near: flange(spec.half - 1.2, spec.half),
-    groove: sectionArc("y", circleSection(cx, cz, spec.radius - 1.7, 44), spec.half - 1.2, P),
-    hub: prismAlong("y", circleSection(cx, cz, spec.hubRadius, 20), -spec.half - 0.8, spec.half + 0.8, P),
+    groove: sectionArc("y", circleSection(cx, cz, spec.radius - 1.7, 44), cy + spec.half - 1.2, P),
+    hub: prismAlong(
+      "y",
+      circleSection(cx, cz, spec.hubRadius, 20),
+      cy - spec.half - 0.8,
+      cy + spec.half + 0.8,
+      P,
+    ),
     bolts: pointsAt(
-      [-spec.cheekHalf - 1.2, spec.cheekHalf + 1.2].map((y) => [cx, y, cz] as Point3),
+      [-spec.cheekHalf - 1.2, spec.cheekHalf + 1.2].map((y) => [cx, cy + y, cz] as Point3),
       P,
     ) as Flat[],
   };
