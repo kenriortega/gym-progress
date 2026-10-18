@@ -15,7 +15,7 @@ import {
   type Point3,
   type SolidPaths,
 } from "@/components/iso/iso-kit";
-import { circleSection, prismAlong, runOf, sectionArc } from "./prism";
+import { circleSection, prismAlong, runOf, sectionArc } from "../prism";
 import {
   BAR_HALF,
   BAR_R,
