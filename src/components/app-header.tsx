@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { auth, signOut } from "@/auth";
+import { AnalyticsIdentity } from "@/components/analytics-identity";
 import { UserMenu } from "@/components/user-menu";
 import { getAppVersion } from "@/lib/version";
 
@@ -24,6 +25,8 @@ export async function AppHeader({ eyebrow, title, backHref, action, icon }: AppH
 
   return (
     <header className="flex items-center gap-3">
+      {user?.id ? <AnalyticsIdentity userId={user.id} /> : null}
+
       {backHref ? (
         <Link
           href={backHref}

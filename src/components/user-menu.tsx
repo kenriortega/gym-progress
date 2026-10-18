@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
+import posthog from "posthog-js";
 import {
   BookOpenIcon,
   CalendarDaysIcon,
@@ -223,7 +224,14 @@ export function UserMenu({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void signOutAction()}>
+            <AlertDialogAction
+              onClick={() => {
+                // Si no se limpia la identidad, quien use este navegador
+                // después hereda la cuenta anterior en la analítica.
+                posthog.reset();
+                void signOutAction();
+              }}
+            >
               Cerrar sesión
             </AlertDialogAction>
           </AlertDialogFooter>
