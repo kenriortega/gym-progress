@@ -6,7 +6,9 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { exercises, workoutExercises, workouts, workoutSets } from "@/db/schema";
 import { AppHeader } from "@/components/app-header";
+import { ExerciseFigure } from "@/components/exercise-figure";
 import { Badge } from "@/components/ui/badge";
+import { hasFigure } from "@/lib/exercise-figures";
 import {
   Card,
   CardDescription,
@@ -20,7 +22,12 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
 
   const { id } = await params;
   const [exercise] = await db
-    .select({ id: exercises.id, name: exercises.name, muscleGroup: exercises.muscleGroup })
+    .select({
+      id: exercises.id,
+      name: exercises.name,
+      muscleGroup: exercises.muscleGroup,
+      equipmentKey: exercises.equipmentKey,
+    })
     .from(exercises)
     .where(and(eq(exercises.id, id), or(isNull(exercises.userId), eq(exercises.userId, session.user.id))))
     .limit(1);
@@ -62,6 +69,18 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
   return (
     <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-12 pt-6">
       <AppHeader backHref="/progress" eyebrow={exercise.muscleGroup} title={exercise.name} />
+
+      {hasFigure(exercise.equipmentKey, exercise.name) ? (
+        <Card className="mt-6 p-5">
+          <CardHeader className="p-0">
+            <CardDescription>El aparato</CardDescription>
+            <CardTitle className="mt-1 text-lg">Cómo funciona</CardTitle>
+          </CardHeader>
+          <div className="mt-4">
+            <ExerciseFigure equipmentKey={exercise.equipmentKey} name={exercise.name} />
+          </div>
+        </Card>
+      ) : null}
 
       {bestSet ? (
         <>

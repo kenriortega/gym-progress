@@ -1,0 +1,46 @@
+.lp {
+  border-radius: 10px;
+  cursor: grab;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.lp:active {
+  cursor: grabbing;
+}
+
+.lp:focus-visible {
+  outline: 1px solid var(--anatomy-muted);
+  outline-offset: 6px;
+}
+
+.lp .iso-svg {
+  overflow: visible;
+}
+
+.lp-cable {
+  stroke-linecap: round;
+}
+
+.lp [data-plate] {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp * {
+    transition: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .lp {
+    overflow: hidden;
+  }
+
+  .iso-plate .lp .iso-svg {
+    width: 114%;
+    margin: -3% -7% -2%;
+  }
+}
