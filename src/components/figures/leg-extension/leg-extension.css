@@ -1,0 +1,46 @@
+.le {
+  border-radius: 10px;
+  cursor: grab;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.le:active {
+  cursor: grabbing;
+}
+
+.le:focus-visible {
+  outline: 1px solid var(--anatomy-muted);
+  outline-offset: 6px;
+}
+
+.le .iso-svg {
+  overflow: visible;
+}
+
+.le-cable {
+  stroke-linecap: round;
+}
+
+.le [data-plate] {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .le * {
+    transition: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .le {
+    overflow: hidden;
+  }
+
+  .iso-plate .le .iso-svg {
+    width: 114%;
+    margin: -3% -7% -2%;
+  }
+}

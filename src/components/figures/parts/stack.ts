@@ -26,6 +26,11 @@ import { circleSection, prismAlong, sectionArc } from "../prism";
 export interface StackSpec {
   /** Centre of the stack on the floor plan. */
   x: number;
+  /**
+   * Centre across the machine. Most towers sit on the middle line, but a cam
+   * machine puts its stack out to one side, in line with the cam.
+   */
+  y?: number;
   plate: Plan;
   plateHeight: number;
   pitch: number;
@@ -51,6 +56,8 @@ export const eyeTopOf = (spec: StackSpec) => yokeTopOf(spec) + 3;
 
 const join = (paths: string[]) => paths.filter(Boolean).join("");
 
+const midY = (spec: StackSpec) => spec.y ?? 0;
+
 export interface PlateArt {
   solid: SolidPaths;
   seam: string;
@@ -67,12 +74,12 @@ export function platesOf(spec: StackSpec, P: Projection): PlateArt[] {
       seam: sideSeam(spec.plate, z + spec.plateHeight / 2, P, 6),
       edge: sideSeam(insetPlan(spec.plate, 2.4), z + spec.plateHeight - 0.9, P, 6),
       holes: join([
-        ring(spec.x, -spec.rodY, spec.rodR + 0.9, z + spec.plateHeight, P, 18),
-        ring(spec.x, spec.rodY, spec.rodR + 0.9, z + spec.plateHeight, P, 18),
-        ring(spec.x, 0, spec.selectorR + 1, z + spec.plateHeight, P, 20),
+        ring(spec.x, midY(spec) - spec.rodY, spec.rodR + 0.9, z + spec.plateHeight, P, 18),
+        ring(spec.x, midY(spec) + spec.rodY, spec.rodR + 0.9, z + spec.plateHeight, P, 18),
+        ring(spec.x, midY(spec), spec.selectorR + 1, z + spec.plateHeight, P, 20),
       ]),
       pinHole: sideRing(
-        [spec.plate.x + spec.plate.w, 0, z + spec.plateHeight / 2],
+        [spec.plate.x + spec.plate.w, midY(spec), z + spec.plateHeight / 2],
         1.9,
         "x",
         P,
@@ -89,20 +96,20 @@ export function yokeOf(spec: StackSpec, P: Projection) {
     solid: slabOf(spec.yoke, spec.yokeZ, spec.yokeHeight, P, 6, 0.8),
     seam: sideSeam(spec.yoke, spec.yokeZ + spec.yokeHeight / 2, P, 6),
     holes: join([
-      ring(spec.x, -spec.rodY, spec.rodR + 0.9, top, P, 18),
-      ring(spec.x, spec.rodY, spec.rodR + 0.9, top, P, 18),
+      ring(spec.x, midY(spec) - spec.rodY, spec.rodR + 0.9, top, P, 18),
+      ring(spec.x, midY(spec) + spec.rodY, spec.rodR + 0.9, top, P, 18),
     ]),
     screws: pointsAt(
       corners(spec.yoke, 6).map(([x, y]) => [x, y, top] as Point3),
       P,
     ),
-    eye: cylinder(spec.x, 0, 2.8, top, 3, P, 16),
-    eyeRing: ring(spec.x, 0, 1.2, top + 3, P, 14),
+    eye: cylinder(spec.x, midY(spec), 2.8, top, 3, P, 16),
+    eyeRing: ring(spec.x, midY(spec), 1.2, top + 3, P, 14),
   };
 }
 
 export const guideRodsOf = (spec: StackSpec, P: Projection) =>
-  [-spec.rodY, spec.rodY].map((y) =>
+  [midY(spec) - spec.rodY, midY(spec) + spec.rodY].map((y) =>
     cylinder(spec.x, y, spec.rodR, spec.blockTop, spec.rodTop - spec.blockTop, P, 20),
   );
 
@@ -113,7 +120,7 @@ export const guideRodsOf = (spec: StackSpec, P: Projection) =>
 export const selectorRodsOf = (spec: StackSpec, P: Projection): SolidPaths[] =>
   Array.from({ length: spec.count }, (_, pin) => {
     const bottom = pin === 0 ? spec.blockTop : plateZOf(spec, pin - 1) + spec.plateHeight;
-    return cylinder(spec.x, 0, spec.selectorR, bottom, spec.yokeZ - bottom, P, 20);
+    return cylinder(spec.x, midY(spec), spec.selectorR, bottom, spec.yokeZ - bottom, P, 20);
   });
 
 /** The pin, one per position: a shaft through the plate and its knurled knob. */
@@ -122,9 +129,9 @@ export const pinsOf = (spec: StackSpec, P: Projection) =>
     const z = plateZOf(spec, pin) + spec.plateHeight / 2;
     const face = spec.plate.x + spec.plate.w;
     return {
-      shaft: prismAlong("x", circleSection(0, z, 1.7, 20), face - 7, face + 8, P),
-      knob: prismAlong("x", circleSection(0, z, 3.4, 24), face + 8, face + 12.5, P),
-      collar: sectionArc("x", circleSection(0, z, 3.4, 24), face + 10.2, P),
+      shaft: prismAlong("x", circleSection(midY(spec), z, 1.7, 20), face - 7, face + 8, P),
+      knob: prismAlong("x", circleSection(midY(spec), z, 3.4, 24), face + 8, face + 12.5, P),
+      collar: sectionArc("x", circleSection(midY(spec), z, 3.4, 24), face + 10.2, P),
     };
   });
 

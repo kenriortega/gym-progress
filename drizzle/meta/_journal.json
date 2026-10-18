@@ -141,6 +141,13 @@
       "when": 1792283847417,
       "tag": "0019_seed-leg-press-equipment",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792283848417,
+      "tag": "0020_seed-leg-extension-equipment",
+      "breakpoints": true
     }
   ]
 }
