@@ -138,7 +138,7 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
             <Card className="gap-1 p-4">
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Mejor volumen</p>
               <p className="text-3xl font-bold tabular-nums text-foreground">{Math.round(bestVolume)}</p>
-              <p className="text-sm text-muted-foreground">kg por sesión</p>
+              <p className="text-sm text-muted-foreground">kg movidos en una sesión</p>
             </Card>
           </section>
 
