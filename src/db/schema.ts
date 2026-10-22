@@ -344,6 +344,42 @@ export const exerciseMuscles = pgTable(
   ],
 );
 
+/**
+ * Mover una sesión a otro día sin tocar la rutina semanal.
+ *
+ * Es una excepción con fecha, no un cambio al plan: `training_plans.weekday`
+ * sigue siendo la verdad de tu semana, y esto es una nota al margen para una
+ * semana concreta. Por eso no es una columna en `training_plans`, donde valdría
+ * para todas.
+ *
+ * Caduca sola: nadie borra estas filas, simplemente dejan de consultarse cuando
+ * su `to_date` queda atrás.
+ */
+export const planReschedules = pgTable(
+  "plan_reschedules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    planId: uuid("plan_id")
+      .notNull()
+      .references(() => trainingPlans.id, { onDelete: "cascade" }),
+    /** El día que el plan tocaba y del que se va. */
+    fromDate: date("from_date").notNull(),
+    /** El día al que se mueve. */
+    toDate: date("to_date").notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    // Un plan solo se mueve una vez desde un día dado: moverlo otra vez
+    // sustituye al anterior en vez de acumular.
+    uniqueIndex("plan_reschedules_plan_from_unique").on(table.planId, table.fromDate),
+    index("plan_reschedules_user_to_idx").on(table.userId, table.toDate),
+    check("plan_reschedules_forward", sql`${table.toDate} <> ${table.fromDate}`),
+  ],
+);
+
 export type User = typeof users.$inferSelect;
 export type Account = typeof accounts.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
@@ -355,3 +391,4 @@ export type WorkoutExercise = typeof workoutExercises.$inferSelect;
 export type WorkoutSet = typeof workoutSets.$inferSelect;
 export type BodyWeight = typeof bodyWeights.$inferSelect;
 export type ExerciseMuscle = typeof exerciseMuscles.$inferSelect;
+export type PlanReschedule = typeof planReschedules.$inferSelect;

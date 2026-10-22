@@ -169,6 +169,13 @@
       "when": 1792697616336,
       "tag": "0023_seed-exercise-muscles",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792702075671,
+      "tag": "0024_high_namorita",
+      "breakpoints": true
     }
   ]
 }

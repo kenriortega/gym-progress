@@ -1,12 +1,30 @@
-import { and, asc, count, desc, eq, isNotNull, isNull } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  isNotNull,
+  isNull,
+  sql,
+} from "drizzle-orm";
 import Link from "next/link";
-import { ArchiveIcon, ArchiveRestoreIcon, ChevronRightIcon } from "lucide-react";
+import {
+  ArchiveIcon,
+  ArchiveRestoreIcon,
+  ChevronRightIcon,
+} from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { createPlan, unarchivePlan } from "@/app/actions/plans";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { trainingPlanExercises, trainingPlans } from "@/db/schema";
+import {
+  planReschedules,
+  trainingPlanExercises,
+  trainingPlans,
+} from "@/db/schema";
 import { FormSelect } from "@/components/form-select";
 import { PendingButton } from "@/components/pending-button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +41,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { AppHeader } from "@/components/app-header";
+import { PlanReschedule } from "@/components/plan-reschedule";
 import { PlanTemplates } from "@/components/plan-templates";
 
 const weekdays = [
@@ -41,6 +60,23 @@ export default async function PlansPage() {
   if (!session?.user?.id) {
     redirect("/login");
   }
+
+  // Solo los movimientos que quedan por delante: los pasados caducan solos,
+  // sin borrar nada, porque nadie vuelve a preguntar por ellos.
+  const reschedules = await db
+    .select({
+      planId: planReschedules.planId,
+      fromDate: planReschedules.fromDate,
+      toDate: planReschedules.toDate,
+    })
+    .from(planReschedules)
+    .where(
+      and(
+        eq(planReschedules.userId, session.user.id),
+        gte(planReschedules.toDate, sql`current_date`),
+      ),
+    );
+  const movimientos = new Map(reschedules.map((item) => [item.planId, item]));
 
   const plans = await db
     .select({
@@ -94,13 +130,20 @@ export default async function PlansPage() {
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-12 pt-6">
-      <AppHeader backHref="/" eyebrow="Organización" title="Planes de entrenamiento" />
+      <AppHeader
+        backHref="/"
+        eyebrow="Organización"
+        title="Planes de entrenamiento"
+      />
 
       <Card className="mt-8 bg-primary p-5 text-primary-foreground">
         <CardHeader className="p-0">
-          <CardTitle className="text-xl">Crear un día de entrenamiento</CardTitle>
+          <CardTitle className="text-xl">
+            Crear un día de entrenamiento
+          </CardTitle>
           <CardDescription className="text-primary-foreground/75">
-            Ponle un nombre, asigna un día y después añade los ejercicios en orden.
+            Ponle un nombre, asigna un día y después añade los ejercicios en
+            orden.
           </CardDescription>
         </CardHeader>
         <form action={createPlan} className="mt-5 space-y-3">
@@ -120,7 +163,10 @@ export default async function PlansPage() {
             <FormSelect
               name="weekday"
               placeholder="Sin día fijo"
-              options={weekdays.map((day, index) => ({ value: String(index), label: day }))}
+              options={weekdays.map((day, index) => ({
+                value: String(index),
+                label: day,
+              }))}
               className="mt-2 h-12 w-full rounded-xl border-primary-foreground/20 bg-primary-foreground/10 px-4 text-base font-bold text-primary-foreground"
               aria-label="Día de la semana"
             />
@@ -148,36 +194,57 @@ export default async function PlansPage() {
         {plans.length > 0 ? (
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             {plans.map((plan) => (
-              <Link key={plan.id} href={`/plans/${plan.id}`} className="block min-w-0">
-                <Card className="flex-row items-center gap-4 p-4 transition hover:border-foreground/25">
-                  <Badge variant="secondary" className="size-11 shrink-0 justify-center rounded-xl text-base font-bold">
-                    {plan.exerciseCount}
-                  </Badge>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="truncate font-semibold text-foreground">{plan.name}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {plan.weekday === null ? "Sin día fijo" : weekdays[plan.weekday]}
-                    {plan.exerciseCount === 1
-                      ? " · 1 ejercicio"
-                      : ` · ${plan.exerciseCount} ejercicios`}
-                  </p>
-                </div>
-                  <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
-                </Card>
-              </Link>
+              <div key={plan.id} className="min-w-0">
+                <Link href={`/plans/${plan.id}`} className="block min-w-0">
+                  <Card className="flex-row items-center gap-4 p-4 transition hover:border-foreground/25">
+                    <Badge
+                      variant="secondary"
+                      className="size-11 shrink-0 justify-center rounded-xl text-base font-bold"
+                    >
+                      {plan.exerciseCount}
+                    </Badge>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate font-semibold text-foreground">
+                        {plan.name}
+                      </h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {plan.weekday === null
+                          ? "Sin día fijo"
+                          : weekdays[plan.weekday]}
+                        {plan.exerciseCount === 1
+                          ? " · 1 ejercicio"
+                          : ` · ${plan.exerciseCount} ejercicios`}
+                      </p>
+                    </div>
+                    <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
+                  </Card>
+                </Link>
+                {plan.weekday !== null ? (
+                  <PlanReschedule
+                    planId={plan.id}
+                    weekday={plan.weekday}
+                    movedTo={movimientos.get(plan.id) ?? null}
+                  />
+                ) : null}
+              </div>
             ))}
           </div>
         ) : (
           <Card className="mt-4 border-dashed p-6 text-center">
             <CardDescription>
-              Crea tu primer plan para que la app prepare automáticamente los ejercicios del día.
+              Crea tu primer plan para que la app prepare automáticamente los
+              ejercicios del día.
             </CardDescription>
           </Card>
         )}
       </section>
 
       <PlanTemplates
-        titulo={plans.length === 0 ? "Empieza con un plan hecho" : "Más planes listos para copiar"}
+        titulo={
+          plans.length === 0
+            ? "Empieza con un plan hecho"
+            : "Más planes listos para copiar"
+        }
       />
 
       {archivados.length > 0 && (
@@ -205,7 +272,9 @@ export default async function PlansPage() {
                             : weekdays[plan.weekday]}
                           {" · "}
                           {plan.exerciseCount}{" "}
-                          {plan.exerciseCount === 1 ? "ejercicio" : "ejercicios"}
+                          {plan.exerciseCount === 1
+                            ? "ejercicio"
+                            : "ejercicios"}
                         </p>
                         {plan.archivedAt && (
                           <p className="mt-1 text-xs text-muted-foreground">

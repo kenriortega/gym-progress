@@ -9,9 +9,12 @@ import { findTemplate } from "@/lib/plan-templates";
 import { db } from "@/db";
 import {
   exercises,
+  planReschedules,
   trainingPlanExercises,
   trainingPlans,
 } from "@/db/schema";
+import { localDate } from "@/lib/dates";
+import { nextOccurrence } from "@/lib/schedule";
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -585,4 +588,82 @@ export async function createPlanFromTemplate(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/plans");
   redirect(`/plans/${planId}`);
+}
+
+/**
+ * Mueve la próxima sesión de un plan a otro día, sin tocar su día de la semana.
+ * El origen no se pide: es la próxima vez que toca, porque mover "el martes"
+ * significa mover el martes que viene y no todos los martes.
+ */
+export async function reschedulePlan(formData: FormData) {
+  const userId = await requireUserId();
+  const planId = requiredUuid(formData, "planId");
+  const toDate = String(formData.get("toDate") ?? "").trim();
+  const today = String(formData.get("today") ?? "").trim();
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(toDate) || !/^\d{4}-\d{2}-\d{2}$/.test(today)) {
+    throw new Error("La fecha no es válida.");
+  }
+
+  const [plan] = await db
+    .select({ id: trainingPlans.id, weekday: trainingPlans.weekday })
+    .from(trainingPlans)
+    .where(
+      and(
+        eq(trainingPlans.id, planId),
+        eq(trainingPlans.userId, userId),
+        isNull(trainingPlans.archivedAt),
+      ),
+    )
+    .limit(1);
+
+  if (!plan) {
+    throw new Error("No tienes acceso a este plan.");
+  }
+
+  const fromDate = nextOccurrence(plan.weekday, localDate(today));
+
+  if (fromDate === null) {
+    throw new Error("Un plan sin día fijo no se mueve: ya puedes empezarlo cualquier día.");
+  }
+
+  if (fromDate === toDate) {
+    throw new Error("Ese es el día que ya le toca.");
+  }
+
+  // Mover otra vez el mismo día sustituye al movimiento anterior.
+  await db
+    .insert(planReschedules)
+    .values({ userId, planId, fromDate, toDate })
+    .onConflictDoUpdate({
+      target: [planReschedules.planId, planReschedules.fromDate],
+      set: { toDate, updatedAt: new Date() },
+    });
+
+  revalidatePath("/plans");
+  revalidatePath("/");
+}
+
+/** Devuelve la sesión a su día. */
+export async function cancelReschedule(formData: FormData) {
+  const userId = await requireUserId();
+  const planId = requiredUuid(formData, "planId");
+  const fromDate = String(formData.get("fromDate") ?? "").trim();
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fromDate)) {
+    throw new Error("La fecha no es válida.");
+  }
+
+  await db
+    .delete(planReschedules)
+    .where(
+      and(
+        eq(planReschedules.userId, userId),
+        eq(planReschedules.planId, planId),
+        eq(planReschedules.fromDate, fromDate),
+      ),
+    );
+
+  revalidatePath("/plans");
+  revalidatePath("/");
 }

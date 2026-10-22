@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, isNull, sql } from "drizzle-orm";
 import Link from "next/link";
 import { ChevronRightIcon } from "lucide-react";
 import { redirect } from "next/navigation";
@@ -7,7 +7,8 @@ import { startWorkout } from "@/app/actions/workouts";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { AppHeader } from "@/components/app-header";
-import { dayOf } from "@/lib/dates";
+import { dayOf, localDate } from "@/lib/dates";
+import { plansOn } from "@/lib/schedule";
 import { greetingName } from "@/lib/display-name";
 import { PendingButton } from "@/components/pending-button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ import {
   workouts,
   workoutSets,
   users,
+  planReschedules,
 } from "@/db/schema";
 
 const weekdays = [
@@ -94,7 +96,27 @@ export default async function Home() {
     .groupBy(trainingPlans.id)
     .orderBy(asc(trainingPlans.weekday), asc(trainingPlans.name));
 
-  const todayPlan = plans.find((plan) => plan.weekday === new Date().getDay());
+  const reschedules = await db
+    .select({
+      planId: planReschedules.planId,
+      fromDate: planReschedules.fromDate,
+      toDate: planReschedules.toDate,
+    })
+    .from(planReschedules)
+    .where(
+      and(
+        eq(planReschedules.userId, session.user.id),
+        gte(planReschedules.toDate, sql`current_date`),
+      ),
+    );
+
+  // "Qué toca hoy" ya no sale solo del día de la semana: un plan movido fuera
+  // de hoy no cuenta, y uno movido a hoy sí aunque no le tocara.
+  const today = dayOf(new Date());
+  const todaysPlans = plansOn(plans, reschedules, today);
+  const todayPlan = todaysPlans[0]?.plan ?? null;
+  const todayMovedFrom = todaysPlans[0]?.movedFrom ?? null;
+  const alsoToday = todaysPlans.slice(1);
 
   // Una sesión abierta de otro día es casi siempre un olvido, no algo que
   // quieras continuar. Hasta ahora secuestraba Inicio: el botón decía
@@ -224,7 +246,11 @@ export default async function Home() {
             : activeWorkout
               ? "Tus series están guardadas. Continúa desde el siguiente ejercicio."
               : todayPlan
-                ? `${todayPlan.exerciseCount} ${todayPlan.exerciseCount === 1 ? "ejercicio preparado" : "ejercicios preparados"} para registrar tu progreso.`
+                ? `${todayPlan.exerciseCount} ${todayPlan.exerciseCount === 1 ? "ejercicio preparado" : "ejercicios preparados"} para registrar tu progreso.${
+                    todayMovedFrom
+                      ? ` Lo moviste desde el ${weekdays[localDate(todayMovedFrom).getDay()].toLowerCase()}.`
+                      : ""
+                  }${alsoToday.length > 0 ? ` Hoy tienes también ${alsoToday.map((item) => item.plan.name).join(" y ")}.` : ""}`
                 : plans.length > 0
                   ? "Puedes comenzar cualquiera de tus planes desde la lista de abajo."
                   : "Crea un plan por día con tus ejercicios, series y repeticiones objetivo."}
