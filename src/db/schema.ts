@@ -18,6 +18,7 @@ import {
 import type { AdapterAccountType } from "next-auth/adapters";
 
 export const weightUnit = pgEnum("weight_unit", ["kg", "lb"]);
+export const muscleRole = pgEnum("muscle_role", ["primary", "secondary"]);
 export const workoutStatus = pgEnum("workout_status", [
   "active",
   "completed",
@@ -318,6 +319,31 @@ export const bodyWeights = pgTable(
   ],
 );
 
+/**
+ * Qué músculos trabaja cada ejercicio, para teñir el mapa corporal. Tabla
+ * aparte y no dos columnas de array en `exercises` porque enriquecer esto es
+ * añadir filas, no reescribir listas, y sumar volumen por músculo es un join
+ * en vez de un unnest.
+ *
+ * `muscle` es una de las regiones de `src/lib/muscles.ts`. No es un enum de
+ * Postgres: la lista va a crecer durante semanas y no quiero una migración
+ * cada vez que añadamos una región.
+ */
+export const exerciseMuscles = pgTable(
+  "exercise_muscles",
+  {
+    exerciseId: uuid("exercise_id")
+      .notNull()
+      .references(() => exercises.id, { onDelete: "cascade" }),
+    muscle: varchar("muscle", { length: 40 }).notNull(),
+    role: muscleRole("role").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.exerciseId, table.muscle] }),
+    index("exercise_muscles_muscle_idx").on(table.muscle),
+  ],
+);
+
 export type User = typeof users.$inferSelect;
 export type Account = typeof accounts.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
@@ -328,3 +354,4 @@ export type Workout = typeof workouts.$inferSelect;
 export type WorkoutExercise = typeof workoutExercises.$inferSelect;
 export type WorkoutSet = typeof workoutSets.$inferSelect;
 export type BodyWeight = typeof bodyWeights.$inferSelect;
+export type ExerciseMuscle = typeof exerciseMuscles.$inferSelect;

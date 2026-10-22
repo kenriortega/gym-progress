@@ -4,12 +4,14 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { exercises, workoutExercises, workouts, workoutSets } from "@/db/schema";
+import { exerciseMuscles, exercises, workoutExercises, workouts, workoutSets } from "@/db/schema";
 import { AppHeader } from "@/components/app-header";
+import { BodyMap } from "@/components/body-map";
 import { ExerciseFigure } from "@/components/exercise-figure";
 import { MuscleIcon } from "@/components/muscle-icon";
 import { Badge } from "@/components/ui/badge";
 import { hasFigure } from "@/lib/exercise-figures";
+import { MUSCLE_LABELS, isMuscleRegion, weightOf, type MuscleRegion } from "@/lib/muscles";
 import {
   Card,
   CardDescription,
@@ -33,6 +35,16 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
     .where(and(eq(exercises.id, id), or(isNull(exercises.userId), eq(exercises.userId, session.user.id))))
     .limit(1);
   if (!exercise) notFound();
+
+  const muscles = await db
+    .select({ muscle: exerciseMuscles.muscle, role: exerciseMuscles.role })
+    .from(exerciseMuscles)
+    .where(eq(exerciseMuscles.exerciseId, exercise.id));
+  const intensity: Partial<Record<MuscleRegion, number>> = {};
+  for (const row of muscles) {
+    if (isMuscleRegion(row.muscle)) intensity[row.muscle] = weightOf(row.role);
+  }
+  const primary = muscles.filter((row) => row.role === "primary");
 
   const rows = await db
     .select({
@@ -124,6 +136,21 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
           <div className="mt-4">
             <ExerciseFigure equipmentKey={exercise.equipmentKey} name={exercise.name} />
           </div>
+        </Card>
+      ) : null}
+
+      {muscles.length > 0 ? (
+        <Card className="mt-6 p-5">
+          <CardHeader className="p-0">
+            <CardDescription>Qué mueve</CardDescription>
+            <CardTitle className="mt-1 text-lg capitalize">
+              {primary.map((row) => MUSCLE_LABELS[row.muscle as MuscleRegion]).join(" y ")}
+            </CardTitle>
+          </CardHeader>
+          <BodyMap intensity={intensity} className="mx-auto mt-4 max-w-[15rem]" />
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            En claro lo que hace el trabajo; en oscuro lo que ayuda.
+          </p>
         </Card>
       ) : null}
 
