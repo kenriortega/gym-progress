@@ -1,4 +1,5 @@
 import { and, asc, eq, isNull, or } from "drizzle-orm";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import {
@@ -116,7 +117,12 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
                 <div className="flex items-center gap-3">
                   <Badge className="size-10 shrink-0 justify-center rounded-xl text-sm font-bold">{String(index + 1).padStart(2, "0")}</Badge>
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate font-semibold text-foreground">{exercise.name}</h3>
+                    <Link
+                      href={`/exercises/${exercise.exerciseId}`}
+                      className="block truncate font-semibold text-foreground underline-offset-4 hover:text-primary hover:underline"
+                    >
+                      {exercise.name}
+                    </Link>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {exercise.targetSets} series · {exercise.targetRepsMin}{exercise.targetRepsMax !== exercise.targetRepsMin ? `–${exercise.targetRepsMax}` : ""} reps
                     </p>

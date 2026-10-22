@@ -165,6 +165,7 @@ export default async function Home() {
     ? await db
         .select({
           workoutExerciseId: workoutExercises.id,
+          exerciseId: exercises.id,
           name: exercises.name,
           position: workoutExercises.position,
           setPosition: workoutSets.position,
@@ -186,6 +187,7 @@ export default async function Home() {
         (summary, row) => {
           const current = summary.get(row.workoutExerciseId) ?? {
             id: row.workoutExerciseId,
+            exerciseId: row.exerciseId,
             name: row.name,
             position: row.position,
             sets: 0,
@@ -204,6 +206,8 @@ export default async function Home() {
           string,
           {
             id: string;
+            /** El del catálogo, para enlazar a su ficha. No el de esta sesión. */
+            exerciseId: string;
             name: string;
             position: number;
             sets: number;
@@ -437,9 +441,12 @@ export default async function Home() {
                   {String(index + 1).padStart(2, "0")}
                 </Badge>
                 <div className="min-w-0 flex-1">
-                  <h3 className="truncate font-semibold text-foreground">
+                  <Link
+                    href={`/exercises/${exercise.exerciseId}`}
+                    className="block truncate font-semibold text-foreground underline-offset-4 hover:text-primary hover:underline"
+                  >
                     {exercise.name}
-                  </h3>
+                  </Link>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {exercise.sets} {exercise.sets === 1 ? "serie" : "series"}
                     {exercise.sets > 0 && lastWorkout
