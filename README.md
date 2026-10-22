@@ -135,3 +135,12 @@ Hay un flujo de GitHub Actions en `.github/workflows/backup.yml`, **desactivado 
 - Los textos de la interfaz están en español. El código y los nombres de archivo, en inglés, salvo los módulos nuevos del lado offline.
 - Los colores se definen con tokens (`bg-card`, `text-muted-foreground`, `bg-primary`), nunca con valores sueltos de la paleta.
 - Todo lo que se nota al usar la app se anota en `src/lib/changelog.ts`, escrito para quien la usa y no para quien la programa.
+
+## Créditos
+
+La silueta y los contornos musculares del mapa corporal vienen de
+[MuscleMap](https://github.com/melihcolpan/MuscleMap), de Melih Colpan, usados bajo licencia MIT.
+`scripts/extract-body-paths.mjs` los extrae de su código Swift y los agrupa en las doce regiones de
+`src/lib/muscles.ts`; los paths son los suyos sin tocar.
+
+> MIT License · Copyright (c) 2026 Melih Colpan
