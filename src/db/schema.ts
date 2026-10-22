@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   check,
+  date,
   index,
   integer,
   numeric,
@@ -40,6 +41,8 @@ export const users = pgTable("users", {
   emailVerified: timestamp("email_verified", { withTimezone: true }),
   image: text("image"),
   preferredWeightUnit: weightUnit("preferred_weight_unit").notNull().default("kg"),
+  /** Peso al que apuntas, en kg. Null mientras no te marques ninguno. */
+  goalWeight: numeric("goal_weight", { precision: 5, scale: 2 }),
   ...timestamps,
 });
 
@@ -286,6 +289,35 @@ export const workoutSets = pgTable(
   ],
 );
 
+/**
+ * Una pesada al día y como mucho una: el peso corporal oscila cerca de un kilo
+ * entre la mañana y la noche, así que guardar varias el mismo día añade ruido
+ * sin información. Registrar otra vez sustituye la del día.
+ */
+export const bodyWeights = pgTable(
+  "body_weights",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /**
+     * Siempre en kg, a diferencia de `workouts.weightUnit`, que congela la
+     * unidad de cada entreno. Un entreno es un hecho aislado y se lee con la
+     * unidad con la que se anotó; el peso corporal es una única serie continua,
+     * y mezclar 78 kg con 172 lb en la misma línea no dibuja nada.
+     */
+    weight: numeric("weight", { precision: 5, scale: 2 }).notNull(),
+    measuredOn: date("measured_on").notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("body_weights_user_day_unique").on(table.userId, table.measuredOn),
+    index("body_weights_user_day_idx").on(table.userId, table.measuredOn),
+    check("body_weights_weight_range", sql`${table.weight} between 20 and 500`),
+  ],
+);
+
 export type User = typeof users.$inferSelect;
 export type Account = typeof accounts.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
@@ -295,3 +327,4 @@ export type TrainingPlanExercise = typeof trainingPlanExercises.$inferSelect;
 export type Workout = typeof workouts.$inferSelect;
 export type WorkoutExercise = typeof workoutExercises.$inferSelect;
 export type WorkoutSet = typeof workoutSets.$inferSelect;
+export type BodyWeight = typeof bodyWeights.$inferSelect;

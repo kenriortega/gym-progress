@@ -12,6 +12,7 @@ import { PendingButton } from "@/components/pending-button";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/button-link";
 import { ChangelogDialog } from "@/components/changelog-dialog";
+import { BodyWeightCard } from "@/components/body-weight-card";
 import {
   Card,
   CardContent,
@@ -20,12 +21,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  bodyWeights,
   exercises,
   trainingPlanExercises,
   trainingPlans,
   workoutExercises,
   workouts,
   workoutSets,
+  users,
 } from "@/db/schema";
 
 const weekdays = [
@@ -93,6 +96,25 @@ export default async function Home() {
     .orderBy(asc(trainingPlans.weekday), asc(trainingPlans.name));
 
   const todayPlan = plans.find((plan) => plan.weekday === new Date().getDay());
+
+  // Las 90 últimas pesadas, de la más antigua a la más reciente, que es como
+  // las dibuja la gráfica. Con una al día son tres meses de serie.
+  const weighInRows = await db
+    .select({ measuredOn: bodyWeights.measuredOn, weight: bodyWeights.weight })
+    .from(bodyWeights)
+    .where(eq(bodyWeights.userId, session.user.id))
+    .orderBy(desc(bodyWeights.measuredOn))
+    .limit(90);
+  const weighIns = weighInRows
+    .map((row) => ({ measuredOn: row.measuredOn, weight: Number(row.weight) }))
+    .reverse();
+
+  const [profile] = await db
+    .select({ goalWeight: users.goalWeight })
+    .from(users)
+    .where(eq(users.id, session.user.id))
+    .limit(1);
+  const goalWeight = profile?.goalWeight ? Number(profile.goalWeight) : null;
 
   const [lastWorkout] = await db
     .select({
@@ -236,6 +258,8 @@ export default async function Home() {
           </ButtonLink>
         )}
       </Card>
+
+      <BodyWeightCard history={weighIns} goal={goalWeight} />
 
       <section id="planes" className="mt-8 scroll-mt-5">
         <div className="flex items-end justify-between">
