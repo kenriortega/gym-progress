@@ -1,10 +1,11 @@
-import { and, countDistinct, desc, eq, max } from "drizzle-orm";
+import { and, countDistinct, desc, eq, max, sql } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { exercises, workoutExercises, workouts, workoutSets } from "@/db/schema";
+import { ActivityHeatmap } from "@/components/activity-heatmap";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,26 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 export default async function ProgressPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
+
+  // Volumen movido por día del último año. El día sale de la fecha del
+  // entreno en la zona del servidor, igual que el resto de fechas de la app.
+  const trainedRows = await db
+    .select({
+      day: sql<string>`to_char(${workouts.performedAt}, 'YYYY-MM-DD')`,
+      volume: sql<string>`coalesce(sum(${workoutSets.weight} * ${workoutSets.reps}), 0)`,
+    })
+    .from(workouts)
+    .innerJoin(workoutExercises, eq(workoutExercises.workoutId, workouts.id))
+    .innerJoin(workoutSets, eq(workoutSets.workoutExerciseId, workoutExercises.id))
+    .where(
+      and(
+        eq(workouts.userId, session.user.id),
+        eq(workouts.status, "completed"),
+        sql`${workouts.performedAt} >= now() - interval '53 weeks'`,
+      ),
+    )
+    .groupBy(sql`to_char(${workouts.performedAt}, 'YYYY-MM-DD')`);
+  const trained = trainedRows.map((row) => ({ day: row.day, volume: Number(row.volume) }));
 
   const summaries = await db
     .select({
@@ -33,6 +54,8 @@ export default async function ProgressPage() {
   return (
     <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-12 pt-6">
       <AppHeader backHref="/" eyebrow="Marcas personales" title="Progreso por ejercicio" />
+
+      <ActivityHeatmap trained={trained} />
 
       {summaries.length > 0 ? (
         <section className="mt-8 grid gap-3 md:grid-cols-2">
