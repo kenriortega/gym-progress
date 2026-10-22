@@ -41,12 +41,16 @@ export default async function ProgressPage() {
 
   // Volumen por músculo del último mes. El secundario cuenta menos: el press de
   // banca trabaja el tríceps de verdad, pero no como el pecho.
+  //
+  // El `1::numeric` no es decorativo. Postgres deduce el tipo del case por su
+  // primera rama, así que con `then 1` esperaba un entero en el parámetro de la
+  // otra y reventaba con "invalid input syntax for type integer: 0.4".
   const muscleRows = await db
     .select({
       muscle: exerciseMuscles.muscle,
       volume: sql<string>`sum(
         ${workoutSets.weight} * ${workoutSets.reps}
-        * case ${exerciseMuscles.role} when 'primary' then 1 else ${SECONDARY_SHARE} end
+        * case ${exerciseMuscles.role} when 'primary' then 1::numeric else ${SECONDARY_SHARE} end
       )`,
     })
     .from(workoutSets)
