@@ -1,4 +1,5 @@
 import { and, asc, eq } from "drizzle-orm";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
@@ -87,6 +88,8 @@ export default async function HistoryDetailPage({
     string,
     {
       id: string;
+      /** El del catálogo, para enlazar a su ficha. No el de esta sesión. */
+      exerciseId: string;
       name: string;
       muscleGroup: string;
       position: number;
@@ -105,6 +108,7 @@ export default async function HistoryDetailPage({
   for (const row of rows) {
     const exercise = exerciseMap.get(row.workoutExerciseId) ?? {
       id: row.workoutExerciseId,
+      exerciseId: row.exerciseId,
       name: row.name,
       muscleGroup: row.muscleGroup,
       position: row.exercisePosition,
@@ -164,7 +168,12 @@ export default async function HistoryDetailPage({
                 {String(exerciseIndex + 1).padStart(2, "0")}
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="truncate font-extrabold text-foreground">{exercise.name}</h2>
+                <Link
+                  href={`/exercises/${exercise.exerciseId}`}
+                  className="block truncate font-extrabold text-foreground underline-offset-4 hover:text-primary hover:underline"
+                >
+                  {exercise.name}
+                </Link>
                 <p className="mt-1 text-sm text-muted-foreground">{exercise.muscleGroup}</p>
                 {exercise.targetSets !== null && (
                   <div className="mt-2 flex flex-wrap items-center gap-2">
