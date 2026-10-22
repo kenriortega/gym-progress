@@ -15,6 +15,7 @@ import {
 import {
   addExercise,
   deleteSet,
+  discardWorkout,
   finishWorkout,
   toggleExerciseComplete,
   updateSet,
@@ -591,6 +592,27 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
               {completedExercises}/{exerciseRows.length} ejercicios marcados como completados.
             </p>
           )}
+        </form>
+
+        {/*
+          La salida que faltaba. Sin esto, dejar una sesión a medias obligaba a
+          finalizarla, y acababa contando como un entreno que no hiciste.
+        */}
+        <form action={discardWorkout} className="mx-auto mt-2 max-w-md md:max-w-sm">
+          <input type="hidden" name="workoutId" value={workout.id} />
+          <ConfirmSubmitButton
+            type="submit"
+            variant="ghost"
+            confirmation={
+              totalSets === 0
+                ? "¿Descartar esta sesión? No has registrado ninguna serie, así que no se pierde nada."
+                : `¿Descartar esta sesión? Se perderán las ${totalSets} ${totalSets === 1 ? "serie" : "series"} que registraste, y no contará como entreno.`
+            }
+            pendingLabel="Descartando…"
+            className="h-10 w-full text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            Descartar sesión
+          </ConfirmSubmitButton>
         </form>
       </div>
     </main>

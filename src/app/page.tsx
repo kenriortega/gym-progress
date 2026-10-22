@@ -7,6 +7,7 @@ import { startWorkout } from "@/app/actions/workouts";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { AppHeader } from "@/components/app-header";
+import { dayOf } from "@/lib/dates";
 import { greetingName } from "@/lib/display-name";
 import { PendingButton } from "@/components/pending-button";
 import { Badge } from "@/components/ui/badge";
@@ -62,14 +63,12 @@ export default async function Home() {
     .select({
       id: workouts.id,
       planName: trainingPlans.name,
+      performedAt: workouts.performedAt,
     })
     .from(workouts)
     .leftJoin(trainingPlans, eq(trainingPlans.id, workouts.trainingPlanId))
     .where(
-      and(
-        eq(workouts.userId, session.user.id),
-        eq(workouts.status, "active"),
-      ),
+      and(eq(workouts.userId, session.user.id), eq(workouts.status, "active")),
     )
     .limit(1);
 
@@ -96,6 +95,14 @@ export default async function Home() {
     .orderBy(asc(trainingPlans.weekday), asc(trainingPlans.name));
 
   const todayPlan = plans.find((plan) => plan.weekday === new Date().getDay());
+
+  // Una sesión abierta de otro día es casi siempre un olvido, no algo que
+  // quieras continuar. Hasta ahora secuestraba Inicio: el botón decía
+  // "Continuar entreno" y no había forma de empezar el plan de hoy.
+  const staleWorkout =
+    activeWorkout && dayOf(activeWorkout.performedAt) !== dayOf(new Date())
+      ? activeWorkout
+      : null;
 
   // Las 90 últimas pesadas, de la más antigua a la más reciente, que es como
   // las dibuja la gráfica. Con una al día son tres meses de serie.
@@ -152,35 +159,37 @@ export default async function Home() {
     : [];
 
   const exerciseSummary = Array.from(
-    lastRows.reduce(
-      (summary, row) => {
-        const current = summary.get(row.workoutExerciseId) ?? {
-          id: row.workoutExerciseId,
-          name: row.name,
-          position: row.position,
-          sets: 0,
-          maxWeight: 0,
-        };
+    lastRows
+      .reduce(
+        (summary, row) => {
+          const current = summary.get(row.workoutExerciseId) ?? {
+            id: row.workoutExerciseId,
+            name: row.name,
+            position: row.position,
+            sets: 0,
+            maxWeight: 0,
+          };
 
-        if (row.setPosition !== null) {
-          current.sets += 1;
-          current.maxWeight = Math.max(current.maxWeight, Number(row.weight));
-        }
+          if (row.setPosition !== null) {
+            current.sets += 1;
+            current.maxWeight = Math.max(current.maxWeight, Number(row.weight));
+          }
 
-        summary.set(row.workoutExerciseId, current);
-        return summary;
-      },
-      new Map<
-        string,
-        {
-          id: string;
-          name: string;
-          position: number;
-          sets: number;
-          maxWeight: number;
-        }
-      >(),
-    ).values(),
+          summary.set(row.workoutExerciseId, current);
+          return summary;
+        },
+        new Map<
+          string,
+          {
+            id: string;
+            name: string;
+            position: number;
+            sets: number;
+            maxWeight: number;
+          }
+        >(),
+      )
+      .values(),
   ).sort((a, b) => a.position - b.position);
 
   return (
@@ -202,7 +211,7 @@ export default async function Home() {
         </p>
         <h2 className="mt-3 max-w-[12ch] text-4xl font-black leading-[0.95] tracking-[-0.05em] md:max-w-[16ch] md:text-5xl lg:text-6xl">
           {activeWorkout
-            ? activeWorkout.planName ?? "Sigue donde lo dejaste."
+            ? (activeWorkout.planName ?? "Sigue donde lo dejaste.")
             : todayPlan
               ? todayPlan.name
               : plans.length > 0
@@ -210,20 +219,40 @@ export default async function Home() {
                 : "Organiza tu semana."}
         </h2>
         <p className="mt-4 max-w-xs text-sm font-medium leading-6 text-primary-foreground/75 md:max-w-lg md:text-base md:leading-7">
-          {activeWorkout
-            ? "Tus series están guardadas. Continúa desde el siguiente ejercicio."
-            : todayPlan
-              ? `${todayPlan.exerciseCount} ${todayPlan.exerciseCount === 1 ? "ejercicio preparado" : "ejercicios preparados"} para registrar tu progreso.`
-              : plans.length > 0
-                ? "Puedes comenzar cualquiera de tus planes desde la lista de abajo."
-                : "Crea un plan por día con tus ejercicios, series y repeticiones objetivo."}
+          {staleWorkout
+            ? `Dejaste esta sesión abierta ${relativeDate(staleWorkout.performedAt).toLowerCase()}. Mientras siga así no puedes empezar otra.`
+            : activeWorkout
+              ? "Tus series están guardadas. Continúa desde el siguiente ejercicio."
+              : todayPlan
+                ? `${todayPlan.exerciseCount} ${todayPlan.exerciseCount === 1 ? "ejercicio preparado" : "ejercicios preparados"} para registrar tu progreso.`
+                : plans.length > 0
+                  ? "Puedes comenzar cualquiera de tus planes desde la lista de abajo."
+                  : "Crea un plan por día con tus ejercicios, series y repeticiones objetivo."}
         </p>
         {activeWorkout ? (
           <div className="mt-7 grid gap-2">
+            {staleWorkout && todayPlan ? (
+              <form action={startWorkout}>
+                <input type="hidden" name="planId" value={todayPlan.id} />
+                <input type="hidden" name="discardActive" value="1" />
+                <PendingButton
+                  type="submit"
+                  size="lg"
+                  pendingLabel="Preparando…"
+                  className="h-14 w-full rounded-2xl bg-background text-base font-semibold text-foreground hover:bg-background/90"
+                >
+                  Descartar y empezar {todayPlan.name}
+                </PendingButton>
+              </form>
+            ) : null}
             <ButtonLink
               href="/entreno"
               size="lg"
-              className="h-14 w-full rounded-2xl bg-background text-base font-semibold text-foreground hover:bg-background/90"
+              className={
+                staleWorkout && todayPlan
+                  ? "h-12 w-full rounded-2xl border border-primary-foreground/25 bg-transparent text-base font-semibold text-primary-foreground hover:bg-primary-foreground/10"
+                  : "h-14 w-full rounded-2xl bg-background text-base font-semibold text-foreground hover:bg-background/90"
+              }
             >
               Continuar entreno
             </ButtonLink>
@@ -264,7 +293,9 @@ export default async function Home() {
       <section id="planes" className="mt-8 scroll-mt-5">
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Tu semana</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              Tu semana
+            </p>
             <h2 className="mt-1 text-xl font-extrabold tracking-tight text-foreground">
               Planes de entrenamiento
             </h2>
@@ -280,7 +311,9 @@ export default async function Home() {
               <Card
                 key={plan.id}
                 className={`p-4 ${
-                  plan.id === todayPlan?.id ? "border-foreground/30 bg-muted/40" : ""
+                  plan.id === todayPlan?.id
+                    ? "border-foreground/30 bg-muted/40"
+                    : ""
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -293,9 +326,12 @@ export default async function Home() {
                       : weekdays[plan.weekday].slice(0, 3)}
                   </Badge>
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate font-semibold text-foreground">{plan.name}</h3>
+                    <h3 className="truncate font-semibold text-foreground">
+                      {plan.name}
+                    </h3>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {plan.exerciseCount} {plan.exerciseCount === 1 ? "ejercicio" : "ejercicios"}
+                      {plan.exerciseCount}{" "}
+                      {plan.exerciseCount === 1 ? "ejercicio" : "ejercicios"}
                     </p>
                   </div>
                   {!activeWorkout && plan.exerciseCount > 0 ? (
@@ -322,7 +358,9 @@ export default async function Home() {
         ) : (
           <Card className="mt-4 border-dashed px-5 py-7 text-center">
             <CardHeader>
-              <CardTitle className="text-base">Aún no tienes ningún plan</CardTitle>
+              <CardTitle className="text-base">
+                Aún no tienes ningún plan
+              </CardTitle>
               <CardDescription>
                 Puedes crear uno desde cero o copiar uno ya hecho y ajustarlo.
               </CardDescription>
@@ -337,7 +375,9 @@ export default async function Home() {
       <section className="mt-8">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Tu referencia rápida</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              Tu referencia rápida
+            </p>
             <h2 className="mt-1 text-xl font-extrabold tracking-tight text-foreground">
               Último entrenamiento
             </h2>
@@ -371,7 +411,9 @@ export default async function Home() {
                   {String(index + 1).padStart(2, "0")}
                 </Badge>
                 <div className="min-w-0 flex-1">
-                  <h3 className="truncate font-semibold text-foreground">{exercise.name}</h3>
+                  <h3 className="truncate font-semibold text-foreground">
+                    {exercise.name}
+                  </h3>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {exercise.sets} {exercise.sets === 1 ? "serie" : "series"}
                     {exercise.sets > 0 && lastWorkout
@@ -384,9 +426,12 @@ export default async function Home() {
           </div>
         ) : (
           <div className="mt-4 rounded-2xl border border-dashed border-border px-5 py-8 text-center">
-            <p className="font-bold text-muted-foreground">Aún no hay entrenamientos terminados</p>
+            <p className="font-bold text-muted-foreground">
+              Aún no hay entrenamientos terminados
+            </p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Tu primera sesión aparecerá aquí como referencia para la siguiente.
+              Tu primera sesión aparecerá aquí como referencia para la
+              siguiente.
             </p>
           </div>
         )}

@@ -89,8 +89,17 @@ export async function startWorkout(formData?: FormData) {
     .where(and(eq(workouts.userId, userId), eq(workouts.status, "active")))
     .limit(1);
 
+  // Solo cabe un entreno activo por usuario (workouts_one_active_per_user), así
+  // que empezar otro plan pasa por decidir qué hacer con el abierto. Quien
+  // llama lo dice; sin bandera, mandamos al que ya estaba.
   if (existingWorkout) {
-    redirect(`/workout/${existingWorkout.id}`);
+    if (formData?.get("discardActive") !== "1") {
+      redirect(`/workout/${existingWorkout.id}`);
+    }
+    await db
+      .update(workouts)
+      .set({ status: "abandoned", updatedAt: new Date() })
+      .where(and(eq(workouts.id, existingWorkout.id), eq(workouts.userId, userId)));
   }
 
   const [user] = await db
@@ -436,6 +445,30 @@ export async function finishWorkout(formData: FormData) {
       completedAt: now,
       updatedAt: now,
     })
+    .where(
+      and(
+        eq(workouts.id, workoutId),
+        eq(workouts.userId, userId),
+        eq(workouts.status, "active"),
+      ),
+    );
+
+  revalidatePath("/");
+  redirect("/");
+}
+
+/**
+ * Descarta la sesión sin registrarla. `abandoned` ya existía en el esquema pero
+ * nada lo usaba, así que la única salida era finalizar: una sesión que no
+ * hiciste acababa en el historial, en el heatmap y en los récords.
+ */
+export async function discardWorkout(formData: FormData) {
+  const userId = await requireUserId();
+  const workoutId = requiredUuid(formData, "workoutId");
+
+  await db
+    .update(workouts)
+    .set({ status: "abandoned", updatedAt: new Date() })
     .where(
       and(
         eq(workouts.id, workoutId),
