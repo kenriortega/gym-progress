@@ -19,6 +19,18 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "2026-10-22",
+    date: "22 de octubre de 2026",
+    title: "Tu peso, tu constancia y una salida",
+    items: [
+      "Puedes apuntar tu peso corporal desde Inicio, una vez al día, y ponerte un objetivo en Ajustes. La gráfica te enseña cómo va y dónde está la meta.",
+      "En Progreso hay un mapa del último año: un cuadro por día, más encendido cuanto más moviste. De un vistazo ves las rachas y los parones.",
+      "Debajo, un cuerpo de frente y de espalda que se tiñe por donde fue tu volumen del último mes, y te dice qué llevas sin tocar. En la página de cada ejercicio también está, marcando lo que mueve.",
+      "Si dejabas una sesión abierta y no la terminabas, la app se quedaba atascada ahí: no podías empezar ningún otro plan. Ahora puedes descartarla, y no cuenta como entreno ni aparece en tu historial.",
+      "Y cuando la sesión abierta es de otro día, Inicio te lo dice y te ofrece descartarla y empezar la de hoy de una vez.",
+    ],
+  },
+  {
     id: "2026-10-18",
     date: "18 de octubre de 2026",
     title: "Mira cómo funciona el aparato",
