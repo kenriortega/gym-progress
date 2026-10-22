@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { exerciseMuscles, exercises, workoutExercises, workouts, workoutSets } from "@/db/schema";
-import { ActivityHeatmap } from "@/components/activity-heatmap";
 import { SECONDARY_SHARE } from "@/lib/muscles";
 import { AppHeader } from "@/components/app-header";
 import { MuscleBalanceCard } from "@/components/muscle-balance-card";
@@ -18,26 +17,6 @@ const BALANCE_DAYS = 30;
 export default async function ProgressPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
-
-  // Volumen movido por día del último año. El día sale de la fecha del
-  // entreno en la zona del servidor, igual que el resto de fechas de la app.
-  const trainedRows = await db
-    .select({
-      day: sql<string>`to_char(${workouts.performedAt}, 'YYYY-MM-DD')`,
-      volume: sql<string>`coalesce(sum(${workoutSets.weight} * ${workoutSets.reps}), 0)`,
-    })
-    .from(workouts)
-    .innerJoin(workoutExercises, eq(workoutExercises.workoutId, workouts.id))
-    .innerJoin(workoutSets, eq(workoutSets.workoutExerciseId, workoutExercises.id))
-    .where(
-      and(
-        eq(workouts.userId, session.user.id),
-        eq(workouts.status, "completed"),
-        sql`${workouts.performedAt} >= now() - interval '53 weeks'`,
-      ),
-    )
-    .groupBy(sql`to_char(${workouts.performedAt}, 'YYYY-MM-DD')`);
-  const trained = trainedRows.map((row) => ({ day: row.day, volume: Number(row.volume) }));
 
   // Volumen por músculo del último mes. El secundario cuenta menos: el press de
   // banca trabaja el tríceps de verdad, pero no como el pecho.
@@ -87,8 +66,6 @@ export default async function ProgressPage() {
   return (
     <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-12 pt-6">
       <AppHeader backHref="/" eyebrow="Marcas personales" title="Progreso por ejercicio" />
-
-      <ActivityHeatmap trained={trained} />
 
       <MuscleBalanceCard volumes={volumes} days={BALANCE_DAYS} />
 

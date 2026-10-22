@@ -14,6 +14,7 @@ import { PendingButton } from "@/components/pending-button";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/button-link";
 import { ChangelogDialog } from "@/components/changelog-dialog";
+import { ActivityHeatmap } from "@/components/activity-heatmap";
 import { BodyWeightCard } from "@/components/body-weight-card";
 import {
   Card,
@@ -144,6 +145,26 @@ export default async function Home() {
     .where(eq(users.id, session.user.id))
     .limit(1);
   const goalWeight = profile?.goalWeight ? Number(profile.goalWeight) : null;
+
+  // Volumen movido por día del último año. El día sale de la fecha del
+  // entreno en la zona del servidor, igual que el resto de fechas de la app.
+  const trainedRows = await db
+    .select({
+      day: sql<string>`to_char(${workouts.performedAt}, 'YYYY-MM-DD')`,
+      volume: sql<string>`coalesce(sum(${workoutSets.weight} * ${workoutSets.reps}), 0)`,
+    })
+    .from(workouts)
+    .innerJoin(workoutExercises, eq(workoutExercises.workoutId, workouts.id))
+    .innerJoin(workoutSets, eq(workoutSets.workoutExerciseId, workoutExercises.id))
+    .where(
+      and(
+        eq(workouts.userId, session.user.id),
+        eq(workouts.status, "completed"),
+        sql`${workouts.performedAt} >= now() - interval '53 weeks'`,
+      ),
+    )
+    .groupBy(sql`to_char(${workouts.performedAt}, 'YYYY-MM-DD')`);
+  const trained = trainedRows.map((row) => ({ day: row.day, volume: Number(row.volume) }));
 
   const [lastWorkout] = await db
     .select({
@@ -319,6 +340,14 @@ export default async function Home() {
       </Card>
 
       <BodyWeightCard history={weighIns} goal={goalWeight} />
+
+      {/*
+        Solo con historial. El componente dibuja la rejilla vacía con un texto
+        de bienvenida, que en Progreso está bien porque entraste a ver progreso,
+        pero en portada le ocupa media pantalla a quien acaba de instalar la app
+        para no decirle nada.
+      */}
+      {trained.length > 0 ? <ActivityHeatmap trained={trained} /> : null}
 
       <section id="planes" className="mt-8 scroll-mt-5">
         <div className="flex items-end justify-between">
