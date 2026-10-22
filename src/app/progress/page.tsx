@@ -4,11 +4,16 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { exercises, workoutExercises, workouts, workoutSets } from "@/db/schema";
+import { exerciseMuscles, exercises, workoutExercises, workouts, workoutSets } from "@/db/schema";
 import { ActivityHeatmap } from "@/components/activity-heatmap";
+import { SECONDARY_SHARE } from "@/lib/muscles";
 import { AppHeader } from "@/components/app-header";
+import { MuscleBalanceCard } from "@/components/muscle-balance-card";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+/** Un mes: suficiente para ver un desequilibrio, corto para que puedas corregirlo. */
+const BALANCE_DAYS = 30;
 
 export default async function ProgressPage() {
   const session = await auth();
@@ -34,6 +39,30 @@ export default async function ProgressPage() {
     .groupBy(sql`to_char(${workouts.performedAt}, 'YYYY-MM-DD')`);
   const trained = trainedRows.map((row) => ({ day: row.day, volume: Number(row.volume) }));
 
+  // Volumen por músculo del último mes. El secundario cuenta menos: el press de
+  // banca trabaja el tríceps de verdad, pero no como el pecho.
+  const muscleRows = await db
+    .select({
+      muscle: exerciseMuscles.muscle,
+      volume: sql<string>`sum(
+        ${workoutSets.weight} * ${workoutSets.reps}
+        * case ${exerciseMuscles.role} when 'primary' then 1 else ${SECONDARY_SHARE} end
+      )`,
+    })
+    .from(workoutSets)
+    .innerJoin(workoutExercises, eq(workoutExercises.id, workoutSets.workoutExerciseId))
+    .innerJoin(workouts, eq(workouts.id, workoutExercises.workoutId))
+    .innerJoin(exerciseMuscles, eq(exerciseMuscles.exerciseId, workoutExercises.exerciseId))
+    .where(
+      and(
+        eq(workouts.userId, session.user.id),
+        eq(workouts.status, "completed"),
+        sql`${workouts.performedAt} >= now() - interval '${sql.raw(String(BALANCE_DAYS))} days'`,
+      ),
+    )
+    .groupBy(exerciseMuscles.muscle);
+  const volumes = muscleRows.map((row) => ({ muscle: row.muscle, volume: Number(row.volume) }));
+
   const summaries = await db
     .select({
       id: exercises.id,
@@ -56,6 +85,8 @@ export default async function ProgressPage() {
       <AppHeader backHref="/" eyebrow="Marcas personales" title="Progreso por ejercicio" />
 
       <ActivityHeatmap trained={trained} />
+
+      <MuscleBalanceCard volumes={volumes} days={BALANCE_DAYS} />
 
       {summaries.length > 0 ? (
         <section className="mt-8 grid gap-3 md:grid-cols-2">
