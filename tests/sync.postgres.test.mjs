@@ -36,15 +36,24 @@ await test("API de sincronización con PostgreSQL temporal real", { timeout: 90_
     const compile = async (file, destination) => {
       const source = await readFile(join(root, file), "utf8");
       const js = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText
-        .replaceAll('"next/server"', '"next/server.js"').replaceAll('"@/auth"', '"./auth.mjs"').replaceAll('"@/db"', '"./db.mjs"').replaceAll('"@/db/schema"', '"./schema.mjs"');
+        .replaceAll('"next/server"', '"next/server.js"').replaceAll('"@/auth"', '"./auth.mjs"').replaceAll('"@/db"', '"./db.mjs"').replaceAll('"@/db/schema"', '"./schema.mjs"').replaceAll('"@/lib/training-metrics"', '"./metrics.mjs"').replaceAll('"@/lib/training-blocks"', '"./blocks.mjs"')
+        .replaceAll('"@/lib/plan-templates"', '"./templates.mjs"').replaceAll('"@/lib/schedule"', '"./schedule.mjs"').replaceAll('"@/lib/dates"', '"./dates.mjs"')
+        .replaceAll('"next/cache"', '"./cache.mjs"').replaceAll('"next/navigation"', '"./navigation.mjs"');
       await writeFile(join(modules, destination), js);
       return import(pathToFileURL(join(modules, destination)).href);
     };
+    await compile("src/lib/training-blocks.ts", "blocks.mjs");
+    await compile("src/lib/training-metrics.ts", "metrics.mjs");
     await compile("src/db/schema.ts", "schema.mjs");
     ({ pool } = await import(pathToFileURL(join(modules, "db.mjs")).href));
     for (const file of (await readdir(join(root, "drizzle"))).filter((name) => name.endsWith(".sql")).sort()) {
       await pool.query(await readFile(join(root, "drizzle", file), "utf8"));
     }
+    await writeFile(join(modules, "cache.mjs"), 'export const revalidatePath = () => {};');
+    await writeFile(join(modules, "navigation.mjs"), 'export const redirect = (url) => { throw Object.assign(new Error("redirect"), { url }); };');
+    await compile("src/lib/dates.ts", "dates.mjs"); await compile("src/lib/schedule.ts", "schedule.mjs"); await compile("src/lib/plan-templates.ts", "templates.mjs");
+    const planActions = await compile("src/app/actions/plans.ts", "plans.mjs");
+    const { GET: offlinePlans } = await compile("src/app/api/offline/plans/route.ts", "offline-plans.mjs");
     const { POST } = await compile("src/app/api/sync/route.ts", "sync.mjs");
     const { GET: snapshot } = await compile("src/app/api/snapshot/route.ts", "snapshot.mjs");
     const { POST: ownership } = await compile("src/app/api/offline/workout-ownership/route.ts", "ownership.mjs");
@@ -191,6 +200,107 @@ await test("API de sincronización con PostgreSQL temporal real", { timeout: 90_
       assert.equal(data.workout.trainingPlanId, planA);
       const verified = await ownership(new Request("http://test.invalid/api/offline/workout-ownership", { method: "POST", body: JSON.stringify({ workoutIds: [a.workoutId, b.workoutId] }) }));
       assert.deepEqual((await verified.json()).workoutIds, [a.workoutId]);
+    });
+    await scenario("calistenia: duración, lastre y asistencia se guardan y reenvían sin cambiar de variante", async () => {
+      for (const [loadType, timed, weight, note] of [["bodyweight", false, 0, null], ["weighted", false, 10, null], ["assisted", false, 20, null], ["assisted", false, 0, "Banda verde"], ["bodyweight", true, 0, null]]) {
+        const workout = make();
+        Object.assign(workout.exercises[0], { measurement: timed ? "time" : "reps", loadType, targetSeconds: timed ? 30 : null, targetRepsMin: timed ? null : 6, targetRepsMax: timed ? null : 8 });
+        assert.equal((await send(workout)).status, 200);
+        const set = series(workout, { reps: timed ? 0 : 8, weight, loadType, durationSeconds: timed ? 35 : null, assistanceNote: note });
+        assert.equal((await send(set)).status, 200);
+        assert.equal((await send(set)).status, 200);
+        assert.equal((await send({ ...set, durationSeconds: 40 })).status >= 400, true);
+        const snapshotData = await (await snapshot()).json();
+        const exercise = snapshotData.workout.exercises[0];
+        assert.equal(exercise.loadType, loadType);
+        assert.equal(exercise.sets[0].durationSeconds, timed ? 35 : null);
+        assert.equal(exercise.sets[0].assistanceNote, note);
+        assert.equal((await send(operation(workout, "finishWorkout"))).status, 200);
+      }
+    });
+    await scenario("una serie incompatible o una asistencia vacía nunca se confirma", async () => {
+      const workout = make();
+      Object.assign(workout.exercises[0], { measurement: "reps", loadType: "bodyweight", targetSeconds: null });
+      await send(workout);
+      assert.equal((await send(series(workout))).status, 409);
+      assert.equal((await send(series(workout, { weight: 10, loadType: "bodyweight" }))).status, 400);
+      assert.equal((await send(series(workout, { weight: 0, loadType: "assisted" }))).status, 400);
+      assert.equal(Number((await pool.query("select count(*) from workout_sets")).rows[0].count), 0);
+    });
+    await scenario("bloques: circuito, AMRAP, límite de tiempo y EMOM sobreviven a reenvíos y al snapshot", async () => {
+      for (const format of ["circuit", "amrap", "for-time", "emom"]) {
+        const workout = make();
+        const block = { id: randomUUID(), name: "Bloque", format, exerciseIds: [exerciseA], rounds: ["circuit", "for-time"].includes(format) ? 3 : null,
+          durationSeconds: ["amrap", "emom"].includes(format) ? 600 : null, timeCapSeconds: format === "for-time" ? 900 : null, intervalSeconds: format === "emom" ? 60 : null };
+        workout.blocks = [block]; workout.discipline = "mixed";
+        assert.equal((await send(workout)).status, 200);
+        const id = randomUUID(), createdAt = Date.now();
+        const progress = { mutationId: id, updatedAt: createdAt, startedAt: null, elapsedSeconds: 200,
+          result: { rounds: format === "circuit" ? 3 : 2, reps: 5, intervals: format === "emom" ? 10 : 0, durationSeconds: format === "for-time" ? 900 : null, completed: ["circuit", "emom"].includes(format), adaptation: "scaled", adaptationNote: "Banda verde" } };
+        const m = { id, createdAt, userId: userA, kind: "blockProgress", workoutId: workout.workoutId, blockId: block.id, progress };
+        assert.equal((await send(m)).status, 200);
+        assert.equal((await send(m)).status, 200);
+        assert.equal((await send({ ...m, progress: { ...progress, elapsedSeconds: 201 } })).status, 409);
+        const data = await (await snapshot()).json();
+        assert.equal(data.workout.blocks[0].format, format);
+        assert.equal(data.workout.blockProgress[block.id].result.adaptationNote, "Banda verde");
+        assert.equal((await send(operation(workout, "finishWorkout"))).status, 200);
+        assert.equal((await send(m)).status, 200);
+      }
+    });
+    await scenario("bloques inválidos, resultados incoherentes y accesos ajenos no escriben datos", async () => {
+      const workout = make();
+      const block = { id: randomUUID(), name: "EMOM", format: "emom", exerciseIds: [exerciseA], rounds: null, durationSeconds: 610, timeCapSeconds: null, intervalSeconds: 60 };
+      assert.equal((await send({ ...workout, blocks: [block] })).status, 400);
+      block.durationSeconds = 600;
+      assert.equal((await send({ ...workout, blocks: [block] })).status, 200);
+      const id = randomUUID(), createdAt = Date.now();
+      const progress = { mutationId: id, updatedAt: createdAt, startedAt: null, elapsedSeconds: 0, result: { rounds: 0, reps: 0, durationSeconds: null, intervals: 11, completed: true, adaptation: "rx", adaptationNote: null } };
+      const m = { id, createdAt, userId: userA, workoutId: workout.workoutId, kind: "blockProgress", blockId: block.id, progress };
+      assert.equal((await send(m)).status, 400);
+      setUser(userB); assert.equal((await send(m)).status, 403);
+      setUser(userA); const data = await (await snapshot()).json();
+      assert.deepEqual(data.workout.blockProgress, {});
+    });
+    await scenario("la progresión congela el paso y no trae referencias de otra variante", async () => {
+      const previous = make(); previous.exercises[0].loadType = "bodyweight"; previous.exercises[0].variation = "Negativa";
+      await send(previous); await send(series(previous, { loadType: "bodyweight", weight: 0 })); await send(operation(previous, "finishWorkout"));
+      const next = make(); Object.assign(next.exercises[0], { loadType: "bodyweight", variation: "Estricta", progressionSteps: ["Negativa", "Estricta"], progressionStep: 2 });
+      assert.equal((await send(next)).status, 200);
+      const data = await (await snapshot()).json();
+      assert.equal(data.workout.exercises[0].variation, "Estricta");
+      assert.equal(data.workout.exercises[0].progressionStep, 2);
+      assert.deepEqual(data.workout.exercises[0].previous, []);
+    });
+    await scenario("acciones reales: objetivos por tiempo, bloques, duplicación y descarga completa", async () => {
+      const id = randomUUID();
+      await pool.query("insert into training_plans(id,user_id,name) values ($1,$2,'Plan de bloques')", [id, userA]);
+      const form = (values) => { const f = new FormData(); for (const [k, v] of Object.entries(values)) for (const item of Array.isArray(v) ? v : [v]) f.append(k, String(item)); return f; };
+      await planActions.addPlanExercise(form({ planId: id, exerciseId: exerciseA, targetSets: 3, measurement: "time", loadType: "bodyweight", targetSeconds: 30, progressionSteps: "Con apoyo\nEstricta", progressionStep: 2 }));
+      const created = (await pool.query("select * from training_plan_exercises where plan_id=$1", [id])).rows[0];
+      assert.equal(created.target_reps_min, null); assert.equal(created.variation, "Estricta");
+      await planActions.savePlanBlock(form({ planId: id, name: "Circuito", format: "circuit", rounds: 3, exerciseIds: [exerciseA] }));
+      await assert.rejects(planActions.savePlanBlock(form({ planId: id, name: "Duplicado", format: "circuit", rounds: 3, exerciseIds: [exerciseA] })));
+      const pkg = await (await offlinePlans()).json();
+      const plan = pkg.plans.find((item) => item.id === id);
+      assert.equal(plan.blocks.length, 1); assert.equal(plan.exercises[0].targetSeconds, 30); assert.equal(plan.exercises[0].progressionStep, 2);
+      try { await planActions.duplicatePlan(form({ planId: id })); } catch (error) { assert.ok(error.url?.startsWith("/plans/")); }
+      const copy = (await pool.query("select id,blocks from training_plans where name='Plan de bloques copia' and user_id=$1", [userA])).rows[0];
+      assert.ok(copy); assert.equal(copy.blocks.length, 1); assert.notEqual(copy.blocks[0].id, plan.blocks[0].id);
+      await planActions.removePlanExercise(form({ planId: id, planExerciseId: created.id }));
+      assert.deepEqual((await pool.query("select blocks from training_plans where id=$1", [id])).rows[0].blocks, []);
+      setUser(userB); await assert.rejects(planActions.savePlanBlock(form({ planId: copy.id, name: "Ajeno", format: "circuit", rounds: 2, exerciseIds: [exerciseA] })));
+    });
+    await scenario("plantillas nuevas crean movimientos privados completos y conservan los formatos", async () => {
+      for (const templateId of ["calistenia", "amrap-editable"]) {
+        const form = new FormData(); form.set("templateId", templateId);
+        try { await planActions.createPlanFromTemplate(form); } catch (error) { if (!error.url?.startsWith("/plans/")) throw error; }
+      }
+      const pkg = await (await offlinePlans()).json();
+      const calis = pkg.plans.find((item) => item.name === "Calistenia editable");
+      const wod = pkg.plans.find((item) => item.name === "AMRAP editable");
+      assert.equal(calis.exercises.length, 3); assert.equal(calis.exercises[2].measurement, "time");
+      assert.equal(wod.exercises.length, 3); assert.equal(wod.blocks[0].format, "amrap");
     });
   } finally {
     await pool?.end();

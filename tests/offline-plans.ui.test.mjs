@@ -374,6 +374,43 @@ await test("planes en la PWA compilada: descarga automática y primera apertura 
     await withoutBackground.close();
     page = previousPage;
 
+    current = structuredClone(plansFixture);
+    current.schemaVersion = 2;
+    current.plans[0].exercises = ["Dominadas", "Fondos con lastre", "Dominadas con banda", "Plancha"].map((name, index) => ({
+      ...plansFixture.plans[0].exercises[0], name, id: `calis-${index}`,
+      exerciseId: `00000000-0000-4000-8000-00000000001${index}`,
+      measurement: index === 3 ? "time" : "reps", loadType: ["bodyweight", "weighted", "assisted", "bodyweight"][index],
+      targetSeconds: index === 3 ? 30 : null, targetRepsMin: index === 3 ? null : 8, targetRepsMax: index === 3 ? null : 12, previous: null,
+    }));
+    await page.goto(`${origin}/planes-guardados`);
+    await page.getByRole("button", { name: "Actualizar planes", exact: true }).click();
+    await until(() => page.getByText("Plancha", { exact: true }).count(), "descargar el plan de calistenia");
+    await context.setOffline(true);
+    await startSession();
+    for (const [index, name] of ["Dominadas", "Fondos con lastre", "Dominadas con banda", "Plancha"].entries()) {
+      const card = page.locator('[data-slot="card"]').filter({ has: page.getByRole("heading", { name, exact: true }) });
+      if (index === 1) await card.getByLabel("LASTRE KG", { exact: true }).fill("10");
+      if (index === 2) await card.getByLabel("Banda o asistencia (opcional si indicas kilos)", { exact: true }).fill("Banda verde");
+      await card.getByLabel(index === 3 ? "SEGUNDOS" : "REPS", { exact: true }).fill(index === 3 ? "35" : "8");
+      await card.getByRole("button", { name: "Registrar serie", exact: true }).click();
+    }
+    await page.getByText("35 s · peso corporal", { exact: true }).waitFor();
+    await page.screenshot({ path: "/tmp/gym-calisthenics-mobile.png", fullPage: true });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await page.screenshot({ path: "/tmp/gym-calisthenics-desktop.png", fullPage: true });
+    await page.close(); page = await context.newPage();
+    await page.goto(`${origin}/abrir`);
+    await page.getByText("8 reps · banda (Banda verde)", { exact: true }).waitFor();
+    await page.getByText("35 s · peso corporal", { exact: true }).waitFor();
+    await finish();
+    await context.setOffline(false);
+    await until(() => serverWorkouts.size === 6 && [...serverWorkouts.values()].every((workout) => workout.completedAt !== null), "sincronizar calistenia tras reabrir");
+    const calis = [...serverWorkouts.values()].at(-1);
+    assert.equal(calis.sets.length, 4);
+    assert.equal(calis.sets[3].durationSeconds, 35);
+    assert.equal(calis.sets[2].assistanceNote, "Banda verde");
+
     rootMode = "unavailable";
     await page.goto(`${origin}/`);
     await page.getByRole("heading", { name: "Tu gimnasio sin conexión", exact: true }).waitFor();

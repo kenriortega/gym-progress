@@ -10,6 +10,8 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE_PATH || "playwright")
 const ts = require("typescript");
 const root = new URL("../", import.meta.url);
 const modules = {
+  "/training-blocks": "src/lib/training-blocks.ts",
+  "/training-metrics": "src/lib/training-metrics.ts",
   "/offline-queue": "src/lib/offline-queue.ts",
   "/offline/storage": "src/lib/offline/storage.ts",
   "/offline/database": "src/lib/offline/database.ts",
@@ -630,6 +632,63 @@ await test("persistencia y sincronización con IndexedDB real", async (t) => {
       assert.equal((await page.evaluate(() => window.syncState.readSyncView())).needsAuth, false);
       await page.evaluate(() => window.plansApi.identifyPlanAccount("user-a"));
       assert.equal((await state(page)).queue.length, 1);
+    });
+    await scenario("calistenia: variantes y segundos sobreviven al cierre y no se confunden con kilos", async (page, context, reopen) => {
+      const data = structuredClone(plansFixture);
+      data.schemaVersion = 2;
+      data.plans[0].exercises = ["bodyweight", "weighted", "assisted", "bodyweight"].map((loadType, index) => ({
+        ...data.plans[0].exercises[0], id: `plan-exercise-${index}`, exerciseId: `exercise-${index}`,
+        measurement: index === 3 ? "time" : "reps", loadType, targetSeconds: index === 3 ? 30 : null,
+        targetRepsMin: index === 3 ? null : 8, targetRepsMax: index === 3 ? null : 12, previous: null,
+      }));
+      await page.evaluate(async (data) => {
+        await window.plansApi.identifyPlanAccount("user-a");
+        const token = await window.planStorage.beginPlanDownload();
+        if (!await window.planStorage.saveOfflinePlans(data, token)) throw new Error("Paquete rechazado");
+        await window.api.iniciarEntreno("user-a", data.plans[0].id);
+      }, data);
+      await context.setOffline(true);
+      const workout = (await state(page)).workout;
+      for (const [index, exercise] of workout.exercises.entries()) {
+        await enqueue(page, mutation(`calis-${index}`, { workoutId: workout.workoutId,
+          workoutExerciseId: exercise.workoutExerciseId, loadType: exercise.loadType,
+          reps: index === 3 ? 0 : 8, durationSeconds: index === 3 ? 35 : null,
+          weight: index === 1 ? 10 : 0, assistanceNote: index === 2 ? "Banda verde" : null }));
+      }
+      await assert.rejects(enqueue(page, mutation("invalid", { workoutId: workout.workoutId, workoutExerciseId: workout.exercises[3].workoutExerciseId })));
+      await context.setOffline(false);
+      await page.close(); page = await reopen(context); await context.setOffline(true);
+      const restored = (await state(page)).workout;
+      assert.deepEqual(restored.exercises.map((exercise) => exercise.sets[0].loadType), ["bodyweight", "weighted", "assisted", "bodyweight"]);
+      assert.equal(restored.exercises[3].sets[0].durationSeconds, 35);
+      assert.equal(restored.exercises[2].sets[0].assistanceNote, "Banda verde");
+      assert.equal(restored.exercises[3].targetRepsMin, null);
+      await context.setOffline(false);
+      assert.equal((await page.evaluate(() => window.api.sincronizar())).quedan, 0);
+    });
+    await scenario("bloques: rondas y cronómetro persisten sin red y rechazan resultados incompatibles", async (page, context, reopen) => {
+      await seed(page);
+      const data = structuredClone(plansFixture);
+      data.schemaVersion = 3;
+      const block = { id: "00000000-0000-4000-8000-000000000090", name: "Circuito", format: "circuit", exerciseIds: [data.plans[0].exercises[0].exerciseId], rounds: 3, durationSeconds: null, timeCapSeconds: null, intervalSeconds: null };
+      data.plans[0].blocks = [block];
+      await page.evaluate(async (data) => { const token = await window.planStorage.beginPlanDownload(); await window.planStorage.saveOfflinePlans(data, token); }, data);
+      // Cerrar la sesión de prueba anterior antes de iniciar la del paquete.
+      await enqueue(page, { id: "finish-old", userId: "user-a", workoutId: "workout", kind: "finishWorkout", createdAt: 150 });
+      const workout = await page.evaluate((id) => window.api.iniciarEntreno("user-a", id), data.plans[0].id);
+      await context.setOffline(true);
+      const id = "00000000-0000-4000-8000-000000000091", createdAt = Date.now();
+      const progress = { mutationId: id, updatedAt: createdAt, startedAt: createdAt - 5000, elapsedSeconds: 10, result: { rounds: 2, reps: 0, intervals: 0, durationSeconds: null, completed: false, adaptation: "rx", adaptationNote: null } };
+      const m = { id, createdAt, userId: "user-a", workoutId: workout.workoutId, kind: "blockProgress", blockId: block.id, progress };
+      await enqueue(page, m);
+      await assert.rejects(enqueue(page, { ...m, id: "00000000-0000-4000-8000-000000000092", progress: { ...progress, result: { ...progress.result, rounds: 4 } } }));
+      await context.setOffline(false); await page.close(); page = await reopen(context); await context.setOffline(true);
+      const restored = (await state(page)).workout;
+      assert.equal(restored.blocks[0].rounds, 3);
+      assert.equal(restored.blockProgress[block.id].result.rounds, 2);
+      const elapsed = await page.evaluate((value) => import("/training-blocks").then((api) => api.elapsedBlock(value)), progress);
+      assert.ok(elapsed >= 15);
+      await context.setOffline(false); assert.equal((await page.evaluate(() => window.api.sincronizar())).quedan, 0);
     });
   } finally {
     await browser?.close();
