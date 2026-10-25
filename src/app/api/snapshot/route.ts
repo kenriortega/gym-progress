@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ne } from "drizzle-orm";
+import { and, asc, desc, eq, ne, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
@@ -28,7 +28,7 @@ export async function GET() {
 
   const [activo] = await db
     .select({
-      id: workouts.id,
+      id: workouts.id, blocks: workouts.blocks, discipline: workouts.discipline, blockProgress: workouts.blockProgress,
       trainingPlanId: workouts.trainingPlanId,
       weightUnit: workouts.weightUnit,
       performedAt: workouts.performedAt,
@@ -50,6 +50,8 @@ export async function GET() {
       name: exercises.name,
       muscleGroup: exercises.muscleGroup,
       position: workoutExercises.position,
+      variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
+      measurement: workoutExercises.measurement, loadType: workoutExercises.loadType, targetSeconds: workoutExercises.targetSeconds,
       targetSets: workoutExercises.targetSets,
       targetRepsMin: workoutExercises.targetRepsMin,
       targetRepsMax: workoutExercises.targetRepsMax,
@@ -67,6 +69,7 @@ export async function GET() {
         .select({
           id: workoutSets.id,
           position: workoutSets.position,
+          durationSeconds: workoutSets.durationSeconds, loadType: workoutSets.loadType, assistanceNote: workoutSets.assistanceNote,
           reps: workoutSets.reps,
           weight: workoutSets.weight,
           rpe: workoutSets.rpe,
@@ -82,6 +85,8 @@ export async function GET() {
         .where(
           and(
             eq(workoutExercises.exerciseId, fila.exerciseId),
+            fila.variation === null ? isNull(workoutExercises.variation) : eq(workoutExercises.variation, fila.variation),
+            eq(workoutExercises.measurement, fila.measurement), eq(workoutExercises.loadType, fila.loadType),
             eq(workouts.userId, userId),
             eq(workouts.status, "completed"),
             ne(workouts.id, activo.id),
@@ -92,7 +97,7 @@ export async function GET() {
 
       const previas = anterior
         ? await db
-            .select({ reps: workoutSets.reps, weight: workoutSets.weight })
+            .select({ reps: workoutSets.reps, weight: workoutSets.weight, durationSeconds: workoutSets.durationSeconds, loadType: workoutSets.loadType, assistanceNote: workoutSets.assistanceNote })
             .from(workoutSets)
             .where(eq(workoutSets.workoutExerciseId, anterior.id))
             .orderBy(asc(workoutSets.position))
@@ -104,6 +109,8 @@ export async function GET() {
         name: fila.name,
         muscleGroup: fila.muscleGroup,
         position: fila.position,
+        variation: fila.variation, progressionSteps: fila.progressionSteps, progressionStep: fila.progressionStep,
+        measurement: fila.measurement, loadType: fila.loadType, targetSeconds: fila.targetSeconds,
         targetSets: fila.targetSets,
         targetRepsMin: fila.targetRepsMin,
         targetRepsMax: fila.targetRepsMax,
@@ -115,15 +122,16 @@ export async function GET() {
           position: s.position,
           reps: s.reps,
           weight: Number(s.weight),
+          durationSeconds: s.durationSeconds, loadType: s.loadType, assistanceNote: s.assistanceNote,
           rpe: s.rpe === null ? null : Number(s.rpe),
         })),
-        previous: previas.map((s) => ({ reps: s.reps, weight: Number(s.weight) })),
+        previous: previas.map((s) => ({ ...s, weight: Number(s.weight) })),
       };
     }),
   );
 
   const snapshot: WorkoutSnapshot = {
-    userId,
+    userId, blocks: activo.blocks, discipline: activo.discipline, blockProgress: activo.blockProgress,
     trainingPlanId: activo.trainingPlanId,
     workoutId: activo.id,
     planName: activo.planName,

@@ -1,9 +1,11 @@
+import type { TrainingBlock, BlockProgressMap, Discipline } from "../lib/training-blocks";
 import { sql } from "drizzle-orm";
 import {
   check,
   date,
   index,
   integer,
+  jsonb,
   numeric,
   pgEnum,
   pgTable,
@@ -24,6 +26,10 @@ export const workoutStatus = pgEnum("workout_status", [
   "completed",
   "abandoned",
 ]);
+
+export const measurement = pgEnum("measurement", ["reps", "time"]);
+export const loadType = pgEnum("load_type", ["external", "bodyweight", "weighted", "assisted"]);
+const metrics = { variation: varchar("variation", { length: 120 }), progressionSteps: jsonb("progression_steps").$type<string[]>().notNull().default([]), progressionStep: smallint("progression_step"), measurement: measurement("measurement").notNull().default("reps"), loadType: loadType("load_type").notNull().default("external"), targetSeconds: integer("target_seconds") };
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -123,6 +129,8 @@ export const trainingPlans = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 100 }).notNull(),
+    discipline: varchar("discipline", { length: 20 }).$type<Discipline>().notNull().default("strength"),
+    blocks: jsonb("blocks").$type<TrainingBlock[]>().notNull().default([]),
     description: text("description"),
     weekday: smallint("weekday"),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
@@ -152,9 +160,10 @@ export const trainingPlanExercises = pgTable(
       .notNull()
       .references(() => exercises.id, { onDelete: "restrict" }),
     position: smallint("position").notNull(),
+    ...metrics,
     targetSets: smallint("target_sets").notNull().default(3),
-    targetRepsMin: smallint("target_reps_min").notNull().default(8),
-    targetRepsMax: smallint("target_reps_max").notNull().default(12),
+    targetRepsMin: smallint("target_reps_min").default(8),
+    targetRepsMax: smallint("target_reps_max").default(12),
     notes: text("notes"),
     ...timestamps,
   },
@@ -175,8 +184,7 @@ export const trainingPlanExercises = pgTable(
     ),
     check(
       "training_plan_exercises_reps_range",
-      sql`${table.targetRepsMin} between 1 and 1000
-        and ${table.targetRepsMax} between ${table.targetRepsMin} and 1000`,
+      sql`(${table.measurement} = 'time' and ${table.targetRepsMin} is null and ${table.targetRepsMax} is null and ${table.targetSeconds} is not null and ${table.targetSeconds} between 1 and 86400) or (${table.measurement} = 'reps' and ${table.targetSeconds} is null and ${table.targetRepsMin} is not null and ${table.targetRepsMax} is not null and ${table.targetRepsMin} between 1 and 1000 and ${table.targetRepsMax} between ${table.targetRepsMin} and 1000)`,
     ),
   ],
 );
@@ -188,6 +196,9 @@ export const workouts = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    discipline: varchar("discipline", { length: 20 }).$type<Discipline>().notNull().default("strength"),
+    blocks: jsonb("blocks").$type<TrainingBlock[]>().notNull().default([]),
+    blockProgress: jsonb("block_progress").$type<BlockProgressMap>().notNull().default({}),
     trainingPlanId: uuid("training_plan_id").references(() => trainingPlans.id, {
       onDelete: "set null",
     }),
@@ -229,6 +240,7 @@ export const workoutExercises = pgTable(
       .notNull()
       .references(() => exercises.id, { onDelete: "restrict" }),
     position: smallint("position").notNull(),
+    ...metrics,
     targetSets: smallint("target_sets"),
     targetRepsMin: smallint("target_reps_min"),
     targetRepsMax: smallint("target_reps_max"),
@@ -253,9 +265,7 @@ export const workoutExercises = pgTable(
     ),
     check(
       "workout_exercises_target_reps_range",
-      sql`(${table.targetRepsMin} is null and ${table.targetRepsMax} is null)
-        or (${table.targetRepsMin} between 1 and 1000
-          and ${table.targetRepsMax} between ${table.targetRepsMin} and 1000)`,
+      sql`(${table.measurement} = 'time' and ${table.targetRepsMin} is null and ${table.targetRepsMax} is null and ${table.targetSeconds} is not null and ${table.targetSeconds} between 1 and 86400) or (${table.measurement} = 'reps' and ${table.targetSeconds} is null and ((${table.targetRepsMin} is null and ${table.targetRepsMax} is null) or (${table.targetRepsMin} is not null and ${table.targetRepsMax} is not null and ${table.targetRepsMin} between 1 and 1000 and ${table.targetRepsMax} between ${table.targetRepsMin} and 1000)))`,
     ),
   ],
 );
@@ -269,6 +279,9 @@ export const workoutSets = pgTable(
       .references(() => workoutExercises.id, { onDelete: "cascade" }),
     position: smallint("position").notNull(),
     reps: smallint("reps").notNull(),
+    durationSeconds: integer("duration_seconds"),
+    loadType: loadType("load_type").notNull().default("external"),
+    assistanceNote: varchar("assistance_note", { length: 120 }),
     weight: numeric("weight", { precision: 7, scale: 2 }).notNull(),
     rpe: numeric("rpe", { precision: 3, scale: 1 }),
     completedAt: timestamp("completed_at", { withTimezone: true }),
@@ -284,7 +297,8 @@ export const workoutSets = pgTable(
       table.position,
     ),
     check("workout_sets_position_nonnegative", sql`${table.position} >= 0`),
-    check("workout_sets_reps_range", sql`${table.reps} between 1 and 1000`),
+    check("workout_sets_reps_range", sql`(${table.durationSeconds} is null and ${table.reps} between 1 and 1000) or (${table.durationSeconds} is not null and ${table.durationSeconds} between 1 and 86400 and ${table.reps} = 0)`),
+    check("workout_sets_load_valid", sql`(${table.loadType} <> 'bodyweight' or ${table.weight} = 0) and (${table.loadType} = 'assisted' or ${table.assistanceNote} is null) and (${table.assistanceNote} is null or char_length(trim(${table.assistanceNote})) > 0) and (${table.loadType} <> 'assisted' or ${table.weight} > 0 or ${table.assistanceNote} is not null)`),
     check("workout_sets_weight_nonnegative", sql`${table.weight} >= 0`),
     check("workout_sets_rpe_range", sql`${table.rpe} is null or ${table.rpe} between 1 and 10`),
   ],

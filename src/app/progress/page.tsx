@@ -1,3 +1,5 @@
+import { BlockProgressHistory } from "@/components/block-progress-history";
+import { CalisthenicsProgress } from "@/components/calisthenics-progress";
 import { and, countDistinct, desc, eq, max, sql } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -40,6 +42,7 @@ export default async function ProgressPage() {
       and(
         eq(workouts.userId, session.user.id),
         eq(workouts.status, "completed"),
+        eq(workoutSets.loadType, "external"), sql`${workoutSets.durationSeconds} is null`, sql`${workoutExercises.variation} is null`,
         sql`${workouts.performedAt} >= now() - interval '${sql.raw(String(BALANCE_DAYS))} days'`,
       ),
     )
@@ -59,7 +62,7 @@ export default async function ProgressPage() {
     .innerJoin(workoutExercises, eq(workoutExercises.id, workoutSets.workoutExerciseId))
     .innerJoin(exercises, eq(exercises.id, workoutExercises.exerciseId))
     .innerJoin(workouts, eq(workouts.id, workoutExercises.workoutId))
-    .where(and(eq(workouts.userId, session.user.id), eq(workouts.status, "completed")))
+    .where(and(eq(workouts.userId, session.user.id), eq(workouts.status, "completed"), eq(workoutSets.loadType, "external"), sql`${workoutSets.durationSeconds} is null`, sql`${workoutExercises.variation} is null`))
     .groupBy(exercises.id)
     .orderBy(desc(max(workouts.performedAt)));
 
@@ -68,7 +71,11 @@ export default async function ProgressPage() {
       <AppHeader backHref="/" eyebrow="Marcas personales" title="Progreso por ejercicio" />
 
       <MuscleBalanceCard volumes={volumes} days={BALANCE_DAYS} />
+      <p className="mt-3 text-xs leading-5 text-muted-foreground">Este reparto usa solo carga externa con repeticiones. La calistenia, las series por tiempo y los WOD tienen sus registros separados a continuación.</p>
 
+      <CalisthenicsProgress userId={session.user.id} />
+      <BlockProgressHistory userId={session.user.id} />
+      <h2 className="mt-8 text-xl font-bold">Fuerza con carga externa</h2>
       {summaries.length > 0 ? (
         <section className="mt-8 grid gap-3 md:grid-cols-2">
           {summaries.map((exercise) => (
@@ -94,7 +101,7 @@ export default async function ProgressPage() {
           <CardHeader>
             <CardTitle>Aún no hay progreso calculado</CardTitle>
             <CardDescription>
-              Finaliza una sesión para comenzar a ver tus récords y evolución.
+              Aquí aparecen las marcas de los ejercicios con carga externa y repeticiones.
             </CardDescription>
           </CardHeader>
         </Card>

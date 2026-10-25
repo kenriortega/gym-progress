@@ -1,3 +1,5 @@
+import { describeBlock, describeResult } from "@/lib/training-blocks";
+import { formatSet, formatTarget, type ExerciseMetrics, type SetMetrics } from "@/lib/training-metrics";
 import { and, asc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -37,7 +39,7 @@ export default async function HistoryDetailPage({
   const { id } = await params;
   const [workout] = await db
     .select({
-      id: workouts.id,
+      id: workouts.id, blocks: workouts.blocks, blockProgress: workouts.blockProgress,
       performedAt: workouts.performedAt,
       completedAt: workouts.completedAt,
       weightUnit: workouts.weightUnit,
@@ -66,11 +68,14 @@ export default async function HistoryDetailPage({
       name: exercises.name,
       muscleGroup: exercises.muscleGroup,
       exercisePosition: workoutExercises.position,
+      variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
+      measurement: workoutExercises.measurement, loadType: workoutExercises.loadType, targetSeconds: workoutExercises.targetSeconds,
       targetSets: workoutExercises.targetSets,
       targetRepsMin: workoutExercises.targetRepsMin,
       targetRepsMax: workoutExercises.targetRepsMax,
       setId: workoutSets.id,
       setPosition: workoutSets.position,
+      durationSeconds: workoutSets.durationSeconds, setLoadType: workoutSets.loadType, assistanceNote: workoutSets.assistanceNote,
       reps: workoutSets.reps,
       weight: workoutSets.weight,
       rpe: workoutSets.rpe,
@@ -93,11 +98,14 @@ export default async function HistoryDetailPage({
       name: string;
       muscleGroup: string;
       position: number;
+      variation?: string | null; progressionSteps?: string[]; progressionStep?: number | null;
+      measurement?: ExerciseMetrics["measurement"]; loadType?: ExerciseMetrics["loadType"]; targetSeconds?: number | null;
       targetSets: number | null;
       targetRepsMin: number | null;
       targetRepsMax: number | null;
       sets: Array<{
         id: string;
+        durationSeconds?: number | null; loadType?: SetMetrics["loadType"]; assistanceNote?: string | null;
         reps: number;
         weight: string;
         rpe: string | null;
@@ -112,6 +120,8 @@ export default async function HistoryDetailPage({
       name: row.name,
       muscleGroup: row.muscleGroup,
       position: row.exercisePosition,
+      variation: row.variation, progressionSteps: row.progressionSteps, progressionStep: row.progressionStep,
+        measurement: row.measurement, loadType: row.loadType, targetSeconds: row.targetSeconds,
       targetSets: row.targetSets,
       targetRepsMin: row.targetRepsMin,
       targetRepsMax: row.targetRepsMax,
@@ -121,6 +131,7 @@ export default async function HistoryDetailPage({
     if (row.setId && row.reps !== null && row.weight !== null) {
       exercise.sets.push({
         id: row.setId,
+        durationSeconds: row.durationSeconds, loadType: row.setLoadType ?? undefined, assistanceNote: row.assistanceNote,
         reps: row.reps,
         weight: row.weight,
         rpe: row.rpe,
@@ -151,11 +162,18 @@ export default async function HistoryDetailPage({
       <section className="mt-7 rounded-3xl bg-primary p-5 text-primary-foreground">
         <p className="capitalize font-extrabold">{dateLabel}</p>
         <p className="mt-2 text-sm font-semibold text-primary-foreground/75">
-          {workoutExerciseList.length} {workoutExerciseList.length === 1 ? "ejercicio" : "ejercicios"}
+      {workoutExerciseList.length} {workoutExerciseList.length === 1 ? "ejercicio" : "ejercicios"}
           {" · "}
           {totalSets} {totalSets === 1 ? "serie" : "series"}
         </p>
       </section>
+
+          {workout.blocks.filter((block) => block.format !== "sets").map((block) => <section key={block.id} className="mt-6 border-b border-border pb-5">
+        <h2 className="text-xl font-bold">{block.name}</h2><p className="mt-1 text-sm text-muted-foreground">{describeBlock(block)}</p>
+        {block.prescription && <p className="mt-2 text-sm">{block.prescription}</p>}
+        <p className="mt-3 font-semibold">{workout.blockProgress[block.id]?.result ? describeResult(block, workout.blockProgress[block.id].result!) : "Sin resultado registrado"}</p>
+      </section>)}
+
 
       <section className="mt-6 grid items-start gap-4 md:grid-cols-2">
         {workoutExerciseList.map((exercise, exerciseIndex) => (
@@ -178,10 +196,7 @@ export default async function HistoryDetailPage({
                 {exercise.targetSets !== null && (
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">
-                      Objetivo {exercise.targetSets}×{exercise.targetRepsMin}
-                      {exercise.targetRepsMax !== exercise.targetRepsMin
-                        ? `–${exercise.targetRepsMax}`
-                        : ""}
+                      {formatTarget(exercise)}
                     </Badge>
                     <Badge
                       variant={
@@ -208,8 +223,8 @@ export default async function HistoryDetailPage({
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-10">#</TableHead>
-                      <TableHead>Peso</TableHead>
-                      <TableHead>Reps</TableHead>
+                      <TableHead>Registro</TableHead>
+                      <TableHead>Esfuerzo</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -219,10 +234,9 @@ export default async function HistoryDetailPage({
                           {setIndex + 1}
                         </TableCell>
                         <TableCell className="font-semibold text-foreground">
-                          {Number(set.weight)} {workout.weightUnit}
+                          {formatSet({ ...set, weight: Number(set.weight) }, workout.weightUnit)}
                         </TableCell>
                         <TableCell className="font-semibold text-foreground">
-                          {set.reps}
                           {set.rpe ? (
                             <span className="ml-2 font-normal text-muted-foreground">
                               RPE {Number(set.rpe)}

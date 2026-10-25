@@ -1,3 +1,5 @@
+import type { ExerciseMetrics } from "./training-metrics";
+import type { Discipline, TrainingBlock } from "./training-blocks";
 /**
  * Planes de ejemplo para quien entra por primera vez.
  *
@@ -9,7 +11,8 @@
  * omite en vez de fallar: un plan con un ejercicio menos sirve igual.
  */
 
-export type TemplateExercise = {
+export type TemplateExercise = ExerciseMetrics & {
+  muscleGroup?: string;
   name: string;
   sets: number;
   repsMin: number;
@@ -37,6 +40,8 @@ export type PlanTemplate = {
   /** Día sugerido; se puede cambiar después. */
   weekday: number | null;
   exercises: TemplateExercise[];
+  discipline?: Discipline;
+  block?: Omit<TrainingBlock, "id" | "exerciseIds">;
 };
 
 const fuerza = (name: string): TemplateExercise => ({
@@ -59,6 +64,25 @@ const aislamiento = (name: string): TemplateExercise => ({
 });
 
 export const PLAN_TEMPLATES: PlanTemplate[] = [
+  {
+    id: "calistenia", name: "Calistenia editable", description: "Punto de partida para registrar repeticiones y tiempo con peso corporal. Ajusta movimientos y objetivos a tu entrenamiento.",
+    audience: "Peso corporal y tiempo", gender: "mixto", weekday: null, discipline: "calisthenics",
+    exercises: [
+      { name: "Dominadas", muscleGroup: "Espalda", sets: 3, repsMin: 6, repsMax: 8, loadType: "bodyweight" },
+      { name: "Fondos en paralelas", muscleGroup: "Tríceps", sets: 3, repsMin: 6, repsMax: 8, loadType: "bodyweight" },
+      { name: "Plancha abdominal", muscleGroup: "Abdomen", sets: 3, repsMin: 0, repsMax: 0, loadType: "bodyweight", measurement: "time", targetSeconds: 30 },
+    ],
+  },
+  {
+    id: "amrap-editable", name: "AMRAP editable", description: "Ejemplo de editor de WOD: cambia ejercicios, duración y adaptación antes de entrenar.",
+    audience: "Circuito con resultado global", gender: "mixto", weekday: null, discipline: "crossfit",
+    block: { name: "AMRAP editable", format: "amrap", rounds: null, durationSeconds: 600, timeCapSeconds: null, intervalSeconds: null, prescription: "Peso corporal. Ajusta las variantes y anota cualquier adaptación." },
+    exercises: [
+      { name: "Dominadas", muscleGroup: "Espalda", sets: 1, repsMin: 5, repsMax: 5, loadType: "bodyweight" },
+      { name: "Flexiones", muscleGroup: "Pecho", sets: 1, repsMin: 10, repsMax: 10, loadType: "bodyweight" },
+      { name: "Sentadilla libre", muscleGroup: "Piernas", sets: 1, repsMin: 15, repsMax: 15, loadType: "bodyweight" },
+    ],
+  },
   {
     id: "cuerpo-completo",
     gender: "mixto",

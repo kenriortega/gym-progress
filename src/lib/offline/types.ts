@@ -1,3 +1,5 @@
+import type { TrainingBlock, BlockProgress, BlockProgressMap, Discipline } from "../training-blocks";
+import type { ExerciseMetrics, SetMetrics } from "../training-metrics";
 export type QueuedMutation = (
   | {
       id: string;
@@ -9,8 +11,12 @@ export type QueuedMutation = (
       reps: number;
       /** Esfuerzo percibido, de 1 a 10. Opcional. */
       rpe?: number | null;
+      durationSeconds?: number | null;
+      loadType?: SetMetrics["loadType"];
+      assistanceNote?: string | null;
       createdAt: number;
     }
+  | { id: string; kind: "blockProgress"; workoutId: string; blockId: string; progress: BlockProgress; createdAt: number }
   | {
       id: string;
       kind: "deleteSet";
@@ -32,7 +38,9 @@ export type QueuedMutation = (
       planId: string;
       weightUnit: "kg" | "lb";
       performedAt: string;
-      exercises: Array<{
+      discipline?: Discipline;
+      blocks?: TrainingBlock[];
+      exercises: Array<ExerciseMetrics & {
         workoutExerciseId: string;
         exerciseId: string;
         position: number;
@@ -40,12 +48,15 @@ export type QueuedMutation = (
         targetRepsMin: number | null;
         targetRepsMax: number | null;
         notes: string | null;
+        measurement?: ExerciseMetrics["measurement"];
+        loadType?: ExerciseMetrics["loadType"];
+        targetSeconds?: number | null;
       }>;
       createdAt: number;
     }
 ) & { userId: string };
 
-export type SnapshotSet = {
+export type SnapshotSet = SetMetrics & {
   id: string;
   position: number;
   reps: number;
@@ -53,7 +64,7 @@ export type SnapshotSet = {
   rpe?: number | null;
 };
 
-export type SnapshotExercise = {
+export type SnapshotExercise = ExerciseMetrics & {
   workoutExerciseId: string;
   exerciseId: string;
   name: string;
@@ -67,10 +78,13 @@ export type SnapshotExercise = {
   previousWeightUnit?: string;
   sets: SnapshotSet[];
   /** Series de la última sesión completada con este ejercicio. */
-  previous: Array<{ reps: number; weight: number }>;
+  previous: SetMetrics[];
 };
 
 export type WorkoutSnapshot = {
+  discipline?: Discipline;
+  blocks?: TrainingBlock[];
+  blockProgress?: BlockProgressMap;
   userId: string;
   trainingPlanId: string | null;
   workoutId: string;

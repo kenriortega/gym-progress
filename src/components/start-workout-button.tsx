@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useOfflinePlans } from "@/components/offline-plans-provider";
+import { downloadOfflinePlans } from "@/lib/offline/plans";
 import { readOfflinePlans } from "@/lib/offline/plan-storage";
 import { iniciarEntreno } from "@/lib/offline-queue";
 
@@ -12,14 +13,17 @@ function openTraining() {
   window.location.assign("/entreno");
 }
 
-type Props = Omit<React.ComponentProps<typeof Button>, "onClick"> & { userId: string; planId: string };
-export function StartWorkoutButton({ userId, planId, children, disabled, ...props }: Props) {
+type Props = Omit<React.ComponentProps<typeof Button>, "onClick"> & { userId: string; planId: string; refreshBeforeStart?: boolean };
+export function StartWorkoutButton({ userId, planId, children, disabled, refreshBeforeStart = false, ...props }: Props) {
   const [starting, setStarting] = useState(false);
   const { refresh } = useOfflinePlans();
   return <Button {...props} type="button" disabled={disabled || starting} onClick={async () => {
     if (starting) return;
     setStarting(true);
     try {
+      // Desde el editor, usar los objetivos recién guardados antes de crear
+      // la copia de sesión. Desde Planes guardados el inicio sigue siendo local.
+      if (refreshBeforeStart && navigator.onLine) await downloadOfflinePlans();
       const catalog = await readOfflinePlans(userId);
       if (!catalog?.data.plans.some((plan) => plan.id === planId) && navigator.onLine) await refresh();
       await iniciarEntreno(userId, planId);

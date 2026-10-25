@@ -1,3 +1,8 @@
+import { PlanBlockEditor } from "@/components/plan-block-editor";
+import { changePlanBlock } from "@/app/actions/plans";
+import { BLOCK_LABELS, describeBlock, DISCIPLINES } from "@/lib/training-blocks";
+import { ExerciseTargetFields } from "@/components/exercise-target-fields";
+import { formatTarget } from "@/lib/training-metrics";
 import { and, asc, eq, isNull, or } from "drizzle-orm";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -52,6 +57,8 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
       name: exercises.name,
       muscleGroup: exercises.muscleGroup,
       position: trainingPlanExercises.position,
+      variation: trainingPlanExercises.variation, progressionSteps: trainingPlanExercises.progressionSteps, progressionStep: trainingPlanExercises.progressionStep,
+      measurement: trainingPlanExercises.measurement, loadType: trainingPlanExercises.loadType, targetSeconds: trainingPlanExercises.targetSeconds,
       targetSets: trainingPlanExercises.targetSets,
       targetRepsMin: trainingPlanExercises.targetRepsMin,
       targetRepsMax: trainingPlanExercises.targetRepsMax,
@@ -73,7 +80,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
     <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-12 pt-6">
       <AppHeader backHref="/plans" eyebrow="Configurar plan" title={plan.name} />
 
-      <StartWorkoutButton userId={userId} planId={plan.id} disabled={plannedExercises.length === 0}
+      <StartWorkoutButton refreshBeforeStart userId={userId} planId={plan.id} disabled={plannedExercises.length === 0}
         className="mt-6 h-14 w-full rounded-2xl bg-primary text-base font-black text-primary-foreground disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground">
         {plannedExercises.length === 0 ? "Añade ejercicios para empezar" : "Empezar este entrenamiento"}
       </StartWorkoutButton>
@@ -92,6 +99,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
             options={weekdays.map((day, index) => ({ value: String(index), label: day }))}
             aria-label="Día de la semana"
           />
+          <FormSelect placeholder="Disciplina" name="discipline" defaultValue={plan.discipline} aria-label="Disciplina" options={Object.entries(DISCIPLINES).map(([value, label]) => ({ value, label }))} />
           <Input name="description" maxLength={500} defaultValue={plan.description ?? ""} placeholder="Nota opcional" className="h-12" aria-label="Nota" />
           <PendingButton type="submit" className="h-11 w-full">Guardar cambios</PendingButton>
         </form>
@@ -122,7 +130,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
                       {exercise.name}
                     </Link>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {exercise.targetSets} series · {exercise.targetRepsMin}{exercise.targetRepsMax !== exercise.targetRepsMin ? `–${exercise.targetRepsMax}` : ""} reps
+                      {formatTarget(exercise)}
                     </p>
                   </div>
                   <div className="flex gap-1">
@@ -145,18 +153,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
                   <form action={updatePlanExercise} className="mt-3">
                     <input type="hidden" name="planId" value={plan.id} />
                     <input type="hidden" name="planExerciseId" value={exercise.id} />
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        ["targetSets", "SERIES", exercise.targetSets],
-                        ["targetRepsMin", "REPS MIN", exercise.targetRepsMin],
-                        ["targetRepsMax", "REPS MAX", exercise.targetRepsMax],
-                      ].map(([name, label, value]) => (
-                        <label key={String(name)} className="text-[11px] font-bold text-muted-foreground">
-                          {label}
-                          <Input name={String(name)} type="number" inputMode="numeric" min="1" max={name === "targetSets" ? 20 : 1000} required defaultValue={value} className="mt-2 h-11 text-center font-semibold" />
-                        </label>
-                      ))}
-                    </div>
+                    <ExerciseTargetFields value={exercise} />
                     <PendingButton type="submit" className="mt-3 h-11 w-full">Guardar objetivo</PendingButton>
                   </form>
                   <form action={removePlanExercise} className="mt-2">
@@ -185,21 +182,27 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
               muscleGroup: exercise.muscleGroup,
             }))}
           />
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              ["targetSets", "SERIES", 3, 20],
-              ["targetRepsMin", "REPS MIN", 8, 1000],
-              ["targetRepsMax", "REPS MAX", 12, 1000],
-            ].map(([name, label, value, max]) => (
-              <label key={String(name)} className="text-xs font-bold text-muted-foreground">
-                {label}
-                <Input name={String(name)} type="number" inputMode="numeric" min="1" max={max} defaultValue={value} required className="mt-2 h-12 text-center text-lg font-semibold" />
-              </label>
-            ))}
-          </div>
+          <ExerciseTargetFields />
           <PendingButton type="submit" disabled={availableExercises.length === 0} className="h-12 w-full">Añadir al plan</PendingButton>
         </form>
       </Card>
+
+      <section className="mt-8" aria-label="Bloques del entrenamiento">
+        <h2 className="text-xl font-bold">Bloques del entrenamiento</h2>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">Combina fuerza, técnica y circuitos en una sesión. Los ejercicios sin bloque conservan sus series habituales.</p>
+        <div className="mt-4 divide-y divide-border">
+          {plan.blocks.map((block, index) => <div key={block.id} className="py-4">
+            <h3 className="font-semibold">{block.name} · {BLOCK_LABELS[block.format]}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{describeBlock(block)}</p>
+            <details className="mt-3"><summary className="min-h-11 cursor-pointer py-2 text-sm underline underline-offset-4">Editar bloque</summary><PlanBlockEditor planId={plan.id} exercises={plannedExercises} block={block} /></details>
+            <div className="mt-3 flex flex-wrap gap-2">{(["up", "down", "remove"] as const).map((direction) => <form key={direction} action={changePlanBlock}>
+              <input type="hidden" name="planId" value={plan.id} /><input type="hidden" name="blockId" value={block.id} /><input type="hidden" name="direction" value={direction} />
+              {direction === "remove" ? <ConfirmSubmitButton variant="outline" confirmation="El bloque se quitará del plan. Los ejercicios y las sesiones anteriores se conservan.">Quitar bloque</ConfirmSubmitButton> : <PendingButton variant="outline" disabled={direction === "up" ? index === 0 : index === plan.blocks.length - 1}>{direction === "up" ? "Subir bloque" : "Bajar bloque"}</PendingButton>}
+            </form>)}</div>
+          </div>)}
+        </div>
+        <details className="mt-4 border-t border-border pt-3"><summary className="min-h-11 cursor-pointer py-2 font-semibold">Añadir bloque</summary><PlanBlockEditor planId={plan.id} exercises={plannedExercises} /></details>
+      </section>
 
       <section className="mt-6 grid grid-cols-2 gap-3">
         <form action={duplicatePlan}>

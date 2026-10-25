@@ -1,5 +1,9 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
+import { validBlocks, validDiscipline, type TrainingBlock, type BlockFormat } from "@/lib/training-blocks";
+import { parseTargets } from "@/lib/training-metrics";
+
 import { and, eq, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -52,6 +56,8 @@ function parseWeekday(value: FormDataEntryValue | null) {
 
 export async function createPlan(formData: FormData) {
   const userId = await requireUserId();
+  const discipline = String(formData.get("discipline") ?? "strength");
+  if (!validDiscipline(discipline)) throw new Error("Disciplina inválida.");
   const name = String(formData.get("name") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const weekday = parseWeekday(formData.get("weekday"));
@@ -63,7 +69,7 @@ export async function createPlan(formData: FormData) {
   const [plan] = await db
     .insert(trainingPlans)
     .values({
-      userId,
+      userId, discipline,
       name,
       description: description || null,
       weekday,
@@ -76,6 +82,8 @@ export async function createPlan(formData: FormData) {
 export async function updatePlan(formData: FormData) {
   const userId = await requireUserId();
   const planId = requiredUuid(formData, "planId");
+  const discipline = String(formData.get("discipline") ?? "strength");
+  if (!validDiscipline(discipline)) throw new Error("Disciplina inválida.");
   const name = String(formData.get("name") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const weekday = parseWeekday(formData.get("weekday"));
@@ -87,7 +95,7 @@ export async function updatePlan(formData: FormData) {
   await db
     .update(trainingPlans)
     .set({
-      name,
+      name, discipline,
       description: description || null,
       weekday,
       updatedAt: new Date(),
@@ -164,23 +172,7 @@ async function resolverEjercicio(
 export async function addPlanExercise(formData: FormData) {
   const userId = await requireUserId();
   const planId = requiredUuid(formData, "planId");
-  const targetSets = Number(formData.get("targetSets"));
-  const targetRepsMin = Number(formData.get("targetRepsMin"));
-  const targetRepsMax = Number(formData.get("targetRepsMax"));
-
-  if (!Number.isInteger(targetSets) || targetSets < 1 || targetSets > 20) {
-    throw new Error("El objetivo de series debe estar entre 1 y 20.");
-  }
-
-  if (
-    !Number.isInteger(targetRepsMin) ||
-    !Number.isInteger(targetRepsMax) ||
-    targetRepsMin < 1 ||
-    targetRepsMax < targetRepsMin ||
-    targetRepsMax > 1000
-  ) {
-    throw new Error("El rango de repeticiones no es válido.");
-  }
+  const { targetSets, targetRepsMin, targetRepsMax, measurement, loadType, targetSeconds, variation, progressionSteps, progressionStep } = parseTargets(formData);
 
   await db.transaction(async (transaction) => {
     const [plan] = await transaction
@@ -230,6 +222,7 @@ export async function addPlanExercise(formData: FormData) {
         planId,
         exerciseId,
         position: Number(lastPosition?.value ?? -1) + 1,
+        measurement, loadType, targetSeconds, variation, progressionSteps, progressionStep,
         targetSets,
         targetRepsMin,
         targetRepsMax,
@@ -247,19 +240,12 @@ export async function removePlanExercise(formData: FormData) {
   const planId = requiredUuid(formData, "planId");
   const planExerciseId = requiredUuid(formData, "planExerciseId");
 
-  await db
-    .delete(trainingPlanExercises)
-    .where(
-      and(
-        eq(trainingPlanExercises.id, planExerciseId),
-        eq(trainingPlanExercises.planId, planId),
-        sql`exists (
-          select 1 from ${trainingPlans}
-          where ${trainingPlans.id} = ${trainingPlanExercises.planId}
-            and ${trainingPlans.userId} = ${userId}
-        )`,
-      ),
-    );
+  await db.transaction(async (tx) => {
+    const [plan] = await tx.select().from(trainingPlans).where(and(eq(trainingPlans.id, planId), eq(trainingPlans.userId, userId))).limit(1).for("update");
+    if (!plan) throw new Error("El plan no está disponible.");
+    const removed = await tx.delete(trainingPlanExercises).where(and(eq(trainingPlanExercises.id, planExerciseId), eq(trainingPlanExercises.planId, planId))).returning({ exerciseId: trainingPlanExercises.exerciseId });
+    if (removed.length) await tx.update(trainingPlans).set({ blocks: plan.blocks.map((block) => ({ ...block, exerciseIds: block.exerciseIds.filter((id) => id !== removed[0].exerciseId) })).filter((block) => block.exerciseIds.length > 0) }).where(eq(trainingPlans.id, planId));
+  });
 
   revalidatePath("/");
   revalidatePath("/plans");
@@ -270,27 +256,11 @@ export async function updatePlanExercise(formData: FormData) {
   const userId = await requireUserId();
   const planId = requiredUuid(formData, "planId");
   const planExerciseId = requiredUuid(formData, "planExerciseId");
-  const targetSets = Number(formData.get("targetSets"));
-  const targetRepsMin = Number(formData.get("targetRepsMin"));
-  const targetRepsMax = Number(formData.get("targetRepsMax"));
-
-  if (!Number.isInteger(targetSets) || targetSets < 1 || targetSets > 20) {
-    throw new Error("El objetivo de series debe estar entre 1 y 20.");
-  }
-
-  if (
-    !Number.isInteger(targetRepsMin) ||
-    !Number.isInteger(targetRepsMax) ||
-    targetRepsMin < 1 ||
-    targetRepsMax < targetRepsMin ||
-    targetRepsMax > 1000
-  ) {
-    throw new Error("El rango de repeticiones no es válido.");
-  }
+  const { targetSets, targetRepsMin, targetRepsMax, measurement, loadType, targetSeconds, variation, progressionSteps, progressionStep } = parseTargets(formData);
 
   await db
     .update(trainingPlanExercises)
-    .set({ targetSets, targetRepsMin, targetRepsMax, updatedAt: new Date() })
+    .set({ measurement, loadType, targetSeconds, variation, progressionSteps, progressionStep, targetSets, targetRepsMin, targetRepsMax, updatedAt: new Date() })
     .where(
       and(
         eq(trainingPlanExercises.id, planExerciseId),
@@ -407,8 +377,9 @@ export async function duplicatePlan(formData: FormData) {
       .insert(trainingPlans)
       .values({
         userId,
-        name: copyName,
+        name: copyName, discipline: source.discipline,
         description: source.description,
+        blocks: source.blocks.map((block) => ({ ...block, id: randomUUID() })),
         weekday: null,
       })
       .returning({ id: trainingPlans.id });
@@ -417,7 +388,9 @@ export async function duplicatePlan(formData: FormData) {
       .select({
         exerciseId: trainingPlanExercises.exerciseId,
         position: trainingPlanExercises.position,
-        targetSets: trainingPlanExercises.targetSets,
+        variation: trainingPlanExercises.variation, progressionSteps: trainingPlanExercises.progressionSteps, progressionStep: trainingPlanExercises.progressionStep,
+      measurement: trainingPlanExercises.measurement, loadType: trainingPlanExercises.loadType, targetSeconds: trainingPlanExercises.targetSeconds,
+      targetSets: trainingPlanExercises.targetSets,
         targetRepsMin: trainingPlanExercises.targetRepsMin,
         targetRepsMax: trainingPlanExercises.targetRepsMax,
         notes: trainingPlanExercises.notes,
@@ -540,7 +513,7 @@ export async function createPlanFromTemplate(formData: FormData) {
       .values({
         userId,
         name,
-        description: template.description,
+        description: template.description, discipline: template.discipline ?? "strength",
         weekday: template.weekday,
       })
       .returning({ id: trainingPlans.id });
@@ -561,6 +534,15 @@ export async function createPlanFromTemplate(formData: FormData) {
       catalogo.map((e) => [e.name.toLowerCase(), e.id]),
     );
 
+    // Las plantillas nuevas son completas: un movimiento ausente se crea en
+    // el catálogo privado del usuario; nunca se publica un WOD incompleto.
+    if (template.discipline) for (const exercise of template.exercises) {
+      if (!porNombre.has(exercise.name.toLowerCase())) {
+        const [created] = await transaction.insert(exercises).values({ userId, name: exercise.name, muscleGroup: exercise.muscleGroup ?? "Otros" }).returning({ id: exercises.id });
+        porNombre.set(exercise.name.toLowerCase(), created.id);
+      }
+    }
+
     const filas = template.exercises
       .map((ejercicio, indice) => {
         const exerciseId = porNombre.get(ejercicio.name.toLowerCase());
@@ -569,9 +551,10 @@ export async function createPlanFromTemplate(formData: FormData) {
           planId: plan.id,
           exerciseId,
           position: indice,
+          measurement: ejercicio.measurement ?? "reps", loadType: ejercicio.loadType ?? "external", targetSeconds: ejercicio.targetSeconds ?? null,
           targetSets: ejercicio.sets,
-          targetRepsMin: ejercicio.repsMin,
-          targetRepsMax: ejercicio.repsMax,
+          targetRepsMin: ejercicio.measurement === "time" ? null : ejercicio.repsMin,
+          targetRepsMax: ejercicio.measurement === "time" ? null : ejercicio.repsMax,
         };
       })
       .filter((fila) => fila !== null)
@@ -580,6 +563,7 @@ export async function createPlanFromTemplate(formData: FormData) {
 
     if (filas.length > 0) {
       await transaction.insert(trainingPlanExercises).values(filas);
+      if (template.block) await transaction.update(trainingPlans).set({ blocks: [{ ...template.block, id: randomUUID(), exerciseIds: filas.map((item) => item.exerciseId) }] }).where(eq(trainingPlans.id, plan.id));
     }
 
     return plan.id;
@@ -666,4 +650,48 @@ export async function cancelReschedule(formData: FormData) {
 
   revalidatePath("/plans");
   revalidatePath("/");
+}
+
+export async function savePlanBlock(form: FormData) {
+  const userId = await requireUserId();
+  const planId = requiredUuid(form, "planId");
+  const existingId = form.get("blockId") ? requiredUuid(form, "blockId") : null;
+  const format = String(form.get("format")) as BlockFormat;
+  const block: TrainingBlock = {
+    id: existingId ?? randomUUID(), name: String(form.get("name") ?? "").trim(), prescription: String(form.get("prescription") ?? "").trim() || null, format,
+    exerciseIds: form.getAll("exerciseIds").map(String),
+    rounds: format === "circuit" || format === "for-time" ? Number(form.get("rounds")) : null,
+    durationSeconds: format === "amrap" || format === "emom" ? Number(form.get("durationSeconds")) : null,
+    intervalSeconds: format === "emom" ? Number(form.get("intervalSeconds")) : null,
+    timeCapSeconds: format === "for-time" && form.get("timeCapSeconds") ? Number(form.get("timeCapSeconds")) : null,
+  };
+  await db.transaction(async (tx) => {
+    const [plan] = await tx.select().from(trainingPlans).where(and(eq(trainingPlans.id, planId), eq(trainingPlans.userId, userId), isNull(trainingPlans.archivedAt))).limit(1).for("update");
+    if (!plan || existingId && !plan.blocks.some((item) => item.id === existingId)) throw new Error("El bloque no está disponible.");
+    const rows = await tx.select({ id: trainingPlanExercises.exerciseId }).from(trainingPlanExercises).where(eq(trainingPlanExercises.planId, planId)).orderBy(trainingPlanExercises.position);
+    block.exerciseIds = rows.map((item) => item.id).filter((id) => block.exerciseIds.includes(id));
+    const blocks = existingId ? plan.blocks.map((item) => item.id === existingId ? block : item) : [...plan.blocks, block];
+    if (!validBlocks(blocks, rows.map((item) => item.id))) throw new Error("Revisa el bloque: selecciona ejercicios disponibles sin repetirlos entre bloques y configura sus rondas o duración. En EMOM, la duración debe ser múltiplo del intervalo.");
+    await tx.update(trainingPlans).set({ blocks, updatedAt: new Date() }).where(eq(trainingPlans.id, planId));
+  });
+  revalidatePath(`/plans/${planId}`); revalidatePath("/");
+}
+
+export async function changePlanBlock(form: FormData) {
+  const userId = await requireUserId();
+  const planId = requiredUuid(form, "planId"), blockId = requiredUuid(form, "blockId");
+  const direction = form.get("direction");
+  await db.transaction(async (tx) => {
+    const [plan] = await tx.select().from(trainingPlans).where(and(eq(trainingPlans.id, planId), eq(trainingPlans.userId, userId), isNull(trainingPlans.archivedAt))).limit(1).for("update");
+    if (!plan) throw new Error("El plan no está disponible.");
+    const blocks = [...plan.blocks]; const index = blocks.findIndex((item) => item.id === blockId);
+    if (index < 0) throw new Error("El bloque no está disponible.");
+    if (direction === "remove") blocks.splice(index, 1);
+    else if (direction === "up" || direction === "down") {
+      const next = index + (direction === "up" ? -1 : 1);
+      if (next >= 0 && next < blocks.length) [blocks[index], blocks[next]] = [blocks[next], blocks[index]];
+    } else throw new Error("Acción de bloque inválida.");
+    await tx.update(trainingPlans).set({ blocks, updatedAt: new Date() }).where(eq(trainingPlans.id, planId));
+  });
+  revalidatePath(`/plans/${planId}`); revalidatePath("/");
 }

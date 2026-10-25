@@ -1,3 +1,5 @@
+import { RecordedSetFields } from "@/components/recorded-set-fields";
+import { formatSet, formatTarget } from "@/lib/training-metrics";
 import { and, asc, desc, eq, isNull, ne, or } from "drizzle-orm";
 import Link from "next/link";
 import { HistoryIcon, PencilIcon, PlusIcon, TrendingUpIcon } from "lucide-react";
@@ -45,8 +47,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -84,6 +84,7 @@ async function getPreviousPerformance(
     .where(
       and(
         eq(workoutExercises.exerciseId, exerciseId),
+        isNull(workoutExercises.variation), eq(workoutExercises.measurement, "reps"), eq(workoutExercises.loadType, "external"),
         eq(workouts.userId, userId),
         eq(workouts.status, "completed"),
         ne(workouts.id, currentWorkoutId),
@@ -114,6 +115,8 @@ async function getProgressionSuggestion(
     .select({
       workoutExerciseId: workoutExercises.id,
       performedAt: workouts.performedAt,
+      variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
+      measurement: workoutExercises.measurement, loadType: workoutExercises.loadType, targetSeconds: workoutExercises.targetSeconds,
       targetSets: workoutExercises.targetSets,
       targetRepsMax: workoutExercises.targetRepsMax,
     })
@@ -122,6 +125,7 @@ async function getProgressionSuggestion(
     .where(
       and(
         eq(workoutExercises.exerciseId, exerciseId),
+        isNull(workoutExercises.variation), eq(workoutExercises.measurement, "reps"), eq(workoutExercises.loadType, "external"),
         eq(workouts.userId, userId),
         eq(workouts.status, "completed"),
         ne(workouts.id, currentWorkoutId),
@@ -197,6 +201,8 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
       name: exercises.name,
       muscleGroup: exercises.muscleGroup,
       position: workoutExercises.position,
+      variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
+      measurement: workoutExercises.measurement, loadType: workoutExercises.loadType, targetSeconds: workoutExercises.targetSeconds,
       targetSets: workoutExercises.targetSets,
       targetRepsMin: workoutExercises.targetRepsMin,
       targetRepsMax: workoutExercises.targetRepsMax,
@@ -212,6 +218,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
       id: workoutSets.id,
       workoutExerciseId: workoutSets.workoutExerciseId,
       position: workoutSets.position,
+      durationSeconds: workoutSets.durationSeconds, loadType: workoutSets.loadType, assistanceNote: workoutSets.assistanceNote,
       reps: workoutSets.reps,
       weight: workoutSets.weight,
       rpe: workoutSets.rpe,
@@ -357,11 +364,11 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
             );
             const reference = references.get(exercise.workoutExerciseId) ?? null;
             const target =
-              exercise.targetSets !== null &&
-              exercise.targetRepsMin !== null &&
-              exercise.targetRepsMax !== null
+              exercise.targetSets !== null
                 ? {
-                    targetSets: exercise.targetSets,
+                    variation: exercise.variation, progressionSteps: exercise.progressionSteps, progressionStep: exercise.progressionStep,
+        measurement: exercise.measurement, loadType: exercise.loadType, targetSeconds: exercise.targetSeconds,
+          targetSets: exercise.targetSets,
                     targetRepsMin: exercise.targetRepsMin,
                     targetRepsMax: exercise.targetRepsMax,
                   }
@@ -412,10 +419,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                   {target && (
                     <div className="mb-2 flex flex-wrap items-center gap-2">
                       <Badge variant="secondary">
-                        Objetivo {target.targetSets}×{target.targetRepsMin}
-                        {target.targetRepsMax !== target.targetRepsMin
-                          ? `–${target.targetRepsMax}`
-                          : ""}
+                        {formatTarget(exercise)}
                       </Badge>
                       <Badge variant={remainingSets === 0 ? "default" : "outline"}>
                         {remainingSets === 0
@@ -424,7 +428,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                       </Badge>
                     </div>
                   )}
-                  {suggestion && (
+                  {exercise.measurement === "reps" && exercise.loadType === "external" && suggestion && (
                     <Alert className="mb-2">
                       <TrendingUpIcon />
                       <AlertTitle>Toca subir peso</AlertTitle>
@@ -436,7 +440,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                       </AlertDescription>
                     </Alert>
                   )}
-                  {reference && reference.sets.length > 0 ? (
+                  {exercise.measurement === "reps" && exercise.loadType === "external" && reference && reference.sets.length > 0 ? (
                     <Alert className="bg-muted/40">
                       <HistoryIcon />
                       <AlertTitle>Última vez</AlertTitle>
@@ -463,8 +467,8 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-10">#</TableHead>
-                          <TableHead>Peso</TableHead>
-                          <TableHead>Reps</TableHead>
+                          <TableHead>Registro</TableHead>
+                          <TableHead>RPE</TableHead>
                           <TableHead className="w-10 text-right">Editar</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -475,10 +479,10 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                               {index + 1}
                             </TableCell>
                             <TableCell className="font-semibold text-foreground">
-                              {Number(set.weight)} {workout.weightUnit}
+                              {formatSet({ ...set, weight: Number(set.weight) }, workout.weightUnit)}
                             </TableCell>
                             <TableCell className="font-semibold text-foreground">
-                              {set.reps}
+                              {set.rpe ?? "—"}
                             </TableCell>
                             <TableCell className="text-right">
                               <Dialog>
@@ -492,45 +496,14 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                                   <DialogHeader>
                                     <DialogTitle>Serie {index + 1}</DialogTitle>
                                     <DialogDescription>
-                                      {exercise.name} · {Number(set.weight)}{" "}
-                                      {workout.weightUnit} × {set.reps} repeticiones
+                                      {exercise.name} · {formatSet({ ...set, weight: Number(set.weight) }, workout.weightUnit)}
                                     </DialogDescription>
                                   </DialogHeader>
 
                                   <form action={updateSet} className="grid gap-3">
                                     <input type="hidden" name="workoutId" value={workout.id} />
                                     <input type="hidden" name="setId" value={set.id} />
-                                    <div className="grid grid-cols-2 gap-3">
-                                      <div className="grid gap-2">
-                                        <Label htmlFor={`weight-${set.id}`}>Peso</Label>
-                                        <Input
-                                          id={`weight-${set.id}`}
-                                          name="weight"
-                                          type="number"
-                                          inputMode="decimal"
-                                          min="0"
-                                          max="99999"
-                                          step="0.01"
-                                          required
-                                          defaultValue={Number(set.weight)}
-                                          className="text-center font-semibold"
-                                        />
-                                      </div>
-                                      <div className="grid gap-2">
-                                        <Label htmlFor={`reps-${set.id}`}>Repeticiones</Label>
-                                        <Input
-                                          id={`reps-${set.id}`}
-                                          name="reps"
-                                          type="number"
-                                          inputMode="numeric"
-                                          min="1"
-                                          max="1000"
-                                          required
-                                          defaultValue={set.reps}
-                                          className="text-center font-semibold"
-                                        />
-                                      </div>
-                                    </div>
+                                    <RecordedSetFields value={{ ...set, weight: Number(set.weight) }} unit={workout.weightUnit} />
                                     <PendingButton type="submit" className="w-full">
                                       Guardar cambios
                                     </PendingButton>

@@ -176,6 +176,34 @@
       "when": 1792702075671,
       "tag": "0024_high_namorita",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1792928318277,
+      "tag": "0025_calisthenics-metrics",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1792928835722,
+      "tag": "0026_training-blocks",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1792929221783,
+      "tag": "0027_exercise-progressions",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1792929309250,
+      "tag": "0028_training-disciplines",
+      "breakpoints": true
     }
   ]
 }

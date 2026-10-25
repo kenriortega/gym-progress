@@ -1,4 +1,7 @@
 "use client";
+import { TrainingBlockCard } from "@/components/training-block-card";
+import type { BlockProgress } from "@/lib/training-blocks";
+import { formatSet, formatTarget, validSet, type SetMetrics } from "@/lib/training-metrics";
 
 import { DocumentLink } from "@/components/document-link";
 import { OfflineSyncStatus } from "@/components/offline-sync-status";
@@ -111,6 +114,7 @@ export default function EntrenoPage() {
       peso: number,
       reps: number,
       rpe: number | null,
+      metrics: Pick<SetMetrics, "durationSeconds" | "loadType" | "assistanceNote">,
     ) => {
       if (!sesion) return;
       const setId = crypto.randomUUID();
@@ -125,6 +129,7 @@ export default function EntrenoPage() {
         weight: peso,
         reps,
         rpe,
+        ...metrics,
         createdAt: Date.now(),
       });
       await cargarLocal();
@@ -171,6 +176,15 @@ export default function EntrenoPage() {
       toast.error("No se pudo guardar la finalización. La sesión sigue abierta.");
     }
   }, [sesion, cargarLocal, reintentar]);
+
+  const saveBlock = async (blockId: string, next: Pick<BlockProgress, "startedAt" | "elapsedSeconds" | "result">) => {
+    if (!sesion) return;
+    const id = crypto.randomUUID();
+    const createdAt = Math.max(Date.now(), (sesion.blockProgress?.[blockId]?.updatedAt ?? 0) + 1);
+    await encolar({ id, kind: "blockProgress", userId: sesion.userId, workoutId: sesion.workoutId, blockId,
+      progress: { ...next, mutationId: id, updatedAt: createdAt }, createdAt });
+    await cargarLocal(); void reintentar();
+  };
 
   const estadoSync = (
     <>
@@ -241,7 +255,7 @@ export default function EntrenoPage() {
       {estadoSync}
 
       <SessionProgress
-        ejercicios={sesion.exercises.map((e) => ({
+        ejercicios={sesion.exercises.filter((e) => !(sesion.blocks ?? []).some((block) => block.format !== "sets" && block.exerciseIds.includes(e.exerciseId))).map((e) => ({
           name: e.name,
           targetSets: e.targetSets,
           setsDone: e.sets.length,
@@ -249,7 +263,7 @@ export default function EntrenoPage() {
       />
 
       <div className="mt-6 grid items-start gap-4 md:grid-cols-2">
-        {sesion.exercises.map((ejercicio, indice) => (
+        {sesion.exercises.filter((exercise) => !(sesion.blocks ?? []).some((block) => block.exerciseIds.includes(exercise.exerciseId))).map((ejercicio, indice) => (
           <TarjetaEjercicio
             key={ejercicio.workoutExerciseId}
             ejercicio={ejercicio}
@@ -260,6 +274,15 @@ export default function EntrenoPage() {
           />
         ))}
       </div>
+
+      {(sesion.blocks ?? []).map((block) => <div key={block.id}>
+        {block.format === "sets" ? <section className="mt-6" aria-label={`Bloque ${block.name}`}><h2 className="text-xl font-bold">{block.name}</h2>
+          <div className="mt-4 grid items-start gap-4 md:grid-cols-2">{block.exerciseIds.map((exerciseId, index) => {
+            const exercise = sesion.exercises.find((item) => item.exerciseId === exerciseId);
+            return exercise && <TarjetaEjercicio key={exercise.workoutExerciseId} ejercicio={exercise} indice={index} unidad={sesion.weightUnit} onRegistrar={registrar} onBorrar={borrarSerie} />;
+          })}</div>
+        </section> : <TrainingBlockCard block={block} exercises={block.exerciseIds.map((id) => sesion.exercises.find((item) => item.exerciseId === id)!).filter(Boolean)} progress={sesion.blockProgress?.[block.id]} onSave={saveBlock} />}
+      </div>)}
 
       <form
         className="mt-8"
@@ -304,16 +327,21 @@ function TarjetaEjercicio({
     peso: number,
     reps: number,
     rpe: number | null,
+    metrics: Pick<SetMetrics, "durationSeconds" | "loadType" | "assistanceNote">,
   ) => Promise<void>;
   onBorrar: (workoutExerciseId: string, setId: string) => Promise<void>;
 }) {
   const fieldId = useId();
+  const timed = ejercicio.measurement === "time";
+  const loadType = ejercicio.loadType ?? "external";
+  const bodyweight = loadType === "bodyweight";
   const currentSet = ejercicio.sets.at(-1);
   const ultima = currentSet ?? ejercicio.previous.at(-1);
   const referenceUnit = currentSet ? unidad : ejercicio.previousWeightUnit ?? unidad;
   const initialWeight = ultima ? referenceUnit === unidad ? ultima.weight : referenceUnit === "lb" ? ultima.weight * 0.45359237 : ultima.weight / 0.45359237 : null;
   const [peso, setPeso] = useState(initialWeight === null ? "" : String(Math.round(initialWeight * 100) / 100));
-  const [reps, setReps] = useState(ultima ? String(ultima.reps) : "");
+  const [reps, setReps] = useState(ultima ? String(timed ? ultima.durationSeconds ?? "" : ultima.reps) : "");
+  const [assistanceNote, setAssistanceNote] = useState(ultima?.assistanceNote ?? "");
   const [rpe, setRpe] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [guardadas, setGuardadas] = useState(0);
@@ -360,12 +388,13 @@ function TarjetaEjercicio({
             <HistoryIcon />
             <AlertTitle>Última vez</AlertTitle>
             <AlertDescription>
-              {ejercicio.previous.map((s) => `${s.weight}×${s.reps}`).join(" · ")}{" "}
-              {ejercicio.previousWeightUnit ?? unidad}
+              {ejercicio.previous.map((s) => formatSet(s, ejercicio.previousWeightUnit ?? unidad)).join(" · ")}
             </AlertDescription>
           </Alert>
         )}
 
+        <p className="text-sm text-muted-foreground">{formatTarget(ejercicio)}</p>
+        {ejercicio.progressionStep && ejercicio.progressionSteps?.[ejercicio.progressionStep] && <p className="text-xs leading-5 text-muted-foreground">Siguiente paso de tu plan: {ejercicio.progressionSteps[ejercicio.progressionStep]}. Puedes avanzar editando el plan cuando lo decidas.</p>}
         {ejercicio.notes && <p className="whitespace-pre-wrap break-words text-sm leading-6">{ejercicio.notes}</p>}
         <DocumentLink
           href={`/exercises/${ejercicio.exerciseId}`}
@@ -384,7 +413,7 @@ function TarjetaEjercicio({
             >
               <span className="text-muted-foreground">{i + 1}</span>
               <span className="flex-1 text-right font-semibold text-foreground">
-                {serie.weight} {unidad} × {serie.reps}
+                {formatSet(serie, unidad)}
               </span>
               <button
                 type="button"
@@ -403,10 +432,11 @@ function TarjetaEjercicio({
         className="mt-4 grid grid-cols-[1fr_1fr_auto] gap-2 border-t border-border p-5"
         onSubmit={async (evento) => {
           evento.preventDefault();
-          const p = Number(peso);
-          const r = Number(reps);
-          if (!Number.isFinite(p) || p < 0 || p > 99999 || !Number.isInteger(r) || r < 1 || r > 1000) {
-            toast.error("Revisa el peso y las repeticiones.");
+          const p = bodyweight ? 0 : Number(peso);
+          const r = timed ? 0 : Number(reps);
+          const metrics = { loadType, durationSeconds: timed ? Number(reps) : null, assistanceNote: loadType === "assisted" ? assistanceNote.trim() || null : null };
+          if (!validSet({ ...metrics, weight: p, reps: r })) {
+            toast.error("Revisa la medición y la carga. La asistencia requiere kilos o una descripción de la banda.");
             return;
           }
           const esfuerzo = rpe === "" ? null : Number(rpe);
@@ -416,7 +446,7 @@ function TarjetaEjercicio({
           }
           setGuardando(true);
           try {
-            await onRegistrar(ejercicio, p, r, esfuerzo);
+            await onRegistrar(ejercicio, p, r, esfuerzo, metrics);
             setGuardadas((n) => n + 1);
           } catch {
             toast.error("No se pudo guardar la serie en el dispositivo. Inténtalo de nuevo.");
@@ -425,23 +455,23 @@ function TarjetaEjercicio({
           }
         }}
       >
-        <div className="grid gap-1">
-          <Label htmlFor={`${fieldId}-weight`} className="text-[11px]">PESO {unidad.toUpperCase()}</Label>
+        {!bodyweight ? <div className="grid gap-1">
+          <Label htmlFor={`${fieldId}-weight`} className="text-[11px]">{loadType === "weighted" ? "LASTRE" : loadType === "assisted" ? "ASISTENCIA" : "PESO"} {unidad.toUpperCase()}</Label>
           <Input
             type="number"
             inputMode="decimal"
             min="0"
             step="0.01"
-            required
+            required={loadType !== "assisted" || !assistanceNote.trim()}
             id={`${fieldId}-weight`}
             max="99999"
             value={peso}
             onChange={(e) => setPeso(e.target.value)}
             className="h-12 text-center text-lg font-semibold"
           />
-        </div>
+        </div> : <p className="self-center text-sm text-muted-foreground">Peso corporal</p>}
         <div className="grid gap-1">
-          <Label htmlFor={`${fieldId}-reps`} className="text-[11px]">REPS</Label>
+          <Label htmlFor={`${fieldId}-reps`} className="text-[11px]">{timed ? "SEGUNDOS" : "REPS"}</Label>
           <Input
             type="number"
             inputMode="numeric"
@@ -449,7 +479,7 @@ function TarjetaEjercicio({
             step="1"
             required
             id={`${fieldId}-reps`}
-            max="1000"
+            max={timed ? 86400 : 1000}
             value={reps}
             onChange={(e) => setReps(e.target.value)}
             className="h-12 text-center text-lg font-semibold"
@@ -459,6 +489,11 @@ function TarjetaEjercicio({
           {guardando ? "…" : <PlusIcon className="size-4" />}
         </Button>
 
+        {loadType === "assisted" && <div className="col-span-3 grid gap-1">
+          <Label htmlFor={`${fieldId}-assistance`}>Banda o asistencia (opcional si indicas kilos)</Label>
+          <Input id={`${fieldId}-assistance`} maxLength={120} value={assistanceNote} onChange={(event) => setAssistanceNote(event.target.value)} placeholder="Ej.: banda verde, marca y resistencia" className="h-12" />
+          <p className="text-xs leading-5 text-muted-foreground">Con banda, deja los kilos vacíos. Usa la misma descripción para comparar tus marcas.</p>
+        </div>}
         <div className="col-span-3 grid gap-1">
           <Label htmlFor={`${fieldId}-rpe`} className="text-[11px] text-muted-foreground">
             RPE · esfuerzo del 1 al 10 (opcional)
@@ -479,7 +514,7 @@ function TarjetaEjercicio({
       </form>
 
       <div className="px-5 pb-5">
-        <PlateCalculator onUse={(kg) => setPeso((unidad === "lb" ? kg / 0.45359237 : kg).toFixed(2))} />
+        {(loadType === "external" || loadType === "weighted") && <PlateCalculator onUse={(kg) => setPeso((unidad === "lb" ? kg / 0.45359237 : kg).toFixed(2))} />}
         <RestTimer restartKey={guardadas} />
       </div>
     </Card>

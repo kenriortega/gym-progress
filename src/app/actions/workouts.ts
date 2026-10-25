@@ -1,4 +1,5 @@
 "use server";
+import { validSet, matchesExercise, type LoadType } from "@/lib/training-metrics";
 
 import { and, asc, eq, isNull, or, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
@@ -55,24 +56,15 @@ function optionalUuid(formData: FormData, field: string) {
 }
 
 function parseSetValues(formData: FormData) {
-  const reps = Number(formData.get("reps"));
+  const durationSeconds = formData.get("durationSeconds") == null ? null : Number(formData.get("durationSeconds"));
+  const reps = durationSeconds === null ? Number(formData.get("reps")) : 0;
   const weight = Number(formData.get("weight"));
+  const loadType = String(formData.get("loadType") ?? "external") as LoadType;
+  const assistanceNote = String(formData.get("assistanceNote") ?? "").trim() || null;
   const rawRpe = formData.get("rpe");
-  const rpe = rawRpe === "" || rawRpe === null ? null : Number(rawRpe);
-
-  if (!Number.isInteger(reps) || reps < 1 || reps > 1000) {
-    throw new Error("Las repeticiones deben ser un número entero mayor que cero.");
-  }
-
-  if (!Number.isFinite(weight) || weight < 0 || weight > 99999) {
-    throw new Error("El peso no es válido.");
-  }
-
-  if (rpe !== null && (!Number.isFinite(rpe) || rpe < 1 || rpe > 10)) {
-    throw new Error("El RPE debe estar entre 1 y 10.");
-  }
-
-  return { reps, weight, rpe };
+  const rpe = rawRpe == null || rawRpe === "" ? null : Number(rawRpe);
+  if (!validSet({ reps, weight, durationSeconds, loadType, assistanceNote }) || rpe !== null && (!Number.isFinite(rpe) || rpe < 1 || rpe > 10)) throw new Error("Los valores de la serie no son válidos.");
+  return { reps, weight, rpe, durationSeconds, loadType, assistanceNote };
 }
 
 export async function startWorkout(formData?: FormData) {
@@ -149,7 +141,9 @@ export async function startWorkout(formData?: FormData) {
       .select({
         exerciseId: trainingPlanExercises.exerciseId,
         position: trainingPlanExercises.position,
-        targetSets: trainingPlanExercises.targetSets,
+        variation: trainingPlanExercises.variation, progressionSteps: trainingPlanExercises.progressionSteps, progressionStep: trainingPlanExercises.progressionStep,
+      measurement: trainingPlanExercises.measurement, loadType: trainingPlanExercises.loadType, targetSeconds: trainingPlanExercises.targetSeconds,
+      targetSets: trainingPlanExercises.targetSets,
         targetRepsMin: trainingPlanExercises.targetRepsMin,
         targetRepsMax: trainingPlanExercises.targetRepsMax,
         notes: trainingPlanExercises.notes,
@@ -164,6 +158,8 @@ export async function startWorkout(formData?: FormData) {
           workoutId: created.id,
           exerciseId: exercise.exerciseId,
           position: exercise.position,
+          variation: exercise.variation, progressionSteps: exercise.progressionSteps, progressionStep: exercise.progressionStep,
+        measurement: exercise.measurement, loadType: exercise.loadType, targetSeconds: exercise.targetSeconds,
           targetSets: exercise.targetSets,
           targetRepsMin: exercise.targetRepsMin,
           targetRepsMax: exercise.targetRepsMax,
@@ -249,7 +245,9 @@ export async function addExercise(formData: FormData) {
     const [planTarget] = workout.trainingPlanId
       ? await transaction
           .select({
-            targetSets: trainingPlanExercises.targetSets,
+            variation: trainingPlanExercises.variation, progressionSteps: trainingPlanExercises.progressionSteps, progressionStep: trainingPlanExercises.progressionStep,
+      measurement: trainingPlanExercises.measurement, loadType: trainingPlanExercises.loadType, targetSeconds: trainingPlanExercises.targetSeconds,
+      targetSets: trainingPlanExercises.targetSets,
             targetRepsMin: trainingPlanExercises.targetRepsMin,
             targetRepsMax: trainingPlanExercises.targetRepsMax,
           })
@@ -267,6 +265,8 @@ export async function addExercise(formData: FormData) {
       workoutId,
       exerciseId,
       position: Number(lastPosition?.value ?? -1) + 1,
+      variation: planTarget?.variation ?? null, progressionSteps: planTarget?.progressionSteps ?? [], progressionStep: planTarget?.progressionStep ?? null,
+      measurement: planTarget?.measurement ?? "reps", loadType: planTarget?.loadType ?? "external", targetSeconds: planTarget?.targetSeconds ?? null,
       targetSets: planTarget?.targetSets ?? null,
       targetRepsMin: planTarget?.targetRepsMin ?? null,
       targetRepsMax: planTarget?.targetRepsMax ?? null,
@@ -281,11 +281,12 @@ export async function addSet(formData: FormData) {
   const workoutId = requiredUuid(formData, "workoutId");
   const workoutExerciseId = requiredUuid(formData, "workoutExerciseId");
   const setId = optionalUuid(formData, "setId");
-  const { reps, weight, rpe } = parseSetValues(formData);
+  const { reps, weight, rpe, durationSeconds, loadType, assistanceNote } = parseSetValues(formData);
 
   await db.transaction(async (transaction) => {
     const [ownedExercise] = await transaction
-      .select({ id: workoutExercises.id })
+      .select({ id: workoutExercises.id, variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
+      measurement: workoutExercises.measurement, loadType: workoutExercises.loadType })
       .from(workoutExercises)
       .innerJoin(workouts, eq(workouts.id, workoutExercises.workoutId))
       .where(
@@ -302,6 +303,7 @@ export async function addSet(formData: FormData) {
       throw new Error("No tienes acceso a este entrenamiento.");
     }
 
+    if (!matchesExercise({ reps, weight, durationSeconds, loadType, assistanceNote }, ownedExercise)) throw new Error("La serie no coincide con la variante del ejercicio.");
     const [lastPosition] = await transaction
       .select({ value: sql<number>`coalesce(max(${workoutSets.position}), -1)` })
       .from(workoutSets)
@@ -315,7 +317,7 @@ export async function addSet(formData: FormData) {
         ...(setId ? { id: setId } : {}),
         workoutExerciseId,
         position: Number(lastPosition?.value ?? -1) + 1,
-        reps,
+        reps, durationSeconds, loadType, assistanceNote,
         weight: weight.toFixed(2),
         rpe: rpe?.toFixed(1) ?? null,
         completedAt: new Date(),
@@ -356,12 +358,12 @@ export async function updateSet(formData: FormData) {
   const userId = await requireUserId();
   const workoutId = requiredUuid(formData, "workoutId");
   const setId = requiredUuid(formData, "setId");
-  const { reps, weight, rpe } = parseSetValues(formData);
+  const { reps, weight, rpe, durationSeconds, loadType, assistanceNote } = parseSetValues(formData);
 
   await db
     .update(workoutSets)
     .set({
-      reps,
+      reps, durationSeconds, loadType, assistanceNote,
       weight: weight.toFixed(2),
       rpe: rpe?.toFixed(1) ?? null,
       updatedAt: new Date(),
@@ -369,6 +371,8 @@ export async function updateSet(formData: FormData) {
     .where(
       and(
         eq(workoutSets.id, setId),
+        eq(workoutSets.loadType, loadType),
+        sql`(${workoutSets.durationSeconds} is not null) = ${durationSeconds !== null}`,
         sql`exists (
           select 1
           from ${workoutExercises}

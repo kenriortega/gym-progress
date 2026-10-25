@@ -1,4 +1,6 @@
 "use client";
+import { describeBlock, DISCIPLINES } from "@/lib/training-blocks";
+import { formatTarget, formatSet } from "@/lib/training-metrics";
 
 import { useState, useSyncExternalStore } from "react";
 import { DocumentLink } from "@/components/document-link";
@@ -57,7 +59,7 @@ export default function SavedPlansPage() {
               <ul className="mt-4 space-y-3">
                 {scheduled.map(({ plan, movedFrom }) => (
                   <li key={plan.id}>
-                    <a href={`#plan-${plan.id}`} className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4">{plan.name}</a>
+                    <a href={`#plan-${plan.id}`} className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4">{plan.name} · {DISCIPLINES[plan.discipline ?? "strength"]}</a>
                     {movedFrom && <p className="text-sm text-muted-foreground">Movido desde el {localDate(movedFrom).toLocaleDateString("es", { day: "numeric", month: "long" })}.</p>}
                   </li>
                 ))}
@@ -80,14 +82,15 @@ export default function SavedPlansPage() {
                   </StartWorkoutButton>
                   {plan.description && <p className="mt-3 max-w-prose whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">{plan.description}</p>}
                   {plan.exercises.length === 0 && <p className="mt-4 text-sm text-muted-foreground">Este plan todavía no tiene ejercicios.</p>}
+                  {(plan.blocks ?? []).map((block) => <p key={block.id} className="mt-3 text-sm font-semibold">{block.name} · {describeBlock(block)}{block.prescription ? ` · ${block.prescription}` : ""}</p>)}
                   <ol className="mt-5 space-y-6">
                     {plan.exercises.map((exercise) => (
                       <li key={exercise.id} className="break-words">
                         <h3 className="font-semibold">{exercise.name}</h3>
-                        <p className="mt-1 text-sm text-muted-foreground">{exercise.muscleGroup} · {exercise.targetSets} series × {exercise.targetRepsMin === exercise.targetRepsMax ? exercise.targetRepsMin : `${exercise.targetRepsMin}–${exercise.targetRepsMax}`} repeticiones</p>
+                        <p className="mt-1 text-sm text-muted-foreground">{exercise.muscleGroup} · {formatTarget(exercise)}</p>
                         {exercise.notes && <p className="mt-2 max-w-prose whitespace-pre-wrap text-sm leading-6">{exercise.notes}</p>}
                         {exercise.previous && exercise.previous.sets.length > 0 && <p className="mt-2 max-w-prose text-sm leading-6 text-muted-foreground">
-                          Última sesión ({new Date(exercise.previous.performedAt).toLocaleDateString("es")}): {exercise.previous.sets.map((set) => `${set.weight} ${exercise.previous!.weightUnit} × ${set.reps}`).join(" · ")}.
+                          Última sesión ({new Date(exercise.previous.performedAt).toLocaleDateString("es")}): {exercise.previous.sets.map((set) => formatSet(set, exercise.previous!.weightUnit)).join(" · ")}.
                         </p>}
                       </li>
                     ))}

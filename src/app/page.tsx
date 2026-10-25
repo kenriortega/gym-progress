@@ -153,11 +153,11 @@ export default async function Home() {
   const trainedRows = await db
     .select({
       day: sql<string>`to_char(${workouts.performedAt}, 'YYYY-MM-DD')`,
-      volume: sql<string>`coalesce(sum(${workoutSets.weight} * ${workoutSets.reps}), 0)`,
+      volume: sql<string>`coalesce(sum(case when ${workoutSets.loadType} = 'external' and ${workoutSets.durationSeconds} is null then ${workoutSets.weight} * ${workoutSets.reps} else 0 end), 0)`,
     })
     .from(workouts)
-    .innerJoin(workoutExercises, eq(workoutExercises.workoutId, workouts.id))
-    .innerJoin(workoutSets, eq(workoutSets.workoutExerciseId, workoutExercises.id))
+    .leftJoin(workoutExercises, eq(workoutExercises.workoutId, workouts.id))
+    .leftJoin(workoutSets, eq(workoutSets.workoutExerciseId, workoutExercises.id))
     .where(
       and(
         eq(workouts.userId, session.user.id),
@@ -193,6 +193,7 @@ export default async function Home() {
           position: workoutExercises.position,
           setPosition: workoutSets.position,
           weight: workoutSets.weight,
+          loadType: workoutExercises.loadType, measurement: workoutExercises.measurement,
         })
         .from(workoutExercises)
         .innerJoin(exercises, eq(exercises.id, workoutExercises.exerciseId))
@@ -215,6 +216,7 @@ export default async function Home() {
             position: row.position,
             sets: 0,
             maxWeight: 0,
+            external: row.loadType === "external" && row.measurement === "reps",
           };
 
           if (row.setPosition !== null) {
@@ -235,6 +237,7 @@ export default async function Home() {
             position: number;
             sets: number;
             maxWeight: number;
+            external: boolean;
           }
         >(),
       )
@@ -461,7 +464,7 @@ export default async function Home() {
                   </Link>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {exercise.sets} {exercise.sets === 1 ? "serie" : "series"}
-                    {exercise.sets > 0 && lastWorkout
+                    {exercise.external && exercise.sets > 0 && lastWorkout
                       ? ` · hasta ${exercise.maxWeight} ${lastWorkout.weightUnit}`
                       : ""}
                   </p>

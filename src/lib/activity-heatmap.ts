@@ -59,7 +59,7 @@ export function heatmapOf(trained: TrainedDay[], today = new Date()): HeatCell[]
     for (let weekday = 0; weekday < 7; weekday++) {
       const day = dayOf(cursor);
       const volume = volumes.get(day) ?? 0;
-      column.push({ day, volume, level: levelOf(volume, cuts) });
+      column.push({ day, volume, level: volumes.has(day) && volume === 0 ? 1 : levelOf(volume, cuts) });
       cursor.setDate(cursor.getDate() + 1);
     }
     weeks.push(column);

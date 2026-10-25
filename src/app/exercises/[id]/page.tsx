@@ -1,3 +1,4 @@
+import { CalisthenicsProgress } from "@/components/calisthenics-progress";
 import { and, asc, eq, isNull, or } from "drizzle-orm";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -57,7 +58,7 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
     .from(workoutSets)
     .innerJoin(workoutExercises, eq(workoutExercises.id, workoutSets.workoutExerciseId))
     .innerJoin(workouts, eq(workouts.id, workoutExercises.workoutId))
-    .where(and(eq(workoutExercises.exerciseId, exercise.id), eq(workouts.userId, session.user.id), eq(workouts.status, "completed")))
+    .where(and(eq(workoutExercises.exerciseId, exercise.id), eq(workouts.userId, session.user.id), eq(workouts.status, "completed"), eq(workoutSets.loadType, "external"), isNull(workoutSets.durationSeconds), isNull(workoutExercises.variation)))
     .orderBy(asc(workouts.performedAt), asc(workoutSets.position));
 
   const sessions = new Map<string, { id: string; date: Date; sets: Array<{ weight: number; reps: number }>; maxWeight: number; volume: number }>();
@@ -127,6 +128,7 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
         icon={<MuscleIcon group={exercise.muscleGroup} className="h-12 w-auto text-foreground" />}
       />
 
+      <CalisthenicsProgress userId={session.user.id} exerciseId={exercise.id} />
       {hasFigure(exercise.equipmentKey, exercise.name) ? (
         <Card className="mt-6 p-5">
           <CardHeader className="p-0">

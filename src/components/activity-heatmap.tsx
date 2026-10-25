@@ -92,7 +92,7 @@ export function ActivityHeatmap({ trained }: { trained: TrainedDay[] }) {
                     className={`block size-[11px] rounded-[2px] ${TONES[cell.level]}`}
                     title={
                       cell.level > 0
-                        ? `${dayFormatter.format(localDate(cell.day))}: ${Math.round(cell.volume)} kg movidos`
+                        ? `${dayFormatter.format(localDate(cell.day))}: ${cell.volume > 0 ? `${Math.round(cell.volume)} kg de carga externa` : "entrenamiento completado"}`
                         : dayFormatter.format(localDate(cell.day))
                     }
                   />

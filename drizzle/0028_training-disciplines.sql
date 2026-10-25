@@ -1,0 +1,2 @@
+ALTER TABLE "training_plans" ADD COLUMN "discipline" varchar(20) DEFAULT 'strength' NOT NULL;--> statement-breakpoint
+ALTER TABLE "workouts" ADD COLUMN "discipline" varchar(20) DEFAULT 'strength' NOT NULL;

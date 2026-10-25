@@ -73,7 +73,7 @@ export function PlanTemplates({ titulo }: { titulo?: string }) {
                 <li key={ejercicio.name} className="flex justify-between gap-3">
                   <span className="min-w-0 truncate">{ejercicio.name}</span>
                   <span className="shrink-0 tabular-nums">
-                    {ejercicio.sets}×{ejercicio.repsMin}–{ejercicio.repsMax}
+                    {ejercicio.measurement === "time" ? `${ejercicio.sets} × ${ejercicio.targetSeconds} s` : `${ejercicio.sets}×${ejercicio.repsMin}–${ejercicio.repsMax}`}
                   </span>
                 </li>
               ))}

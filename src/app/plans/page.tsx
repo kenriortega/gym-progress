@@ -1,3 +1,4 @@
+import { DISCIPLINES } from "@/lib/training-blocks";
 import { OfflinePlansStatus } from "@/components/offline-plans-status";
 import {
   and,
@@ -149,6 +150,7 @@ export default async function PlansPage() {
           </CardDescription>
         </CardHeader>
         <form action={createPlan} className="mt-5 space-y-3">
+          <FormSelect placeholder="Disciplina" name="discipline" defaultValue="strength" aria-label="Disciplina" options={Object.entries(DISCIPLINES).map(([value, label]) => ({ value, label }))} />
           <label className="block text-xs font-bold uppercase tracking-wider text-primary-foreground/75">
             Nombre
             <Input

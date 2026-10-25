@@ -24,7 +24,7 @@ export async function GET() {
       const [profile] = await tx.select({ weightUnit: users.preferredWeightUnit })
         .from(users).where(eq(users.id, userId)).limit(1);
       const plans = await tx.select({
-        id: trainingPlans.id, name: trainingPlans.name,
+        id: trainingPlans.id, name: trainingPlans.name, blocks: trainingPlans.blocks, discipline: trainingPlans.discipline,
         description: trainingPlans.description, weekday: trainingPlans.weekday,
       }).from(trainingPlans)
         .where(and(eq(trainingPlans.userId, userId), isNull(trainingPlans.archivedAt)))
@@ -33,7 +33,9 @@ export async function GET() {
       const rows = ids.length === 0 ? [] : await tx.select({
         id: trainingPlanExercises.id, planId: trainingPlanExercises.planId,
         exerciseId: exercises.id, name: exercises.name, muscleGroup: exercises.muscleGroup,
-        position: trainingPlanExercises.position, targetSets: trainingPlanExercises.targetSets,
+        position: trainingPlanExercises.position, variation: trainingPlanExercises.variation, progressionSteps: trainingPlanExercises.progressionSteps, progressionStep: trainingPlanExercises.progressionStep,
+      measurement: trainingPlanExercises.measurement, loadType: trainingPlanExercises.loadType, targetSeconds: trainingPlanExercises.targetSeconds,
+      targetSets: trainingPlanExercises.targetSets,
         targetRepsMin: trainingPlanExercises.targetRepsMin, targetRepsMax: trainingPlanExercises.targetRepsMax,
         notes: trainingPlanExercises.notes,
       }).from(trainingPlanExercises)
@@ -48,36 +50,42 @@ export async function GET() {
         .where(and(eq(planReschedules.userId, userId), inArray(planReschedules.planId, ids)));
       const exerciseIds = [...new Set(rows.map((row) => row.exerciseId))];
       const previousRows = exerciseIds.length === 0 ? [] : await tx
-        .selectDistinctOn([workoutExercises.exerciseId], {
+        .selectDistinctOn([workoutExercises.exerciseId, workoutExercises.measurement, workoutExercises.loadType, workoutExercises.variation], {
           id: workoutExercises.id, exerciseId: workoutExercises.exerciseId,
+          variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
+      measurement: workoutExercises.measurement, loadType: workoutExercises.loadType,
           performedAt: workouts.performedAt, weightUnit: workouts.weightUnit,
         }).from(workoutExercises)
         .innerJoin(workouts, eq(workouts.id, workoutExercises.workoutId))
         .where(and(eq(workouts.userId, userId), eq(workouts.status, "completed"),
           inArray(workoutExercises.exerciseId, exerciseIds)))
-        .orderBy(asc(workoutExercises.exerciseId), desc(workouts.performedAt), desc(workouts.id));
+        .orderBy(asc(workoutExercises.exerciseId), asc(workoutExercises.measurement), asc(workoutExercises.loadType), asc(workoutExercises.variation), desc(workouts.performedAt), desc(workouts.id));
       const previousIds = previousRows.map((row) => row.id);
       const previousSets = previousIds.length === 0 ? [] : await tx.select({
         workoutExerciseId: workoutSets.workoutExerciseId, reps: workoutSets.reps,
+        durationSeconds: workoutSets.durationSeconds, loadType: workoutSets.loadType, assistanceNote: workoutSets.assistanceNote,
         weight: workoutSets.weight, rpe: workoutSets.rpe,
       }).from(workoutSets).where(inArray(workoutSets.workoutExerciseId, previousIds))
         .orderBy(asc(workoutSets.position));
-      const previous = new Map<string, PreviousPerformance>(previousRows.map((row) => [row.exerciseId, {
+      const previous = new Map<string, PreviousPerformance>(previousRows.map((row) => [`${row.exerciseId}:${row.measurement}:${row.loadType}:${row.variation ?? ""}`, {
         performedAt: row.performedAt.toISOString(), weightUnit: row.weightUnit,
         sets: previousSets.filter((set) => set.workoutExerciseId === row.id).map((set) => ({
+          durationSeconds: set.durationSeconds, loadType: set.loadType, assistanceNote: set.assistanceNote,
           reps: set.reps, weight: Number(set.weight), rpe: set.rpe === null ? null : Number(set.rpe),
         })),
       }]));
       return {
-        schemaVersion: 1, userId, weightUnit: profile?.weightUnit ?? "kg", generatedAt: Date.now(),
+        schemaVersion: 3, userId, weightUnit: profile?.weightUnit ?? "kg", generatedAt: Date.now(),
         plans: plans.map((plan) => ({
           ...plan,
           exercises: rows.filter((row) => row.planId === plan.id).map((exercise) => ({
             id: exercise.id, exerciseId: exercise.exerciseId, name: exercise.name,
             muscleGroup: exercise.muscleGroup, position: exercise.position,
-            targetSets: exercise.targetSets, targetRepsMin: exercise.targetRepsMin,
+            variation: exercise.variation, progressionSteps: exercise.progressionSteps, progressionStep: exercise.progressionStep,
+        measurement: exercise.measurement, loadType: exercise.loadType, targetSeconds: exercise.targetSeconds,
+          targetSets: exercise.targetSets, targetRepsMin: exercise.targetRepsMin,
             targetRepsMax: exercise.targetRepsMax, notes: exercise.notes,
-            previous: previous.get(exercise.exerciseId) ?? null,
+            previous: previous.get(`${exercise.exerciseId}:${exercise.measurement}:${exercise.loadType}:${exercise.variation ?? ""}`) ?? null,
           })),
         })),
         reschedules,
