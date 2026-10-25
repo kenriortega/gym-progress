@@ -95,6 +95,8 @@ El navegador nunca habla directamente con PostgreSQL. Todas las consultas se eje
 | Ruta | Qué es |
 |---|---|
 | `/` | Inicio: plan de hoy, tus planes y resumen del último entrenamiento. |
+| `/abrir` | Entrada estática del icono: sesión activa, Inicio o planes guardados según disponibilidad. |
+| `/offline` | Inicio sin conexión con acceso a la sesión y los planes del dispositivo. |
 | `/entreno` | **Entrenamiento. Funciona sin conexión.** Estática y precacheada. |
 | `/workout/[id]` | Ajustes de la sesión: reordenar, editar objetivos, notas. Necesita red. |
 | `/plans`, `/plans/[id]` | Planes, plantillas y archivados. |
@@ -102,16 +104,25 @@ El navegador nunca habla directamente con PostgreSQL. Todas las consultas se eje
 | `/history`, `/history/[id]` | Historial de sesiones. |
 | `/ajustes`, `/ayuda`, `/novedades` | Unidad de peso, guía de uso y registro de cambios. |
 | `/privacidad`, `/terminos` | Páginas legales, públicas porque Google las consulta sin sesión. |
+| `/planes-guardados` | Consulta offline de todos los planes descargados, calendario y últimas marcas. |
+| `/api/offline/plans` | Descarga autenticada de los planes activos y sus referencias. |
 | `/api/snapshot`, `/api/sync` | Descarga de la sesión y recepción de la cola offline. |
 
 ## Cómo funciona sin conexión
 
-1. Al abrir `/entreno` con red, la app descarga la sesión completa (`/api/snapshot`) y la guarda en IndexedDB. Son unos 650 bytes por ejercicio.
+1. Al abrir la app con red se descargan los planes activos. Empezar un plan crea la sesión y sus identificadores en IndexedDB; una sesión del servidor se recupera mediante `/api/snapshot`.
 2. La pantalla se pinta desde esa copia, haya red o no.
-3. Al registrar, editar o borrar una serie, el cambio se ve al instante, se guarda en el móvil y se encola.
-4. Al volver la conexión, la cola se envía en orden a `/api/sync`. Todas las operaciones son idempotentes.
+3. En `/entreno`, registrar o borrar una serie guarda la sesión y la operación pendiente en una sola transacción de IndexedDB. La pantalla confirma el cambio después del guardado. Sesiones y cola se separan por usuario.
+4. Al abrir la pantalla, registrar cambios o recuperar conexión, la cola se envía en orden a `/api/sync`. Solo se elimina cada operación cuando el servidor la confirma; los errores de autenticación y conflictos conservan los datos.
+5. Finalizar sin conexión conserva la sesión local hasta recibir confirmación y permite empezar otra. Se respetan las fechas originales del inicio, series y finalización. Las descargas antiguas no sobrescriben cambios locales y las pestañas comparten un bloqueo de sincronización.
 
-**Lo que todavía necesita red:** empezar un entrenamiento, iniciar sesión, y las pantallas de historial y progreso.
+Al abrir la app con conexión se descargan también todos tus planes activos, su calendario, notas y últimas marcas. Inicio y Planes muestran cuántos están disponibles y cuándo se actualizaron. Puedes consultarlos sin conexión en `/planes-guardados`, sin abrir antes cada plan. Puedes empezar una sesión desde cualquier plan descargado, completar varias sesiones sin red y sincronizarlas después.
+
+El icono usa una entrada precacheada. Si Inicio no puede abrirse con red, aparece el inicio offline con acceso a la sesión y los planes. El envío muestra su estado por cuenta y usa Background Sync como mejora opcional, además de reintentos con la app abierta. Las páginas privadas no se recuperan de una caché HTTP antigua.
+
+Decisiones, pruebas y límites de las entregas: [docs/offline.md](docs/offline.md).
+
+**Lo que todavía necesita red:** iniciar sesión, editar planes/ajustes de sesión y consultar historial y progreso completos. Empezar un plan descargado, registrar series y finalizar funciona sin conexión.
 
 ## Despliegue
 
