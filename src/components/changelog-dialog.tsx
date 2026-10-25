@@ -44,17 +44,23 @@ export function ChangelogDialog() {
         if (!open) marcarVistas();
       }}
     >
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden sm:max-w-md">
+        <DialogHeader className="shrink-0 pr-8">
           <DialogTitle className="flex items-center gap-2">
-            <SparklesIcon className="size-4 text-primary" />
+            <SparklesIcon className="size-4 shrink-0 text-primary" />
             {ultima.title}
           </DialogTitle>
           <DialogDescription>
-            Esto es lo que ha cambiado desde la última vez que entraste.
+            Un vistazo a la última actualización.
           </DialogDescription>
         </DialogHeader>
 
+        <div
+          role="region"
+          aria-label="Novedades de la actualización"
+          tabIndex={0}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline-2 focus-visible:outline-ring"
+        >
         <ul className="space-y-2">
           {ultima.items.map((item) => (
             <li
@@ -66,8 +72,9 @@ export function ChangelogDialog() {
             </li>
           ))}
         </ul>
+        </div>
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0">
           <Button
             variant="outline"
             className="w-full sm:w-auto"

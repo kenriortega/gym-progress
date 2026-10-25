@@ -45,6 +45,40 @@ await test("planes, bloques y WOD en la app real con PostgreSQL aislado", { time
     await context.addCookies([{ name: "authjs.session-token", value: sessionToken, url: origin }]);
     await context.route("**/ingest/**", (route) => route.fulfill({ status: 200, json: {} }));
     let page = await context.newPage(); const errors = []; page.on("pageerror", (error) => errors.push(error.message));
+    // Las novedades deben poder leerse y cerrarse incluso con poca altura.
+    await page.goto(origin);
+    const news = page.getByRole("dialog", { name: "Nuevas formas de entrenar", exact: true });
+    await news.waitFor();
+    for (const viewport of [{ width: 320, height: 568 }, { width: 667, height: 320 }, { width: 1440, height: 900 }]) {
+      await page.setViewportSize(viewport);
+      await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      await until(async () => {
+        const bounds = await news.boundingBox();
+        return bounds.y >= 15 && bounds.y + bounds.height <= viewport.height - 15;
+      }, "El modal cabe en la pantalla después de la animación");
+      for (const name of ["Entendido", "Ver todas"]) {
+        const button = await news.getByRole("button", { name, exact: true }).boundingBox();
+        assert.ok(button && button.y >= 0 && button.y + button.height <= viewport.height, "Los controles permanecen visibles");
+      }
+      if (viewport.height === 320) {
+        const region = news.getByRole("region", { name: "Novedades de la actualización", exact: true });
+        const scroll = await region.evaluate((element) => {
+          element.scrollTop = element.scrollHeight;
+          return { overflowing: element.scrollHeight > element.clientHeight, scrolled: element.scrollTop > 0 };
+        });
+        assert.equal(scroll.overflowing, true);
+        assert.equal(scroll.scrolled, true);
+      }
+      await page.screenshot({ path: `/tmp/gym-changelog-${viewport.width}x${viewport.height}.png`, animations: "disabled" });
+    }
+    await news.getByRole("button", { name: "Entendido", exact: true }).click();
+    await news.waitFor({ state: "hidden" });
+    await page.reload();
+    assert.equal(await page.getByRole("dialog").count(), 0);
+    await page.evaluate(() => localStorage.removeItem("gym-progress:novedades-vistas"));
+    await page.reload(); await news.waitFor(); await page.keyboard.press("Escape");
+    await news.waitFor({ state: "hidden" });
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${origin}/plans/${planId}`);
     await page.getByRole("heading", { name: "Plan de prueba", exact: true }).waitFor();
     // Crear un ejercicio por tiempo mediante el formulario real.
