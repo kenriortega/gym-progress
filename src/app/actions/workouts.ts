@@ -83,6 +83,10 @@ export async function startWorkout(formData?: FormData) {
       ? requiredUuid(formData!, "planId")
       : null;
 
+  // Compatibilidad con enlaces/actions de versiones anteriores: el inicio de
+  // un plan pasa ahora por la copia local y exige el mismo botón de confirmación.
+  if (planId) redirect(`/planes-guardados#plan-${planId}`);
+
   const [existingWorkout] = await db
     .select({ id: workouts.id })
     .from(workouts)

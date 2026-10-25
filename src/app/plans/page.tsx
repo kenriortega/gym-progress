@@ -1,3 +1,4 @@
+import { OfflinePlansStatus } from "@/components/offline-plans-status";
 import {
   and,
   asc,
@@ -135,6 +136,7 @@ export default async function PlansPage() {
         eyebrow="Organización"
         title="Planes de entrenamiento"
       />
+      <OfflinePlansStatus userId={session.user.id} />
 
       <Card className="mt-8 bg-primary p-5 text-primary-foreground">
         <CardHeader className="p-0">

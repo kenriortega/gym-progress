@@ -11,7 +11,7 @@ import {
   updatePlan,
   updatePlanExercise,
 } from "@/app/actions/plans";
-import { startWorkout } from "@/app/actions/workouts";
+import { StartWorkoutButton } from "@/components/start-workout-button";
 import { auth } from "@/auth";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { PendingButton } from "@/components/pending-button";
@@ -73,12 +73,10 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
     <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-12 pt-6">
       <AppHeader backHref="/plans" eyebrow="Configurar plan" title={plan.name} />
 
-      <form action={startWorkout} className="mt-6">
-        <input type="hidden" name="planId" value={plan.id} />
-        <PendingButton type="submit" disabled={plannedExercises.length === 0} pendingLabel="Preparando…" className="h-14 w-full rounded-2xl bg-primary text-base font-black text-primary-foreground disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground">
-          {plannedExercises.length === 0 ? "Añade ejercicios para empezar" : "Empezar este entrenamiento"}
-        </PendingButton>
-      </form>
+      <StartWorkoutButton userId={userId} planId={plan.id} disabled={plannedExercises.length === 0}
+        className="mt-6 h-14 w-full rounded-2xl bg-primary text-base font-black text-primary-foreground disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground">
+        {plannedExercises.length === 0 ? "Añade ejercicios para empezar" : "Empezar este entrenamiento"}
+      </StartWorkoutButton>
 
       <Card className="mt-4 p-4">
         <Collapsible>

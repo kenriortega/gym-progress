@@ -1,16 +1,17 @@
+import { OfflineSyncStatus } from "@/components/offline-sync-status";
+import { OfflinePlansStatus } from "@/components/offline-plans-status";
 import { and, asc, count, desc, eq, gte, isNull, sql } from "drizzle-orm";
 import Link from "next/link";
 import { ChevronRightIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 
-import { startWorkout } from "@/app/actions/workouts";
+import { StartWorkoutButton } from "@/components/start-workout-button";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { AppHeader } from "@/components/app-header";
 import { dayOf, localDate } from "@/lib/dates";
 import { plansOn } from "@/lib/schedule";
 import { greetingName } from "@/lib/display-name";
-import { PendingButton } from "@/components/pending-button";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/button-link";
 import { ChangelogDialog } from "@/components/changelog-dialog";
@@ -60,6 +61,7 @@ export default async function Home() {
     redirect("/login");
   }
 
+  const userId = session.user.id;
   const displayName = session.user.name ?? session.user.email ?? "Atleta";
 
   const [activeWorkout] = await db
@@ -247,6 +249,8 @@ export default async function Home() {
         eyebrow="Tu progreso, serie a serie"
         title={`Hola, ${greetingName(displayName)}`}
       />
+      <OfflinePlansStatus userId={userId} />
+      <OfflineSyncStatus userId={userId} />
 
       <Card className="mt-8 gap-0 overflow-hidden bg-primary p-6 text-primary-foreground">
         <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary-foreground/75">
@@ -283,18 +287,9 @@ export default async function Home() {
         {activeWorkout ? (
           <div className="mt-7 grid gap-2">
             {staleWorkout && todayPlan ? (
-              <form action={startWorkout}>
-                <input type="hidden" name="planId" value={todayPlan.id} />
-                <input type="hidden" name="discardActive" value="1" />
-                <PendingButton
-                  type="submit"
-                  size="lg"
-                  pendingLabel="Preparando…"
-                  className="h-14 w-full rounded-2xl bg-background text-base font-semibold text-foreground hover:bg-background/90"
-                >
-                  Descartar y empezar {todayPlan.name}
-                </PendingButton>
-              </form>
+              <ButtonLink href={`/workout/${activeWorkout.id}`} className="h-14 w-full rounded-2xl bg-background text-base font-semibold text-foreground hover:bg-background/90">
+                Resolver la sesión pendiente
+              </ButtonLink>
             ) : null}
             <ButtonLink
               href="/entreno"
@@ -316,18 +311,11 @@ export default async function Home() {
             </ButtonLink>
           </div>
         ) : todayPlan ? (
-          <form action={startWorkout}>
-            <input type="hidden" name="planId" value={todayPlan.id} />
-            <PendingButton
-              type="submit"
-              size="lg"
-              disabled={todayPlan.exerciseCount === 0}
-              pendingLabel="Preparando…"
-              className="mt-7 h-14 w-full rounded-2xl bg-background text-base font-semibold text-foreground hover:bg-background/90"
-            >
-              Empezar {todayPlan.name}
-            </PendingButton>
-          </form>
+          <StartWorkoutButton userId={userId} planId={todayPlan.id}
+            size="lg" disabled={todayPlan.exerciseCount === 0}
+            className="mt-7 h-14 w-full rounded-2xl bg-background text-base font-semibold text-foreground hover:bg-background/90">
+            Empezar {todayPlan.name}
+          </StartWorkoutButton>
         ) : (
           <ButtonLink
             href={plans.length > 0 ? "#planes" : "/plans"}
@@ -394,12 +382,7 @@ export default async function Home() {
                     </p>
                   </div>
                   {!activeWorkout && plan.exerciseCount > 0 ? (
-                    <form action={startWorkout}>
-                      <input type="hidden" name="planId" value={plan.id} />
-                      <PendingButton type="submit" size="sm" pendingLabel="…">
-                        Iniciar
-                      </PendingButton>
-                    </form>
+                    <StartWorkoutButton userId={userId} planId={plan.id} size="sm">Iniciar</StartWorkoutButton>
                   ) : (
                     <ButtonLink
                       href={`/plans/${plan.id}`}

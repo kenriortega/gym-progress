@@ -1,6 +1,8 @@
 import withSerwistInit from "@serwist/next";
 import type { NextConfig } from "next";
 
+const buildTime = new Date().toISOString();
+
 const nextConfig: NextConfig = {
   // Solo al construir la imagen de Docker: empaqueta un servidor mínimo.
   // En Vercel no hace falta y se deja fuera.
@@ -10,7 +12,7 @@ const nextConfig: NextConfig = {
   env: {
     // Se evalúan al compilar, así que quedan fijadas en el despliegue.
     // VERCEL_GIT_COMMIT_SHA lo inyecta Vercel; en local no existe.
-    APP_BUILD_TIME: new Date().toISOString(),
+    APP_BUILD_TIME: buildTime,
     APP_COMMIT: process.env.VERCEL_GIT_COMMIT_SHA ?? "",
   },
   // Proxy inverso de PostHog: la analítica sale por nuestro propio dominio,
@@ -49,6 +51,11 @@ const esDesarrollo = process.env.NODE_ENV === "development";
 const withSerwist = withSerwistInit({
   swSrc: "src/app/sw.ts",
   swDest: "public/sw.js",
+  // El provider React es el único registro. El entry automático también
+  // parcheaba history y recargaba al volver online, ignorando el provider.
+  register: false,
+  cacheOnNavigation: false,
+  reloadOnOnline: false,
 });
 
 // Serwist configura webpack, y `next dev` usa Turbopack por defecto en Next 16.

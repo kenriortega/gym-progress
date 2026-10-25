@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import { DocumentLink } from "@/components/document-link";
+import { OfflineSyncStatus } from "@/components/offline-sync-status";
 
 import { FlagIcon, HistoryIcon, PlusIcon, Trash2Icon, WifiOffIcon } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { toast } from "sonner";
 
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
@@ -17,14 +18,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScreenSkeleton } from "@/components/screen-skeleton";
 import {
-  borrarSesion,
-  contar,
   encolar,
-  guardarSesion,
-  leerSesion,
+  refrescarSesion,
   sincronizar,
+  suscribirCambios,
 } from "@/lib/offline-queue";
-import type { WorkoutSnapshot } from "@/app/api/snapshot/route";
+import { subscribeOfflinePlans } from "@/lib/offline/plans";
+import { leerEstado } from "@/lib/offline/storage";
+import type { LocalWorkout, WorkoutSnapshot } from "@/lib/offline/types";
 import { ButtonLink } from "@/components/button-link";
 import {
   ExerciseProgress,
@@ -39,59 +40,70 @@ import {
  * fresca cuando hay red.
  */
 export default function EntrenoPage() {
-  const [sesion, setSesion] = useState<WorkoutSnapshot | null>(null);
+  const [sesion, setSesion] = useState<LocalWorkout | null>(null);
+  const [workouts, setWorkouts] = useState<LocalWorkout[]>([]);
+  const [legacyPending, setLegacyPending] = useState(0);
   const [cargando, setCargando] = useState(true);
   const [sinRed, setSinRed] = useState(false);
-  const [pendientes, setPendientes] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
-  const refrescar = useCallback(async () => {
-    try {
-      const respuesta = await fetch("/api/snapshot", { cache: "no-store" });
-      if (!respuesta.ok) throw new Error("sin datos");
-      const datos = (await respuesta.json()) as { workout: WorkoutSnapshot | null };
-      if (datos.workout) {
-        await guardarSesion(datos.workout);
-        setSesion(datos.workout);
-      } else {
-        setSesion(null);
-      }
-      setSinRed(false);
-    } catch {
-      setSinRed(true);
-    }
+  const cargarLocal = useCallback(async () => {
+    const local = await leerEstado();
+    setSesion(local.workout);
+    setWorkouts(local.workouts);
+    setLegacyPending(local.legacyPending);
   }, []);
+
+  const reintentar = useCallback(async () => {
+    try {
+      const account = await leerEstado();
+      const resultado = await sincronizar();
+      const current = await leerEstado();
+      if (account.userId !== current.userId || account.generation !== current.generation) return;
+      setError(null);
+      if (resultado.quedan === 0) await refrescarSesion();
+      setSinRed(!navigator.onLine);
+    } catch {
+      setSinRed(!navigator.onLine);
+      setError("No se pudo actualizar la sesión. Si hay cambios guardados en el dispositivo, se conservan.");
+    } finally {
+      try { await cargarLocal(); } catch {
+        setError("No se puede acceder al almacenamiento local. No registres cambios hasta recuperarlo.");
+      }
+    }
+  }, [cargarLocal]);
 
   useEffect(() => {
     let vivo = true;
-
-    (async () => {
-      // Primero lo guardado: la pantalla aparece al instante, con o sin red.
-      const local = await leerSesion<WorkoutSnapshot>();
-      if (vivo && local) setSesion(local);
-      if (vivo) setCargando(false);
-
-      await refrescar();
-      if (vivo) setPendientes(await contar());
-    })();
-
-    const alVolver = async () => {
-      const { enviadas, quedan } = await sincronizar();
-      if (!vivo) return;
-      setPendientes(quedan);
-      if (enviadas > 0) {
-        toast.success(
-          `${enviadas} ${enviadas === 1 ? "serie enviada" : "series enviadas"}`,
-        );
+    const cargar = async () => {
+      try {
+        const local = await leerEstado();
+        if (!vivo) return;
+        setSesion(local.workout);
+        setWorkouts(local.workouts);
+        setLegacyPending(local.legacyPending);
+          } catch {
+        if (vivo) setError("No se puede acceder al almacenamiento local. No registres cambios hasta recuperarlo.");
+      } finally {
+        if (vivo) setCargando(false);
       }
-      await refrescar();
     };
-
+    const alVolver = () => { void reintentar(); };
+    const unsubscribe = suscribirCambios(() => { void cargar(); });
+    const unsubscribePlans = subscribeOfflinePlans(() => {
+      setError(null);
+      void cargar();
+      alVolver();
+    });
+    void cargar().then(() => { if (vivo) alVolver(); });
     window.addEventListener("online", alVolver);
     return () => {
       vivo = false;
+      unsubscribe();
+      unsubscribePlans();
       window.removeEventListener("online", alVolver);
     };
-  }, [refrescar]);
+  }, [reintentar]);
 
   const registrar = useCallback(
     async (
@@ -101,31 +113,12 @@ export default function EntrenoPage() {
       rpe: number | null,
     ) => {
       if (!sesion) return;
-
       const setId = crypto.randomUUID();
-
-      // Se pinta al instante y se guarda en el móvil. El envío viene después.
-      setSesion((actual) => {
-        if (!actual) return actual;
-        return {
-          ...actual,
-          exercises: actual.exercises.map((e) =>
-            e.workoutExerciseId === ejercicio.workoutExerciseId
-              ? {
-                  ...e,
-                  sets: [
-                    ...e.sets,
-                    { id: setId, position: e.sets.length, reps, weight: peso },
-                  ],
-                }
-              : e,
-          ),
-        };
-      });
-
+      // La pantalla solo confirma cuando snapshot y cola están persistidos.
       await encolar({
         id: setId,
         kind: "addSet",
+        userId: sesion.userId,
         workoutId: sesion.workoutId,
         workoutExerciseId: ejercicio.workoutExerciseId,
         setId,
@@ -134,77 +127,83 @@ export default function EntrenoPage() {
         rpe,
         createdAt: Date.now(),
       });
-
-      const { quedan } = await sincronizar();
-      setPendientes(quedan);
-      if (quedan === 0) {
-        await guardarSesion({ ...sesion, fetchedAt: Date.now() });
-      }
+      await cargarLocal();
+      void reintentar();
     },
-    [sesion],
+    [sesion, cargarLocal, reintentar],
   );
 
   const borrarSerie = useCallback(
-    async (workoutExerciseId: string, setId: string) => {
+    async (_workoutExerciseId: string, setId: string) => {
       if (!sesion) return;
-
-      setSesion((actual) =>
-        actual
-          ? {
-              ...actual,
-              exercises: actual.exercises.map((e) =>
-                e.workoutExerciseId === workoutExerciseId
-                  ? { ...e, sets: e.sets.filter((s) => s.id !== setId) }
-                  : e,
-              ),
-            }
-          : actual,
-      );
-
-      await encolar({
-        id: crypto.randomUUID(),
-        kind: "deleteSet",
+      try {
+        await encolar({
+          id: crypto.randomUUID(),
+          kind: "deleteSet",
+          userId: sesion.userId,
         workoutId: sesion.workoutId,
-        setId,
-        createdAt: Date.now(),
-      });
-      setPendientes((await sincronizar()).quedan);
+          setId,
+          createdAt: Date.now(),
+        });
+        await cargarLocal();
+        void reintentar();
+      } catch {
+        toast.error("No se pudo guardar el borrado en el dispositivo. Inténtalo de nuevo.");
+      }
     },
-    [sesion],
+    [sesion, cargarLocal, reintentar],
   );
 
   const finalizar = useCallback(async () => {
     if (!sesion) return;
-    await encolar({
-      id: crypto.randomUUID(),
-      kind: "finishWorkout",
-      workoutId: sesion.workoutId,
-      createdAt: Date.now(),
-    });
-    const { quedan } = await sincronizar();
-    setPendientes(quedan);
-    await borrarSesion();
-    setSesion(null);
-    toast.success(
-      quedan === 0
-        ? "Entrenamiento finalizado"
-        : "Finalizado. Se enviará al volver la conexión.",
-    );
-  }, [sesion]);
+    try {
+      await encolar({
+        id: crypto.randomUUID(),
+        kind: "finishWorkout",
+        userId: sesion.userId,
+        workoutId: sesion.workoutId,
+        createdAt: Date.now(),
+      });
+      await cargarLocal();
+      toast.success("Entrenamiento finalizado en este dispositivo. Pendiente de sincronizar.");
+      void reintentar();
+    } catch {
+      toast.error("No se pudo guardar la finalización. La sesión sigue abierta.");
+    }
+  }, [sesion, cargarLocal, reintentar]);
+
+  const estadoSync = (
+    <>
+      <OfflineSyncStatus />
+      {legacyPending > 0 && <p role="status" className="mt-4 text-sm text-muted-foreground">Hay cambios de una versión anterior pendientes de recuperar. Conéctate con su cuenta original para verificarlos; siguen guardados.</p>}
+      {workouts.some((workout) => workout.localCompletedAt) && <section aria-label="Sesiones finalizadas pendientes" className="mt-5">
+        <h2 className="text-sm font-semibold">Sesiones finalizadas pendientes de enviar</h2>
+        <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
+          {workouts.filter((workout) => workout.localCompletedAt).map((workout) => <li key={workout.workoutId}>
+            {workout.planName ?? "Sesión libre"} · {new Date(workout.performedAt).toLocaleDateString("es")} · {workout.exercises.reduce((total, exercise) => total + exercise.sets.length, 0)} series
+          </li>)}
+        </ul>
+      </section>}
+      {error && <p role="alert" className="mt-4 text-sm text-muted-foreground">{error}</p>}
+    </>
+  );
 
   if (cargando) return <ScreenSkeleton />;
 
-  if (!sesion) {
+  if (!sesion || sesion.localCompletedAt) {
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col justify-center px-5 py-10">
         <Alert>
           <WifiOffIcon />
-          <AlertTitle>No hay entrenamiento guardado</AlertTitle>
+          <AlertTitle>{sesion?.localCompletedAt ? "Entrenamiento finalizado en este dispositivo" : "Elige tu próximo entrenamiento"}</AlertTitle>
           <AlertDescription>
-            Empieza una sesión con conexión y quedará disponible aquí aunque
-            luego te quedes sin cobertura.
+            {sesion?.localCompletedAt
+              ? "La sesión y sus cambios se conservan hasta que el servidor confirme la sincronización."
+              : "Puedes empezar otro entrenamiento desde tus planes guardados, también sin conexión."}
           </AlertDescription>
         </Alert>
+        {estadoSync}
+        <a href="/planes-guardados" className="mt-6 inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4">Elegir un plan guardado</a>
         <ButtonLink href="/" className="mt-6 h-12">
           Ir al inicio
         </ButtonLink>
@@ -213,7 +212,7 @@ export default function EntrenoPage() {
   }
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-16 pt-6">
+    <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-16 pt-12">
       <header className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">
@@ -239,12 +238,7 @@ export default function EntrenoPage() {
         </Alert>
       )}
 
-      {pendientes > 0 && (
-        <p className="mt-4 rounded-xl bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-200">
-          {pendientes} {pendientes === 1 ? "serie" : "series"} sin enviar
-          todavía.
-        </p>
-      )}
+      {estadoSync}
 
       <SessionProgress
         ejercicios={sesion.exercises.map((e) => ({
@@ -286,6 +280,7 @@ export default function EntrenoPage() {
         </ConfirmSubmitButton>
       </form>
 
+      {sesion.serverCreated && <ButtonLink href={`/workout/${sesion.workoutId}`} variant="outline" className="mt-4 min-h-11 w-full">Ajustes de la sesión · requiere conexión</ButtonLink>}
       <p className="mt-4 text-center text-xs leading-5 text-muted-foreground">
         Para reordenar ejercicios o cambiar objetivos, entra desde el inicio.
         Eso necesita conexión.
@@ -312,8 +307,12 @@ function TarjetaEjercicio({
   ) => Promise<void>;
   onBorrar: (workoutExerciseId: string, setId: string) => Promise<void>;
 }) {
-  const ultima = ejercicio.sets.at(-1) ?? ejercicio.previous.at(-1);
-  const [peso, setPeso] = useState(ultima ? String(ultima.weight) : "");
+  const fieldId = useId();
+  const currentSet = ejercicio.sets.at(-1);
+  const ultima = currentSet ?? ejercicio.previous.at(-1);
+  const referenceUnit = currentSet ? unidad : ejercicio.previousWeightUnit ?? unidad;
+  const initialWeight = ultima ? referenceUnit === unidad ? ultima.weight : referenceUnit === "lb" ? ultima.weight * 0.45359237 : ultima.weight / 0.45359237 : null;
+  const [peso, setPeso] = useState(initialWeight === null ? "" : String(Math.round(initialWeight * 100) / 100));
   const [reps, setReps] = useState(ultima ? String(ultima.reps) : "");
   const [rpe, setRpe] = useState("");
   const [guardando, setGuardando] = useState(false);
@@ -362,17 +361,18 @@ function TarjetaEjercicio({
             <AlertTitle>Última vez</AlertTitle>
             <AlertDescription>
               {ejercicio.previous.map((s) => `${s.weight}×${s.reps}`).join(" · ")}{" "}
-              {unidad}
+              {ejercicio.previousWeightUnit ?? unidad}
             </AlertDescription>
           </Alert>
         )}
 
-        <Link
+        {ejercicio.notes && <p className="whitespace-pre-wrap break-words text-sm leading-6">{ejercicio.notes}</p>}
+        <DocumentLink
           href={`/exercises/${ejercicio.exerciseId}`}
           className="inline-block text-xs font-bold text-muted-foreground transition hover:text-primary"
         >
           Ver progreso y gráfica →
-        </Link>
+        </DocumentLink>
       </div>
 
       {ejercicio.sets.length > 0 && (
@@ -405,53 +405,62 @@ function TarjetaEjercicio({
           evento.preventDefault();
           const p = Number(peso);
           const r = Number(reps);
-          if (!Number.isFinite(p) || p < 0 || !Number.isInteger(r) || r < 1) {
+          if (!Number.isFinite(p) || p < 0 || p > 99999 || !Number.isInteger(r) || r < 1 || r > 1000) {
             toast.error("Revisa el peso y las repeticiones.");
             return;
           }
           const esfuerzo = rpe === "" ? null : Number(rpe);
-          if (esfuerzo !== null && (esfuerzo < 1 || esfuerzo > 10)) {
+          if (esfuerzo !== null && (!Number.isFinite(esfuerzo) || esfuerzo < 1 || esfuerzo > 10)) {
             toast.error("El RPE va de 1 a 10.");
             return;
           }
           setGuardando(true);
-          await onRegistrar(ejercicio, p, r, esfuerzo);
-          setGuardadas((n) => n + 1);
-          setGuardando(false);
+          try {
+            await onRegistrar(ejercicio, p, r, esfuerzo);
+            setGuardadas((n) => n + 1);
+          } catch {
+            toast.error("No se pudo guardar la serie en el dispositivo. Inténtalo de nuevo.");
+          } finally {
+            setGuardando(false);
+          }
         }}
       >
         <div className="grid gap-1">
-          <Label className="text-[11px]">PESO {unidad.toUpperCase()}</Label>
+          <Label htmlFor={`${fieldId}-weight`} className="text-[11px]">PESO {unidad.toUpperCase()}</Label>
           <Input
             type="number"
             inputMode="decimal"
             min="0"
             step="0.01"
             required
+            id={`${fieldId}-weight`}
+            max="99999"
             value={peso}
             onChange={(e) => setPeso(e.target.value)}
             className="h-12 text-center text-lg font-semibold"
           />
         </div>
         <div className="grid gap-1">
-          <Label className="text-[11px]">REPS</Label>
+          <Label htmlFor={`${fieldId}-reps`} className="text-[11px]">REPS</Label>
           <Input
             type="number"
             inputMode="numeric"
             min="1"
             step="1"
             required
+            id={`${fieldId}-reps`}
+            max="1000"
             value={reps}
             onChange={(e) => setReps(e.target.value)}
             className="h-12 text-center text-lg font-semibold"
           />
         </div>
-        <Button type="submit" disabled={guardando} className="mt-5 h-12">
+        <Button type="submit" aria-label="Registrar serie" disabled={guardando} className="mt-5 h-12">
           {guardando ? "…" : <PlusIcon className="size-4" />}
         </Button>
 
         <div className="col-span-3 grid gap-1">
-          <Label className="text-[11px] text-muted-foreground">
+          <Label htmlFor={`${fieldId}-rpe`} className="text-[11px] text-muted-foreground">
             RPE · esfuerzo del 1 al 10 (opcional)
           </Label>
           <Input
@@ -461,6 +470,7 @@ function TarjetaEjercicio({
             max="10"
             step="0.5"
             placeholder="—"
+            id={`${fieldId}-rpe`}
             value={rpe}
             onChange={(e) => setRpe(e.target.value)}
             className="h-10 text-center"
@@ -469,7 +479,7 @@ function TarjetaEjercicio({
       </form>
 
       <div className="px-5 pb-5">
-        <PlateCalculator onUse={(kg) => setPeso(kg.toFixed(2))} />
+        <PlateCalculator onUse={(kg) => setPeso((unidad === "lb" ? kg / 0.45359237 : kg).toFixed(2))} />
         <RestTimer restartKey={guardadas} />
       </div>
     </Card>

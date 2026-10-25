@@ -11,37 +11,9 @@ import {
   workouts,
 } from "@/db/schema";
 
-export type SnapshotSet = {
-  id: string;
-  position: number;
-  reps: number;
-  weight: number;
-};
+import type { WorkoutSnapshot, SnapshotExercise } from "@/lib/offline/types";
 
-export type SnapshotExercise = {
-  workoutExerciseId: string;
-  exerciseId: string;
-  name: string;
-  muscleGroup: string;
-  position: number;
-  targetSets: number | null;
-  targetRepsMin: number | null;
-  targetRepsMax: number | null;
-  completed: boolean;
-  sets: SnapshotSet[];
-  /** Series de la última sesión completada con este ejercicio. */
-  previous: Array<{ reps: number; weight: number }>;
-};
-
-export type WorkoutSnapshot = {
-  workoutId: string;
-  planName: string | null;
-  weightUnit: string;
-  performedAt: string;
-  exercises: SnapshotExercise[];
-  /** Momento en que se descargó, para avisar de datos viejos. */
-  fetchedAt: number;
-};
+export const dynamic = "force-dynamic";
 
 /**
  * Entrega la sesión activa completa para guardarla en el móvil. Es lo que
@@ -57,6 +29,7 @@ export async function GET() {
   const [activo] = await db
     .select({
       id: workouts.id,
+      trainingPlanId: workouts.trainingPlanId,
       weightUnit: workouts.weightUnit,
       performedAt: workouts.performedAt,
       planName: trainingPlans.name,
@@ -67,7 +40,7 @@ export async function GET() {
     .limit(1);
 
   if (!activo) {
-    return NextResponse.json({ workout: null });
+    return NextResponse.json({ userId, workout: null }, { headers: { "Cache-Control": "private, no-store" } });
   }
 
   const filas = await db
@@ -81,6 +54,7 @@ export async function GET() {
       targetRepsMin: workoutExercises.targetRepsMin,
       targetRepsMax: workoutExercises.targetRepsMax,
       completedAt: workoutExercises.completedAt,
+      notes: workoutExercises.notes,
     })
     .from(workoutExercises)
     .innerJoin(exercises, eq(exercises.id, workoutExercises.exerciseId))
@@ -95,13 +69,14 @@ export async function GET() {
           position: workoutSets.position,
           reps: workoutSets.reps,
           weight: workoutSets.weight,
+          rpe: workoutSets.rpe,
         })
         .from(workoutSets)
         .where(eq(workoutSets.workoutExerciseId, fila.workoutExerciseId))
         .orderBy(asc(workoutSets.position));
 
       const [anterior] = await db
-        .select({ id: workoutExercises.id })
+        .select({ id: workoutExercises.id, weightUnit: workouts.weightUnit })
         .from(workoutExercises)
         .innerJoin(workouts, eq(workouts.id, workoutExercises.workoutId))
         .where(
@@ -133,11 +108,14 @@ export async function GET() {
         targetRepsMin: fila.targetRepsMin,
         targetRepsMax: fila.targetRepsMax,
         completed: fila.completedAt !== null,
+        notes: fila.notes,
+        previousWeightUnit: anterior?.weightUnit,
         sets: series.map((s) => ({
           id: s.id,
           position: s.position,
           reps: s.reps,
           weight: Number(s.weight),
+          rpe: s.rpe === null ? null : Number(s.rpe),
         })),
         previous: previas.map((s) => ({ reps: s.reps, weight: Number(s.weight) })),
       };
@@ -145,6 +123,8 @@ export async function GET() {
   );
 
   const snapshot: WorkoutSnapshot = {
+    userId,
+    trainingPlanId: activo.trainingPlanId,
     workoutId: activo.id,
     planName: activo.planName,
     weightUnit: activo.weightUnit,
@@ -153,5 +133,5 @@ export async function GET() {
     fetchedAt: Date.now(),
   };
 
-  return NextResponse.json({ workout: snapshot });
+  return NextResponse.json({ userId, workout: snapshot }, { headers: { "Cache-Control": "private, no-store" } });
 }

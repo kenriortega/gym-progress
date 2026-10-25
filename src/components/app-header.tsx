@@ -1,7 +1,8 @@
-import Link from "next/link";
+import { DocumentLink } from "@/components/document-link";
 
 import { auth, signOut } from "@/auth";
 import { AnalyticsIdentity } from "@/components/analytics-identity";
+import { OfflinePlansIdentity } from "@/components/offline-plans-provider";
 import { UserMenu } from "@/components/user-menu";
 import { getAppVersion } from "@/lib/version";
 
@@ -25,16 +26,19 @@ export async function AppHeader({ eyebrow, title, backHref, action, icon }: AppH
 
   return (
     <header className="flex items-center gap-3">
-      {user?.id ? <AnalyticsIdentity userId={user.id} /> : null}
+      {user?.id ? <>
+        <AnalyticsIdentity userId={user.id} />
+        <OfflinePlansIdentity userId={user.id} />
+      </> : null}
 
       {backHref ? (
-        <Link
+        <DocumentLink
           href={backHref}
           className="grid size-11 shrink-0 place-items-center rounded-full border border-border text-xl text-muted-foreground transition hover:border-foreground/30 hover:text-foreground"
           aria-label="Volver"
         >
           ←
-        </Link>
+        </DocumentLink>
       ) : null}
 
       {icon ? <div className="shrink-0">{icon}</div> : null}

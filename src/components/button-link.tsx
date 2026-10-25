@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DocumentLink } from "@/components/document-link";
 
 import { Button } from "@/components/ui/button";
 
@@ -21,8 +22,10 @@ export function ButtonLink({
   return (
     <Button
       {...props}
+      role={props.role ?? "link"}
       nativeButton={false}
-      render={<Link href={href} prefetch={prefetch} replace={replace} />}
+      render={typeof href === "string" && ["/", "/abrir", "/entreno", "/planes-guardados", "/offline"].includes(href)
+        ? <DocumentLink href={href} /> : <Link href={href} prefetch={prefetch} replace={replace} />}
     />
   );
 }

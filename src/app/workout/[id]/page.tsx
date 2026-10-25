@@ -356,7 +356,6 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
               (set) => set.workoutExerciseId === exercise.workoutExerciseId,
             );
             const reference = references.get(exercise.workoutExerciseId) ?? null;
-            const lastKnownSet = sets.at(-1) ?? reference?.sets.at(-1);
             const target =
               exercise.targetSets !== null &&
               exercise.targetRepsMin !== null &&
@@ -561,12 +560,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                   </div>
                 )}
 
-                <SetEntryForm
-                  workoutId={workout.id}
-                  workoutExerciseId={exercise.workoutExerciseId}
-                  defaultWeight={lastKnownSet ? Number(lastKnownSet.weight) : null}
-                  defaultReps={lastKnownSet?.reps ?? null}
-                />
+                <SetEntryForm />
               </Card>
             );
           })}

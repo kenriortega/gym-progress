@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { DocumentLink } from "@/components/document-link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import posthog from "posthog-js";
@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
 
+import { identifyPlanAccount } from "@/lib/offline/plans";
+import { toast } from "sonner";
 import { hayNovedades, subscribirNovedades } from "@/lib/changelog";
 import {
   AlertDialog,
@@ -63,6 +65,7 @@ const NAV_SECTIONS: NavItem[][] = [
     { href: "/", label: "Inicio", Icon: HouseIcon },
     { href: "/entreno", label: "Entrenar", Icon: DumbbellIcon },
     { href: "/plans", label: "Planes", Icon: CalendarDaysIcon },
+    { href: "/planes-guardados", label: "Planes guardados", Icon: CalendarDaysIcon },
   ],
   [
     { href: "/progress", label: "Progreso", Icon: TrendingUpIcon },
@@ -162,7 +165,7 @@ export function UserMenu({
               {section.map(({ href, label, Icon }) => (
                 <DropdownMenuItem
                   key={href}
-                  render={<Link href={href} />}
+                  render={<DocumentLink href={href} />}
                   data-active={pathname === href ? "" : undefined}
                 >
                   <Icon className="size-4" />
@@ -225,11 +228,14 @@ export function UserMenu({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                // Si no se limpia la identidad, quien use este navegador
-                // después hereda la cuenta anterior en la analítica.
+              onClick={async () => {
+                try {
+                  await identifyPlanAccount(null);
+                } catch {
+                  toast.error("No se pudo ocultar la copia local. Cierra las pestañas de la app antes de compartir este navegador.");
+                }
                 posthog.reset();
-                void signOutAction();
+                await signOutAction();
               }}
             >
               Cerrar sesión

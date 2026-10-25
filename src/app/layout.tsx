@@ -4,6 +4,8 @@ import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { OfflinePlansProvider } from "@/components/offline-plans-provider";
+import { OfflineWorkoutSync } from "@/components/offline-workout-sync";
 import { OfflineBanner } from "@/components/offline-banner";
 import { ServiceWorkerProvider } from "@/components/serwist-provider";
 
@@ -49,9 +51,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           enableSystem
           disableTransitionOnChange
         >
-          <OfflineBanner />
-          {children}
-          <Toaster />
+          <OfflinePlansProvider>
+            <OfflineBanner />
+            <OfflineWorkoutSync />
+            {children}
+            <Toaster />
+          </OfflinePlansProvider>
         </ThemeProvider>
         </ServiceWorkerProvider>
       </body>
