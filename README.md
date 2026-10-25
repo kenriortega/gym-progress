@@ -128,6 +128,11 @@ Decisiones, pruebas y límites de las entregas: [docs/offline.md](docs/offline.m
 
 **Vercel** es el despliegue actual, con la base en Neon. El cliente OAuth está publicado, así que no aparece el aviso de aplicación no verificada.
 
+Orden de publicación: **migraciones en Neon → actualizar Novedades → validar y
+crear commits → push a `origin/main`**. Vercel despliega automáticamente con el
+push. Las migraciones de producción usan `npm run db:migrate:prod`, después de
+crear y comprobar la copia de seguridad.
+
 **Autoalojamiento**: `deploy/docker-compose.yml` levanta PostgreSQL, PgBouncer y dos instancias de la app, pensado para Dokploy en un VPS. Medido en marcha, el conjunto consume unos 134 MB de memoria.
 
 Dos detalles que no son evidentes y están documentados en ese archivo:
@@ -155,3 +160,11 @@ La silueta y los contornos musculares del mapa corporal vienen de
 `src/lib/muscles.ts`; los paths son los suyos sin tocar.
 
 > MIT License · Copyright (c) 2026 Melih Colpan
+
+## Musculación, calistenia y WOD
+
+Los planes pueden combinar series, circuitos, AMRAP, por tiempo y EMOM. Cada
+movimiento distingue repeticiones/segundos y carga externa/peso corporal/lastre/
+asistencia. Los bloques, relojes y resultados se guardan primero en el dispositivo.
+Consulta [modalidades y bloques](docs/training-modalities.md) para el modelo,
+las migraciones 0025–0028, las validaciones y los límites de esta primera versión.

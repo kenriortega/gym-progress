@@ -19,6 +19,19 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "2026-10-25",
+    date: "25 de octubre de 2026",
+    title: "Calistenia, circuitos y entrenos sin cobertura",
+    items: [
+      "Después de abrir la app con conexión e iniciar sesión, tus planes activos quedan guardados para entrenar sin cobertura. No necesitas entrar antes en cada plan: puedes elegir uno, empezar, registrar series y finalizar varias sesiones sin red.",
+      "Al volver a abrir la app puedes retomar el entrenamiento que dejaste a medias. Los cambios se guardan primero en este dispositivo y se envían al recuperar la conexión o volver a abrirla. Verás qué queda pendiente y si necesitas iniciar sesión de nuevo.",
+      "Los ejercicios distinguen carga externa, peso corporal, lastre y asistencia. Puedes registrar kilos de asistencia o describir una banda, y elegir entre repeticiones y segundos para movimientos como la plancha.",
+      "Un mismo plan puede combinar bloques de series, circuitos, AMRAP, por tiempo y EMOM. Cuenta y deshaz rondas, usa el cronómetro y guarda el resultado del bloque sin tener que apuntar cada repetición. El reloj recupera su estado al volver a la app.",
+      "En los WOD puedes indicar si seguiste el plan o adaptaste cargas y movimientos. El historial conserva esa versión y Progreso separa los resultados para comparar la misma receta y adaptación. Si llegas al límite de tiempo sin terminar, puedes guardar el trabajo alcanzado.",
+      "Hay plantillas editables de calistenia y AMRAP. También puedes definir tus propios pasos de progresión y elegir el actual: cada sesión conserva la variante que hiciste, aunque después avances en el plan.",
+    ],
+  },
+  {
     id: "2026-10-22",
     date: "22 de octubre de 2026",
     title: "Tu peso, tu constancia y una salida",
