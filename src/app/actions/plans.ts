@@ -513,7 +513,7 @@ export async function createPlanFromTemplate(formData: FormData) {
       .values({
         userId,
         name,
-        description: template.description, discipline: template.discipline ?? "strength",
+        description: [template.description, template.instructions].filter(Boolean).join("\n\n"), discipline: template.discipline ?? "strength",
         weekday: template.weekday,
       })
       .returning({ id: trainingPlans.id });

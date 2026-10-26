@@ -19,6 +19,16 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "2026-10-25-planes-por-disciplina",
+    date: "25 de octubre de 2026",
+    title: "Más planes de calistenia y CrossFit",
+    items: [
+      "Copia tres planes de calistenia y tres de CrossFit, con material necesario, descansos, progresión y adaptaciones.",
+      "Al elegir una disciplina en Planes, sus rutinas y plantillas aparecen primero. Las demás siguen disponibles debajo.",
+      "Las tarjetas muestran la disciplina y el formato de cada WOD: AMRAP, EMOM o por tiempo, con su duración o límite.",
+    ],
+  },
+  {
     id: "2026-10-25",
     date: "25 de octubre de 2026",
     title: "Nuevas formas de entrenar",
