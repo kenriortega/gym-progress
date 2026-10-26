@@ -391,3 +391,53 @@ contra un clúster temporal. No se cambian el esquema del backend ni las
 dependencias de producción. La instalación y el comportamiento en móvil físico
 siguen necesitando una comprobación en el dispositivo; las pruebas automáticas
 abren la URL declarada por el icono, sin instalar una app en el equipo.
+
+## Cancelar una sesión desde Entrenar
+
+La pantalla `/entreno` ofrece **Cancelar entreno**, con confirmación explícita y
+la alternativa **Seguir entrenando**. Cancelar no finaliza la sesión: no añade un
+entrenamiento completado al historial ni al progreso y no cambia sesiones anteriores.
+
+La cancelación se guarda en una transacción de IndexedDB mediante
+`discardWorkout` y `localDiscardedAt`, separado de `localCompletedAt`. Libera el
+inicio de otra sesión inmediatamente, también sin red, y muestra su estado
+pendiente hasta recibir confirmación del servidor. El inicio desde el icono y
+la portada offline ya no consideran activa una sesión cancelada.
+
+Los cambios pendientes de esa sesión se sustituyen por la cancelación en la
+misma transacción. Se mantienen los de otras sesiones y cuentas. El emisor
+ignora solicitudes sustituidas y sus respuestas tardías para que no bloqueen la
+cancelación ni envíen series pendientes que ya se descartaron.
+
+El servidor reutiliza `abandoned`. La cancelación es idempotente y se serializa
+con los inicios mediante el bloqueo de usuario. Si la sesión aún no existe,
+guarda su identificador como sesión abandonada, sin series, para que un inicio
+retrasado no pueda reabrirla. Si ya existe, conserva sus datos y solo cambia su
+estado. Una sesión completada o perteneciente a otra cuenta no puede cancelarse.
+No se necesitan migraciones ni dependencias nuevas.
+
+Las cancelaciones pendientes no se usan como referencia de la sesión anterior.
+La copia local se retira únicamente al confirmarse la cancelación. Una caída de
+red o un error conserva la operación para reintentar; si otro dispositivo ya
+completó esa misma sesión, se muestra un conflicto y se conserva el registro
+completado del servidor.
+
+Validaciones: `tests/offline.browser.test.mjs` comprueba persistencia, sustitución
+de la cola, respuestas en vuelo, reintentos e inicio posterior sin red;
+`tests/sync.postgres.test.mjs` comprueba los handlers contra PostgreSQL temporal,
+incluyendo concurrencia y protección de sesiones completadas y de otras cuentas.
+`tests/units.ui.test.mjs` recorre el botón real, rechaza primero la confirmación,
+cancela con series sin red, recarga, empieza otra sesión y la cancela vacía con
+red; verifica que los tres entrenamientos completados de prueba y sus series
+siguen intactos. No se utilizan credenciales ni datos de producción.
+
+Resultado de esta entrega (26 de octubre de 2026): 60 comprobaciones de
+almacenamiento/API y la prueba completa de interfaz aprobadas; build, lint y
+revisión del diff sin errores. Se revisó visualmente la confirmación en móvil y
+la pantalla de cancelación pendiente sin conexión.
+
+Preparación de publicación (26 de octubre de 2026): backup completo verificado
+en `backups/deploy-cancel-20261026/`, fuera de Git. Neon coincide con las 30
+migraciones locales hasta 0029, sin pendientes; `npm run db:migrate:prod`
+terminó correctamente como no-op. No se modificaron registros reales para
+comprobar esta entrega.

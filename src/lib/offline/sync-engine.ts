@@ -1,4 +1,4 @@
-import { confirmarMutacion, leerEstado, legacyWorkoutIds, migrarLegacy } from "./storage";
+import { confirmarMutacion, leerEstado, legacyWorkoutIds, migrarLegacy, mutacionPendiente } from "./storage";
 import { notifyWorkoutChange } from "./events";
 import { countPendingForUser, writeSyncState } from "./sync-state";
 
@@ -49,6 +49,7 @@ async function enviarCola(): Promise<SyncResult> {
   for (const mutacion of before.queue) {
     const current = await leerEstado();
     if (current.userId !== before.userId || current.generation !== before.generation) break;
+    if (!current.queue.some((item) => item.id === mutacion.id)) continue;
     try {
       const respuesta = await fetch("/api/sync", {
         method: "POST",
@@ -57,6 +58,7 @@ async function enviarCola(): Promise<SyncResult> {
         cache: "no-store",
         signal: AbortSignal.timeout(15_000),
       });
+      if (!(await mutacionPendiente(mutacion))) continue;
       if (respuesta.ok && !respuesta.redirected) {
         const confirmacion = await respuesta.json() as { ok?: boolean };
         if (confirmacion?.ok === true) {
@@ -90,6 +92,7 @@ async function enviarCola(): Promise<SyncResult> {
       error = "El servidor no confirmó el cambio. Se conserva en este dispositivo.";
       break;
     } catch {
+      if (!(await mutacionPendiente(mutacion))) continue;
       retryable = true;
       error = "Sin conexión con el servidor. Los cambios siguen guardados en este dispositivo.";
       break;

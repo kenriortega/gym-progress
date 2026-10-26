@@ -40,12 +40,14 @@ test("preferencias independientes, detalle sin copiar y consulta kg/lb sin alter
     const connectionString = `postgresql://gym_test@127.0.0.1:${dbPort}/postgres`;
     pool = new pg.Pool({ connectionString });
     for (const name of (await readdir(join(root, "drizzle"))).filter((name) => name.endsWith(".sql")).sort()) await pool.query(await readFile(join(root, "drizzle", name), "utf8"));
-    const userId = randomUUID(), workoutId = randomUUID(), exerciseInstance = randomUUID(), sessionToken = randomUUID();
+    const userId = randomUUID(), workoutId = randomUUID(), exerciseInstance = randomUUID(), sessionToken = randomUUID(), planId = randomUUID();
     await pool.query("insert into users(id,email,name,goal_weight) values ($1,'units@test.invalid','Prueba',75)", [userId]);
     assert.deepEqual((await pool.query("select preferred_body_system, preferred_weight_unit from users where id=$1", [userId])).rows[0], { preferred_body_system: "metric", preferred_weight_unit: "kg" });
     await pool.query("insert into sessions(session_token,user_id,expires) values ($1,$2,now()+interval '1 day')", [sessionToken, userId]);
     await pool.query("insert into body_weights(user_id,measured_on,weight) values ($1,current_date,80)", [userId]);
     const exerciseId = (await pool.query("select id from exercises where user_id is null order by name limit 1")).rows[0].id;
+    await pool.query("insert into training_plans(id,user_id,name) values ($1,$2,'Plan de piernas')", [planId, userId]);
+    await pool.query("insert into training_plan_exercises(plan_id,exercise_id,position,target_sets,target_reps_min,target_reps_max) values ($1,$2,0,3,8,12)", [planId, exerciseId]);
     await pool.query("insert into workouts(id,user_id,weight_unit) values ($1,$2,'kg')", [workoutId, userId]);
     await pool.query("insert into workout_exercises(id,workout_id,exercise_id,position,target_sets,target_reps_min,target_reps_max) values ($1,$2,$3,0,3,8,12)", [exerciseInstance, workoutId, exerciseId]);
     await pool.query("insert into workout_sets(workout_exercise_id,position,reps,weight) values ($1,0,10,20)", [exerciseInstance]);
@@ -67,13 +69,13 @@ test("preferencias independientes, detalle sin copiar y consulta kg/lb sin alter
     browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH } : {}) });
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "allow" });
     await context.addCookies([{ name: "authjs.session-token", value: sessionToken, url: origin }]);
-    await context.addInitScript(() => localStorage.setItem("gym-progress:novedades-vistas", "2026-10-26-unidades-y-detalles"));
+    await context.addInitScript(() => localStorage.setItem("gym-progress:novedades-vistas", "2026-10-26-cancelar-entreno"));
     await context.route("**/ingest/**", (route) => route.fulfill({ status: 200, json: {} }));
     page = await context.newPage(); const errors = []; page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(`${origin}/plans`);
     await page.getByRole("link", { name: "Ver detalle", exact: true }).first().click();
     await page.getByRole("heading", { name: "Ejercicios y objetivos", exact: true }).waitFor();
-    assert.equal(Number((await pool.query("select count(*) from training_plans where user_id=$1", [userId])).rows[0].count), 0);
+    assert.equal(Number((await pool.query("select count(*) from training_plans where user_id=$1", [userId])).rows[0].count), 1);
     await page.screenshot({ path: "/tmp/gym-units-template-mobile.png", fullPage: true, animations: "disabled" });
     await page.goto(`${origin}/ajustes`);
     async function select(name, option) {
@@ -88,7 +90,7 @@ test("preferencias independientes, detalle sin copiar y consulta kg/lb sin alter
     await savePreferences("Métrico (kg)", "Libras (lb)");
     await until(async () => (await pool.query("select preferred_weight_unit from users where id=$1", [userId])).rows[0].preferred_weight_unit === "lb", "No se guardó lb");
     await page.goto(origin);
-    await page.getByText("80 kg", { exact: true }).waitFor();
+    await page.getByRole("main").getByText("80 kg", { exact: true }).waitFor();
     await page.goto(`${origin}/entreno`);
     await until(async () => await page.getByRole("button", { name: "lb", exact: true }).getAttribute("aria-pressed") === "true", "La sesión no usa la preferencia lb para consulta");
     assert.equal(await page.getByRole("spinbutton", { name: "PESO KG", exact: true }).inputValue(), "20");
@@ -96,7 +98,7 @@ test("preferencias independientes, detalle sin copiar y consulta kg/lb sin alter
     await page.getByRole("button", { name: "lb", exact: true }).waitFor();
     assert.equal(await page.getByRole("button", { name: "lb", exact: true }).getAttribute("aria-pressed"), "true");
     await page.getByRole("button", { name: "Ambas", exact: true }).click();
-    await page.getByText("132,28 lb · 60 kg", { exact: true }).first().waitFor();
+    await page.getByRole("main").getByText("132,28 lb · 60 kg", { exact: true }).first().waitFor();
     for (const width of [320, 390, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       await page.evaluate(() => new Promise((resolve) => { window.scrollTo(0, 0); requestAnimationFrame(() => requestAnimationFrame(resolve)); }));
@@ -105,15 +107,15 @@ test("preferencias independientes, detalle sin copiar y consulta kg/lb sin alter
       await page.screenshot({ path: `/tmp/gym-units-detail-${width}.png`, fullPage: true, animations: "disabled" });
     }
     await page.goto(`${origin}/history/${completedIds[0]}`);
-    await page.getByText("44,09 lb × 10", { exact: true }).waitFor();
+    await page.getByRole("main").getByText("44,09 lb × 10", { exact: true }).waitFor();
     await page.getByRole("button", { name: "Ambas", exact: true }).click();
-    await page.getByText("44,09 lb · 20 kg × 10", { exact: true }).waitFor();
+    await page.getByRole("main").getByText("44,09 lb · 20 kg × 10", { exact: true }).waitFor();
     await page.screenshot({ path: "/tmp/gym-units-history.png", fullPage: true, animations: "disabled" });
     await page.goto(`${origin}/workout/${workoutId}`);
-    await page.getByText("44,09 lb × 10", { exact: true }).first().waitFor();
+    await page.getByRole("main").getByText("44,09 lb × 10", { exact: true }).first().waitFor();
     assert.equal(await page.getByRole("button", { name: "lb", exact: true }).getAttribute("aria-pressed"), "true");
     await page.goto(`${origin}/progress`);
-    await page.getByText("132,28 lb", { exact: true }).first().waitFor();
+    await page.getByRole("main").getByText("132,28 lb", { exact: true }).first().waitFor();
     await page.goto(`${origin}/ajustes`);
     await savePreferences("Imperial (lb)", "Kilos (kg)");
     await until(async () => (await pool.query("select preferred_body_system from users where id=$1", [userId])).rows[0].preferred_body_system === "imperial", "No se guardó imperial");
@@ -133,7 +135,7 @@ test("preferencias independientes, detalle sin copiar y consulta kg/lb sin alter
     await until(async () => Number((await pool.query("select goal_weight from users where id=$1", [userId])).rows[0].goal_weight) === 75, "Meta en lb incorrecta");
     await page.screenshot({ path: "/tmp/gym-units-settings.png", fullPage: true, animations: "disabled" });
     await page.goto(origin);
-    await page.getByText("176,37 lb", { exact: true }).first().waitFor();
+    await page.getByRole("main").getByText("176,37 lb", { exact: true }).first().waitFor();
     await page.getByRole("spinbutton", { name: "Peso de hoy en lb", exact: true }).fill("176.37");
     await page.getByRole("button", { name: "Registrar", exact: true }).click();
     await until(async () => Number((await pool.query("select weight from body_weights where user_id=$1 and measured_on=current_date", [userId])).rows[0].weight) === 80, "Peso corporal incorrecto");
@@ -145,18 +147,55 @@ test("preferencias independientes, detalle sin copiar y consulta kg/lb sin alter
       await page.getByRole("button", { name: "kg", exact: true }).click();
     }
     await page.getByRole("button", { name: "Ambas", exact: true }).click();
-    await page.getByText("20 kg · 44,09 lb × 10", { exact: true }).waitFor();
+    await page.getByRole("main").getByText("20 kg · 44,09 lb × 10", { exact: true }).waitFor();
     assert.equal(await page.getByRole("spinbutton", { name: "PESO KG", exact: true }).inputValue(), "20");
     await page.evaluate(() => navigator.serviceWorker.ready);
     await until(async () => page.evaluate(() => !!navigator.serviceWorker.controller), "Service worker no controla la página");
     await context.setOffline(true);
     await page.reload();
-    await page.getByText("20 kg · 44,09 lb × 10", { exact: true }).waitFor();
+    await page.getByRole("main").getByText("20 kg · 44,09 lb × 10", { exact: true }).waitFor();
     assert.equal(await page.getByRole("button", { name: "Ambas", exact: true }).getAttribute("aria-pressed"), "true");
     await page.setViewportSize({ width: 390, height: 844 });
     await page.screenshot({ path: "/tmp/gym-units-training-offline.png", fullPage: true, animations: "disabled" });
     assert.deepEqual((await pool.query("select id,weight from workout_sets order by id")).rows, originals);
     assert.deepEqual((await pool.query("select preferred_body_system, preferred_weight_unit from users where id=$1", [userId])).rows[0], { preferred_body_system: "imperial", preferred_weight_unit: "kg" });
+    // Cancelar no debe confundirse con finalizar ni borrar el entreno anterior.
+    await page.getByRole("button", { name: "Cancelar entreno", exact: true }).click();
+    const dialog = page.getByRole("alertdialog", { name: "¿Cancelar este entrenamiento?", exact: true });
+    await dialog.waitFor();
+    const bounds = await dialog.boundingBox();
+    assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= 844);
+    for (const label of ["Seguir entrenando", "Sí, cancelar entreno"]) {
+      const button = dialog.getByRole("button", { name: label, exact: true });
+      await until(async () => (await button.boundingBox()).height >= 43.99, "La animación del diálogo no terminó");
+      assert.ok(await button.evaluate((element) => element.offsetHeight >= 44));
+    }
+    await page.screenshot({ path: "/tmp/gym-cancel-confirm-mobile.png", animations: "disabled" });
+    await dialog.getByRole("button", { name: "Seguir entrenando", exact: true }).click();
+    await page.getByRole("button", { name: "Finalizar sesión", exact: true }).waitFor();
+    await page.getByRole("button", { name: "Cancelar entreno", exact: true }).click();
+    await dialog.getByRole("button", { name: "Sí, cancelar entreno", exact: true }).click();
+    await page.getByRole("main").getByText("Entrenamiento cancelado en este dispositivo", { exact: true }).waitFor();
+    await page.reload();
+    await page.getByRole("region", { name: "Cancelaciones pendientes", exact: true }).waitFor();
+    assert.equal(await page.getByRole("button", { name: "Finalizar sesión", exact: true }).count(), 0);
+    await page.screenshot({ path: "/tmp/gym-cancel-offline-mobile.png", fullPage: true, animations: "disabled" });
+    await page.getByRole("link", { name: "Elegir un plan guardado", exact: true }).click();
+    await page.locator("summary").filter({ hasText: "Plan de piernas" }).click();
+    await page.getByRole("button", { name: "Empezar Plan de piernas", exact: true }).click();
+    await page.getByRole("button", { name: "Cancelar entreno", exact: true }).waitFor();
+    await context.setOffline(false);
+    await until(async () => (await pool.query("select status from workouts where id=$1", [workoutId])).rows[0].status === "abandoned", "No se sincronizó la cancelación");
+    await until(async () => Number((await pool.query("select count(*) from workouts where user_id=$1 and status='active'", [userId])).rows[0].count) === 1, "No se inició otra sesión");
+    const nextId = (await pool.query("select id from workouts where user_id=$1 and status='active'", [userId])).rows[0].id;
+    assert.notEqual(nextId, workoutId);
+    assert.equal(Number((await pool.query("select count(*) from workouts where user_id=$1 and status='completed'", [userId])).rows[0].count), 3);
+    assert.deepEqual((await pool.query("select id,weight from workout_sets order by id")).rows, originals);
+    // La sesión nueva, todavía sin series, también puede cancelarse con red.
+    await page.getByRole("button", { name: "Cancelar entreno", exact: true }).click();
+    await dialog.getByRole("button", { name: "Sí, cancelar entreno", exact: true }).click();
+    await until(async () => (await pool.query("select status from workouts where id=$1", [nextId])).rows[0].status === "abandoned", "No se canceló la sesión vacía con red");
+    assert.equal(Number((await pool.query("select count(*) from workouts where user_id=$1 and status='completed'", [userId])).rows[0].count), 3);
     assert.deepEqual(errors, []);
   } catch (error) {
     if (page && !page.isClosed()) {

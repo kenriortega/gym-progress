@@ -30,6 +30,7 @@ export type QueuedMutation = (
       workoutId: string;
       createdAt: number;
     }
+  | { id: string; kind: "discardWorkout"; workoutId: string; createdAt: number }
 
   | {
       id: string;
@@ -99,6 +100,7 @@ export type WorkoutSnapshot = {
 /** Se conserva hasta que el servidor confirme la finalización. */
 export type LocalWorkout = WorkoutSnapshot & {
   localCompletedAt?: number;
+  localDiscardedAt?: number;
   serverCreated: boolean;
   locallyCreated?: boolean;
 };

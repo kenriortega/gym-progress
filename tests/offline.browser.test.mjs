@@ -98,6 +98,61 @@ await test("persistencia y sincronización con IndexedDB real", async (t) => {
     const enqueue = (page, value) => page.evaluate((m) => window.api.encolar(m), value);
     const state = (page) => page.evaluate(() => window.storage.leerEstado());
 
+    await scenario("cancelar sustituye la cola, persiste al cerrar sin red y permite otro inicio", async (page, context, reopen) => {
+      await page.evaluate(() => window.plansApi.downloadOfflinePlans());
+      const first = await page.evaluate((id) => window.api.iniciarEntreno("user-a", id), plansFixture.plans[0].id);
+      await enqueue(page, mutation("discarded-set", { workoutId: first.workoutId, workoutExerciseId: first.exercises[0].workoutExerciseId }));
+      const cancel = { id: "discard", userId: "user-a", kind: "discardWorkout", workoutId: first.workoutId, createdAt: 300 };
+      await enqueue(page, cancel); await enqueue(page, { ...cancel, id: "duplicate-discard" });
+      assert.deepEqual((await state(page)).queue.map((item) => item.kind), ["discardWorkout"]);
+      assert.equal((await state(page)).workout.localCompletedAt, undefined);
+      assert.equal((await state(page)).workout.localDiscardedAt, 300);
+      await assert.rejects(enqueue(page, { ...cancel, id: "finish-canceled", kind: "finishWorkout" }));
+      await page.close(); page = await reopen(context); await context.setOffline(true);
+      assert.equal((await state(page)).workout.localDiscardedAt, 300);
+      const next = await page.evaluate((id) => window.api.iniciarEntreno("user-a", id), plansFixture.plans[0].id);
+      assert.notEqual(next.workoutId, first.workoutId);
+      assert.deepEqual(next.exercises[0].previous, plansFixture.plans[0].exercises[0].previous?.sets ?? []);
+      assert.equal((await state(page)).workout.workoutId, next.workoutId);
+      const calls = [];
+      await page.route("**/api/sync", (route) => { calls.push(route.request().postDataJSON().kind); return route.fulfill({ json: { ok: true } }); });
+      await context.setOffline(false);
+      assert.equal((await page.evaluate(() => window.api.sincronizar())).quedan, 0);
+      assert.deepEqual(calls, ["discardWorkout", "startWorkout"]);
+      assert.deepEqual((await state(page)).workouts.map((workout) => workout.workoutId), [next.workoutId]);
+    });
+    await scenario("una respuesta en vuelo de una serie cancelada no bloquea la cancelación", async (page) => {
+      await seed(page); await enqueue(page, mutation("in-flight")); await enqueue(page, mutation("not-sent"));
+      let release; const blocked = new Promise((resolve) => { release = resolve; });
+      let arrived; const waiting = new Promise((resolve) => { arrived = resolve; });
+      const calls = [];
+      await page.route("**/api/sync", async (route) => {
+        const value = route.request().postDataJSON(); calls.push(value.id);
+        if (value.id === "in-flight") { arrived(); await blocked; await route.fulfill({ status: 409, json: {} }); }
+        else await route.fulfill({ json: { ok: true } });
+      });
+      await page.evaluate(() => { window.syncing = window.api.sincronizar(); }); await waiting;
+      await enqueue(page, { id: "cancel", kind: "discardWorkout", userId: "user-a", workoutId: "workout", createdAt: 300 });
+      release();
+      const first = await page.evaluate(() => window.syncing);
+      assert.equal(first.error, undefined);
+      await page.evaluate(() => window.api.sincronizar());
+      assert.deepEqual(calls, ["in-flight", "cancel"]);
+      assert.equal((await state(page)).workout, null);
+      assert.equal((await state(page)).queue.length, 0);
+    });
+    await scenario("una cancelación sin confirmación conserva sesión y operación", async (page) => {
+      await seed(page);
+      await enqueue(page, { id: "cancel", kind: "discardWorkout", userId: "user-a", workoutId: "workout", createdAt: 300 });
+      await page.route("**/api/sync", (route) => route.fulfill({ status: 500, json: {} }));
+      await page.evaluate(() => window.api.sincronizar());
+      assert.equal((await state(page)).workout.localDiscardedAt, 300);
+      assert.equal((await state(page)).queue.length, 1);
+      await page.unroute("**/api/sync");
+      await page.evaluate(() => window.api.sincronizar());
+      assert.equal((await state(page)).workout, null);
+    });
+
     await scenario("añadir/borrar sobreviven a cerrar y reabrir sin red", async (page, context, reopen) => {
       await seed(page);
       await enqueue(page, mutation("a"));

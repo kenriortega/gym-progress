@@ -13,7 +13,7 @@ export function OfflineHome() {
   const { catalog } = useOfflinePlans();
   const [hasActive, setHasActive] = useState(false);
   const load = useCallback(() => leerEstado()
-    .then((data) => setHasActive(data.workouts.some((workout) => !workout.localCompletedAt)))
+    .then((data) => setHasActive(data.workouts.some((workout) => !workout.localCompletedAt && !workout.localDiscardedAt)))
     .catch(() => setHasActive(false)), []);
   useEffect(() => {
     const unsubscribe = subscribeWorkoutChange(() => { void load(); });

@@ -20,6 +20,7 @@ export type LocalData = {
 function apply(workout: LocalWorkout, mutation: QueuedMutation): LocalWorkout {
   if (workout.workoutId !== mutation.workoutId || mutation.kind === "startWorkout") return workout;
   if (mutation.kind === "finishWorkout") return { ...workout, localCompletedAt: mutation.createdAt };
+  if (mutation.kind === "discardWorkout") return { ...workout, localDiscardedAt: mutation.createdAt };
   if (mutation.kind === "blockProgress") {
     const previous = workout.blockProgress?.[mutation.blockId];
     if (previous && (previous.updatedAt > mutation.progress.updatedAt || previous.updatedAt === mutation.progress.updatedAt && previous.mutationId >= mutation.progress.mutationId)) return workout;
@@ -58,7 +59,7 @@ function read(tx: IDBTransaction, done: (data: LocalData) => void) {
           .sort((a, b) => Number(!!b.locallyCreated) - Number(!!a.locallyCreated) || Date.parse(b.performedAt) - Date.parse(a.performedAt));
         done({
           userId: account.userId, generation: account.generation, queue: operations,
-          workouts: sessions, workout: sessions.find((workout) => !workout.localCompletedAt) ?? sessions[0] ?? null,
+          workouts: sessions, workout: sessions.find((workout) => !workout.localCompletedAt && !workout.localDiscardedAt) ?? sessions[0] ?? null,
           revision: revision.result ?? 0, legacyPending: legacy.result + Number(!!legacyWorkout.result),
         });
       } catch (error) { abortTransaction(tx, error); }
@@ -82,10 +83,10 @@ export function leerEstado(): Promise<LocalData> {
 export function iniciarSesionLocal(userId: string, planId: string): Promise<LocalWorkout> {
   return transaction(STORES, "readwrite", (tx, result) => read(tx, (data) => {
     if (data.userId !== userId) throw new Error("La cuenta ha cambiado. Vuelve a abrir la pantalla antes de empezar.");
-    const active = data.workouts.find((workout) => !workout.localCompletedAt);
+    const active = data.workouts.find((workout) => !workout.localCompletedAt && !workout.localDiscardedAt);
     if (active) {
       if (active.trainingPlanId === planId) { result(active); return; }
-      throw new Error("Ya hay un entrenamiento abierto en este dispositivo. Continúalo o finalízalo antes de empezar otro.");
+      throw new Error("Ya hay un entrenamiento abierto en este dispositivo. Continúalo, finalízalo o cancélalo antes de empezar otro.");
     }
     const request = tx.objectStore("planes").get(userId);
     request.onsuccess = () => {
@@ -144,7 +145,15 @@ export function guardarMutacion(mutation: QueuedMutation): Promise<void> {
     if (data.userId !== mutation.userId) throw new Error("La cuenta ha cambiado. Vuelve a abrir el entrenamiento.");
     if (data.queue.some((item) => item.id === mutation.id)) { result(); return; }
     const workout = data.workouts.find((item) => item.workoutId === mutation.workoutId);
-    if (!workout || workout.localCompletedAt || mutation.kind === "startWorkout") throw new Error("Este entrenamiento ya no acepta cambios.");
+    if (workout?.localDiscardedAt && mutation.kind === "discardWorkout") { result(); return; }
+    if (!workout || workout.localCompletedAt || workout.localDiscardedAt || mutation.kind === "startWorkout") throw new Error("Este entrenamiento ya no acepta cambios.");
+    // La cancelación sustituye los cambios pendientes de esta sesión. El
+    // servidor acepta también sesiones aún no creadas y bloquea inicios tardíos.
+    if (mutation.kind === "discardWorkout") {
+      for (const pending of data.queue) {
+        if (pending.workoutId === mutation.workoutId) tx.objectStore("mutaciones").delete([mutation.userId, pending.id]);
+      }
+    }
     if (mutation.kind === "addSet" && !workout.exercises.some((exercise) => exercise.workoutExerciseId === mutation.workoutExerciseId)) throw new Error("El ejercicio no pertenece a la sesión.");
     if (mutation.kind === "blockProgress") {
       const block = workout.blocks?.find((item) => item.id === mutation.blockId);
@@ -167,7 +176,7 @@ export function confirmarMutacion(mutation: QueuedMutation): Promise<void> {
     const request = tx.objectStore("entrenamientos").get([mutation.userId, mutation.workoutId]);
     request.onsuccess = () => {
       const workout = request.result as LocalWorkout | undefined;
-      if (mutation.kind === "finishWorkout") tx.objectStore("entrenamientos").delete([mutation.userId, mutation.workoutId]);
+      if (mutation.kind === "finishWorkout" || mutation.kind === "discardWorkout") tx.objectStore("entrenamientos").delete([mutation.userId, mutation.workoutId]);
       else if (mutation.kind === "startWorkout" && workout) tx.objectStore("entrenamientos").put({ ...workout, serverCreated: true });
       tx.objectStore("mutaciones").delete([mutation.userId, mutation.id]);
       const revision = tx.objectStore("offline-meta").get(`workout-revision:${mutation.userId}`);
@@ -176,12 +185,20 @@ export function confirmarMutacion(mutation: QueuedMutation): Promise<void> {
   });
 }
 
+/** Consultar por propietario permite reconocer respuestas de otra cuenta o de cambios cancelados. */
+export function mutacionPendiente(mutation: QueuedMutation): Promise<boolean> {
+  return transaction(["mutaciones"], "readonly", (tx, result) => {
+    const request = tx.objectStore("mutaciones").get([mutation.userId, mutation.id]);
+    request.onsuccess = () => result(!!request.result);
+  });
+}
+
 export function aceptarSnapshot(workout: WorkoutSnapshot | null, revision: number, account: Pick<Identity, "userId" | "generation">): Promise<boolean> {
   return transaction(STORES, "readwrite", (tx, result) => read(tx, (data) => {
     if (!account.userId || data.userId !== account.userId || data.generation !== account.generation ||
         (workout && workout.userId !== data.userId) || data.queue.length > 0 || data.revision !== revision) { result(false); return; }
     for (const local of data.workouts) {
-      if (local.serverCreated && !local.localCompletedAt) tx.objectStore("entrenamientos").delete([local.userId, local.workoutId]);
+      if (local.serverCreated && !local.localCompletedAt && !local.localDiscardedAt) tx.objectStore("entrenamientos").delete([local.userId, local.workoutId]);
     }
     if (workout) tx.objectStore("entrenamientos").put({ ...workout, serverCreated: true });
     bump(tx, account.userId, data.revision);

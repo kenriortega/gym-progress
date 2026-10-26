@@ -20,6 +20,7 @@ type ConfirmSubmitButtonProps = React.ComponentProps<typeof Button> & {
   confirmation: string;
   title?: string;
   confirmLabel?: string;
+  cancelLabel?: string;
   pendingLabel?: string;
 };
 
@@ -27,6 +28,7 @@ export function ConfirmSubmitButton({
   confirmation,
   title = "¿Seguro?",
   confirmLabel = "Sí, continuar",
+  cancelLabel = "Cancelar",
   children,
   pendingLabel = "Procesando…",
   disabled,
@@ -57,8 +59,9 @@ export function ConfirmSubmitButton({
             <AlertDialogDescription>{confirmation}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel className="min-h-11">{cancelLabel}</AlertDialogCancel>
             <AlertDialogAction
+              className="min-h-11"
               onClick={() => {
                 setOpen(false);
                 submitRef.current?.click();

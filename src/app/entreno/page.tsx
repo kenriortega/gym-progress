@@ -181,6 +181,21 @@ export default function EntrenoPage() {
     }
   }, [sesion, cargarLocal, reintentar]);
 
+  const cancelar = useCallback(async () => {
+    if (!sesion) return;
+    try {
+      await encolar({
+        id: crypto.randomUUID(), kind: "discardWorkout", userId: sesion.userId,
+        workoutId: sesion.workoutId, createdAt: Date.now(),
+      });
+      await cargarLocal();
+      toast.success("Entrenamiento cancelado. No contará en tu historial ni en tu progreso.");
+      void reintentar();
+    } catch {
+      toast.error("No se pudo guardar la cancelación. La sesión sigue abierta; vuelve a intentarlo.");
+    }
+  }, [sesion, cargarLocal, reintentar]);
+
   const saveBlock = async (blockId: string, next: Pick<BlockProgress, "startedAt" | "elapsedSeconds" | "result">) => {
     if (!sesion) return;
     const id = crypto.randomUUID();
@@ -202,20 +217,29 @@ export default function EntrenoPage() {
           </li>)}
         </ul>
       </section>}
+      {workouts.some((workout) => workout.localDiscardedAt) && <section aria-label="Cancelaciones pendientes" className="mt-5">
+        <h2 className="text-sm font-semibold">Cancelaciones pendientes de enviar</h2>
+        <p className="mt-2 text-sm text-muted-foreground">No cuentan como entrenamientos completados en este dispositivo. La cancelación se enviará al recuperar la conexión.</p>
+        <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
+          {workouts.filter((workout) => workout.localDiscardedAt).map((workout) => <li key={workout.workoutId}>{workout.planName ?? "Sesión libre"} · cancelado</li>)}
+        </ul>
+      </section>}
       {error && <p role="alert" className="mt-4 text-sm text-muted-foreground">{error}</p>}
     </>
   );
 
   if (cargando) return <ScreenSkeleton />;
 
-  if (!sesion || sesion.localCompletedAt) {
+  if (!sesion || sesion.localCompletedAt || sesion.localDiscardedAt) {
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl flex-col justify-center px-5 py-10">
         <Alert>
           <WifiOffIcon />
-          <AlertTitle>{sesion?.localCompletedAt ? "Entrenamiento finalizado en este dispositivo" : "Elige tu próximo entrenamiento"}</AlertTitle>
+          <AlertTitle>{sesion?.localDiscardedAt ? "Entrenamiento cancelado en este dispositivo" : sesion?.localCompletedAt ? "Entrenamiento finalizado en este dispositivo" : "Elige tu próximo entrenamiento"}</AlertTitle>
           <AlertDescription>
-            {sesion?.localCompletedAt
+            {sesion?.localDiscardedAt
+              ? "No contará en tu historial ni en tu progreso. Puedes empezar otro entrenamiento, también sin conexión."
+              : sesion?.localCompletedAt
               ? "La sesión y sus cambios se conservan hasta que el servidor confirme la sincronización."
               : "Puedes empezar otro entrenamiento desde tus planes guardados, también sin conexión."}
           </AlertDescription>
@@ -306,6 +330,15 @@ export default function EntrenoPage() {
         >
           <FlagIcon className="size-4" />
           Finalizar sesión
+        </ConfirmSubmitButton>
+      </form>
+
+      <form className="mt-3" action={cancelar}>
+        <ConfirmSubmitButton type="submit" variant="outline" className="min-h-12 w-full"
+          title="¿Cancelar este entrenamiento?" confirmLabel="Sí, cancelar entreno" cancelLabel="Seguir entrenando"
+          pendingLabel="Cancelando…"
+          confirmation="Esta sesión no contará en tu historial ni en tu progreso. Las series de esta sesión dejarán de contar y los entrenamientos anteriores se conservarán.">
+          Cancelar entreno
         </ConfirmSubmitButton>
       </form>
 

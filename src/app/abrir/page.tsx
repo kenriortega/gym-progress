@@ -10,7 +10,7 @@ export default function LaunchPage() {
     let alive = true;
     void leerEstado().then((data) => {
       if (!alive) return;
-      const active = data.workouts.some((workout) => !workout.localCompletedAt);
+      const active = data.workouts.some((workout) => !workout.localCompletedAt && !workout.localDiscardedAt);
       const target = active ? "/entreno" : navigator.onLine ? "/" : "/planes-guardados";
       // Entrada de documento precacheada, disponible incluso sin datos RSC.
       window.location.replace(target);

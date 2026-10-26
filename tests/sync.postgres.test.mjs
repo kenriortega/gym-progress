@@ -78,6 +78,44 @@ await test("API de sincronización con PostgreSQL temporal real", { timeout: 90_
       await fn();
     });
 
+    await scenario("cancelar no completa ni duplica entrenamientos y admite reintentos", async () => {
+      const previous = make();
+      await send(previous); await send(series(previous)); await send(operation(previous, "finishWorkout"));
+      const old = (await pool.query("select id,status,completed_at from workouts where id=$1", [previous.workoutId])).rows;
+      const workout = make(); await send(workout); await send(series(workout, { weight: 20 }));
+      const cancel = operation(workout, "discardWorkout");
+      assert.equal((await send(cancel)).status, 200);
+      assert.equal((await send(cancel)).status, 200);
+      assert.deepEqual((await pool.query("select id,status,completed_at from workouts where id=$1", [previous.workoutId])).rows, old);
+      const saved = (await pool.query("select status,completed_at from workouts where id=$1", [workout.workoutId])).rows[0];
+      assert.equal(saved.status, "abandoned"); assert.equal(saved.completed_at, null);
+      assert.equal((await (await snapshot()).json()).workout, null);
+      assert.equal(Number((await pool.query("select count(*) from workouts where status='completed'")).rows[0].count), 1);
+      assert.equal((await send(operation(workout, "finishWorkout"))).status, 409);
+      assert.equal((await send(make())).status, 200);
+    });
+    await scenario("cancelar antes del inicio y en concurrencia impide reabrir la sesión", async () => {
+      const workout = make(); const cancel = operation(workout, "discardWorkout");
+      assert.equal((await send(cancel)).status, 200);
+      assert.equal((await send(workout)).status, 200);
+      assert.equal((await send(series(workout))).status, 409);
+      assert.equal((await pool.query("select status from workouts where id=$1", [workout.workoutId])).rows[0].status, "abandoned");
+      const concurrent = make();
+      const results = await Promise.all([send(concurrent), send(operation(concurrent, "discardWorkout"))]);
+      assert.deepEqual(results.map((response) => response.status), [200, 200]);
+      assert.equal((await pool.query("select status from workouts where id=$1", [concurrent.workoutId])).rows[0].status, "abandoned");
+    });
+    await scenario("cancelar rechaza sesiones completadas o de otra cuenta", async () => {
+      const workout = make(); await send(workout);
+      setUser(userB);
+      assert.equal((await send({ ...operation(workout, "discardWorkout"), userId: userB })).status, 409);
+      setUser(userA);
+      assert.equal((await pool.query("select status from workouts where id=$1", [workout.workoutId])).rows[0].status, "active");
+      await send(operation(workout, "finishWorkout"));
+      assert.equal((await send(operation(workout, "discardWorkout"))).status, 409);
+      assert.equal((await pool.query("select status from workouts where id=$1", [workout.workoutId])).rows[0].status, "completed");
+    });
+
     await scenario("dos entrenamientos y reenvíos conservan fechas, IDs, objetivos y RPE", async () => {
       for (let index = 0; index < 2; index++) {
         const workout = make({ performedAt: `2026-10-${20 + index}T08:00:00.000Z` });

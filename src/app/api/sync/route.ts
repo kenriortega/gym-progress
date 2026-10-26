@@ -59,6 +59,24 @@ export async function POST(request: Request) {
       return await startWorkout(userId, m);
     }
     const workoutId = String(m.workoutId);
+    if (m.kind === "discardWorkout") {
+      return await db.transaction(async (tx) => {
+        // Serializar con startWorkout, incluso si el inicio aún está en vuelo.
+        await tx.select({ id: users.id }).from(users).where(eq(users.id, userId)).for("update");
+        const [workout] = await tx.select().from(workouts)
+          .where(eq(workouts.id, workoutId)).limit(1).for("update");
+        if (workout && workout.userId !== userId) return failure("La sesión no está disponible");
+        if (workout?.status === "completed") return failure("El entrenamiento ya fue completado y no puede cancelarse");
+        if (workout?.status === "abandoned") return ok();
+        if (workout) {
+          await tx.update(workouts).set({ status: "abandoned", updatedAt: new Date() }).where(eq(workouts.id, workoutId));
+        } else {
+          // Marca terminal: un inicio que llegue después nunca podrá reabrirla.
+          await tx.insert(workouts).values({ id: workoutId, userId, status: "abandoned" });
+        }
+        return ok();
+      });
+    }
     if (m.kind === "finishWorkout") {
       return await db.transaction(async (tx) => {
         const [workout] = await tx.select().from(workouts)
@@ -137,6 +155,7 @@ async function startWorkout(userId: string, m: StartMutation) {
   return db.transaction(async (tx) => {
     await tx.select({ id: users.id }).from(users).where(eq(users.id, userId)).for("update");
     const [existing] = await tx.select().from(workouts).where(eq(workouts.id, m.workoutId)).limit(1);
+    if (existing?.userId === userId && existing.status === "abandoned") return ok();
     if (existing) return existing.userId === userId && existing.trainingPlanId === m.planId && existing.weightUnit === m.weightUnit
       ? ok() : failure("Este identificador de sesión ya está en uso");
     const [active] = await tx.select({ id: workouts.id }).from(workouts)

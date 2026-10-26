@@ -19,6 +19,15 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "2026-10-26-cancelar-entreno",
+    date: "26 de octubre de 2026",
+    title: "Cancela un entreno abierto por error",
+    items: [
+      "En Entrenar, pulsa «Cancelar entreno» debajo de «Finalizar sesión» para cerrar una sesión abierta por error sin añadir otro entrenamiento completado a tu historial.",
+      "La cancelación funciona sin conexión, se conserva al recargar y permite empezar otra sesión. Tus entrenamientos anteriores no cambian.",
+    ],
+  },
+  {
     id: "2026-10-26-unidades-y-detalles",
     date: "26 de octubre de 2026",
     title: "Tus unidades y los planes al detalle",
