@@ -20,17 +20,20 @@ export async function updateWeightUnit(formData: FormData) {
   const userId = await requireUserId();
   const unit = String(formData.get("weightUnit") ?? "");
 
+  const bodySystem = String(formData.get("bodySystem") ?? "metric");
+  if (bodySystem !== "metric" && bodySystem !== "imperial") throw new Error("El sistema corporal debe ser métrico o imperial.");
+
   if (unit !== "kg" && unit !== "lb") {
     throw new Error("La unidad debe ser kg o lb.");
   }
 
   await db
     .update(users)
-    .set({ preferredWeightUnit: unit, updatedAt: new Date() })
+    .set({ preferredWeightUnit: unit, preferredBodySystem: bodySystem, updatedAt: new Date() })
     .where(eq(users.id, userId));
 
   // Los entrenamientos ya guardados conservan la unidad con la que se
   // registraron: cambiar la preferencia no reescribe el historial.
   revalidatePath("/ajustes");
-  revalidatePath("/");
+  revalidatePath("/", "layout");
 }

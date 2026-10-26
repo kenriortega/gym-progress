@@ -19,6 +19,26 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "2026-10-26-unidades-y-detalles",
+    date: "26 de octubre de 2026",
+    title: "Tus unidades y los planes al detalle",
+    items: [
+      "Elige por separado las unidades de tu peso corporal y las de entrenamiento desde Ajustes.",
+      "Tus récords y volúmenes comparan las cargas correctamente aunque combines sesiones registradas en kilos y en libras.",
+      "Consulta tus cargas en kg, lb o ambas unidades sin cambiar lo que registraste. La selección de cada ejercicio se conserva al recargar durante esa sesión, también sin conexión.",
+      "Abre el detalle de una plantilla antes de usarla. Solo se añade a tus planes cuando decides copiarla.",
+    ],
+  },
+  {
+    id: "2026-10-26-comparacion-unidades",
+    date: "26 de octubre de 2026",
+    title: "Comparaciones correctas entre kilos y libras",
+    items: [
+      "Tus récords, gráficas de fuerza y volúmenes comparan el mismo peso aunque hayas registrado sesiones en kilos y otras en libras.",
+      "En los ajustes de una sesión, las últimas marcas y las sugerencias de subida se muestran en la unidad de esa sesión.",
+    ],
+  },
+  {
     id: "2026-10-25-planes-por-disciplina",
     date: "25 de octubre de 2026",
     title: "Más planes de calistenia y CrossFit",

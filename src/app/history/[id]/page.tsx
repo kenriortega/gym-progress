@@ -1,5 +1,7 @@
+import { getWeightPreferences } from "@/db/preferences";
+import { WeightView, WeightSet } from "@/components/weight-view";
 import { describeBlock, describeResult } from "@/lib/training-blocks";
-import { formatSet, formatTarget, type ExerciseMetrics, type SetMetrics } from "@/lib/training-metrics";
+import { formatTarget, type ExerciseMetrics, type SetMetrics } from "@/lib/training-metrics";
 import { and, asc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -36,6 +38,8 @@ export default async function HistoryDetailPage({
     redirect("/login");
   }
 
+  const userId = session.user.id;
+  const { trainingUnit } = await getWeightPreferences(userId);
   const { id } = await params;
   const [workout] = await db
     .select({
@@ -217,6 +221,7 @@ export default async function HistoryDetailPage({
               </Badge>
             </div>
 
+            <div className="px-5"><WeightView defaultUnit={trainingUnit} storageKey={`${userId}:${workout.id}:${exercise.id}`} selectable={exercise.loadType !== "bodyweight"}>
             {exercise.sets.length > 0 ? (
               <div className="px-5 pb-2">
                 <Table>
@@ -234,7 +239,7 @@ export default async function HistoryDetailPage({
                           {setIndex + 1}
                         </TableCell>
                         <TableCell className="font-semibold text-foreground">
-                          {formatSet({ ...set, weight: Number(set.weight) }, workout.weightUnit)}
+                          <WeightSet value={{ ...set, weight: Number(set.weight) }} from={workout.weightUnit} />
                         </TableCell>
                         <TableCell className="font-semibold text-foreground">
                           {set.rpe ? (
@@ -253,6 +258,7 @@ export default async function HistoryDetailPage({
                 No se registraron series.
               </p>
             )}
+            </WeightView></div>
           </Card>
         ))}
       </section>

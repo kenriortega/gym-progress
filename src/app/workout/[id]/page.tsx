@@ -1,5 +1,7 @@
+import { getWeightPreferences } from "@/db/preferences";
+import { WeightView, WeightSet, WeightValue } from "@/components/weight-view";
 import { RecordedSetFields } from "@/components/recorded-set-fields";
-import { formatSet, formatTarget } from "@/lib/training-metrics";
+import { formatTarget } from "@/lib/training-metrics";
 import { and, asc, desc, eq, isNull, ne, or } from "drizzle-orm";
 import Link from "next/link";
 import { HistoryIcon, PencilIcon, PlusIcon, TrendingUpIcon } from "lucide-react";
@@ -7,6 +9,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { convertWeight, type WeightUnit } from "@/lib/weight-units";
 import {
   exercises,
   trainingPlans,
@@ -66,18 +69,20 @@ const PROGRESSION_LOOKBACK = 8;
 
 type ExerciseReference = {
   date: Date;
-  sets: Array<{ reps: number; weight: string }>;
+  sets: Array<{ reps: number; weight: number }>;
 } | null;
 
 async function getPreviousPerformance(
   userId: string,
   currentWorkoutId: string,
   exerciseId: string,
+  targetUnit: WeightUnit,
 ): Promise<ExerciseReference> {
   const [previous] = await db
     .select({
       workoutExerciseId: workoutExercises.id,
       date: workouts.performedAt,
+      unit: workouts.weightUnit,
     })
     .from(workoutExercises)
     .innerJoin(workouts, eq(workouts.id, workoutExercises.workoutId))
@@ -103,18 +108,23 @@ async function getPreviousPerformance(
     .where(eq(workoutSets.workoutExerciseId, previous.workoutExerciseId))
     .orderBy(asc(workoutSets.position));
 
-  return { date: previous.date, sets };
+  return { date: previous.date, sets: sets.map((set) => ({
+    reps: set.reps,
+    weight: convertWeight(Number(set.weight), previous.unit, targetUnit),
+  })) };
 }
 
 async function getProgressionSuggestion(
   userId: string,
   currentWorkoutId: string,
   exerciseId: string,
+  targetUnit: WeightUnit,
 ): Promise<ProgressionSuggestion | null> {
   const recent = await db
     .select({
       workoutExerciseId: workoutExercises.id,
       performedAt: workouts.performedAt,
+      weightUnit: workouts.weightUnit,
       variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
       measurement: workoutExercises.measurement, loadType: workoutExercises.loadType, targetSeconds: workoutExercises.targetSeconds,
       targetSets: workoutExercises.targetSets,
@@ -147,6 +157,7 @@ async function getProgressionSuggestion(
 
       return {
         performedAt: entry.performedAt,
+        weightUnit: entry.weightUnit,
         targetSets: entry.targetSets,
         targetRepsMax: entry.targetRepsMax,
         sets: sets.map((set) => ({ reps: set.reps, weight: Number(set.weight) })),
@@ -154,7 +165,7 @@ async function getProgressionSuggestion(
     }),
   );
 
-  return suggestProgression(sessions);
+  return suggestProgression(sessions, targetUnit);
 }
 
 export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/[id]">) {
@@ -165,6 +176,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
   }
 
   const userId = session.user.id;
+  const { trainingUnit } = await getWeightPreferences(userId);
   const { id } = await params;
 
   const [workout] = await db
@@ -256,8 +268,8 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
   await Promise.all(
     exerciseRows.map(async (exercise) => {
       const [reference, suggestion] = await Promise.all([
-        getPreviousPerformance(userId, workout.id, exercise.exerciseId),
-        getProgressionSuggestion(userId, workout.id, exercise.exerciseId),
+        getPreviousPerformance(userId, workout.id, exercise.exerciseId, workout.weightUnit),
+        getProgressionSuggestion(userId, workout.id, exercise.exerciseId, workout.weightUnit),
       ]);
       references.set(exercise.workoutExerciseId, reference);
       suggestions.set(exercise.workoutExerciseId, suggestion);
@@ -415,7 +427,8 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                   </form>
                 </div>
 
-                <div className="px-5 pt-4">
+                <div className="px-5"><WeightView defaultUnit={trainingUnit} storageKey={`${userId}:${workout.id}:${exercise.workoutExerciseId}`} selectable={exercise.loadType !== "bodyweight"}>
+                <div className="pt-4">
                   {target && (
                     <div className="mb-2 flex flex-wrap items-center gap-2">
                       <Badge variant="secondary">
@@ -434,9 +447,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                       <AlertTitle>Toca subir peso</AlertTitle>
                       <AlertDescription>
                         Llevas {suggestion.sessions} sesiones y {suggestion.days}{" "}
-                        días cerrando el rango con {suggestion.fromWeight}{" "}
-                        {workout.weightUnit}. Prueba {suggestion.toWeight}{" "}
-                        {workout.weightUnit} y vuelve al mínimo de repeticiones.
+                        días cerrando el rango con <WeightValue value={suggestion.fromWeight} from={workout.weightUnit} />. Prueba <WeightValue value={suggestion.toWeight} from={workout.weightUnit} /> y vuelve al mínimo de repeticiones.
                       </AlertDescription>
                     </Alert>
                   )}
@@ -445,10 +456,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                       <HistoryIcon />
                       <AlertTitle>Última vez</AlertTitle>
                       <AlertDescription>
-                        {reference.sets
-                          .map((set) => `${Number(set.weight)}×${set.reps}`)
-                          .join(" · ")}{" "}
-                        {workout.weightUnit}
+                        {reference.sets.map((set, index) => <span key={index}>{index > 0 ? " · " : ""}<WeightSet value={set} from={workout.weightUnit} /></span>)}
                       </AlertDescription>
                     </Alert>
                   ) : (
@@ -479,7 +487,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                               {index + 1}
                             </TableCell>
                             <TableCell className="font-semibold text-foreground">
-                              {formatSet({ ...set, weight: Number(set.weight) }, workout.weightUnit)}
+                              <WeightSet value={{ ...set, weight: Number(set.weight) }} from={workout.weightUnit} />
                             </TableCell>
                             <TableCell className="font-semibold text-foreground">
                               {set.rpe ?? "—"}
@@ -496,7 +504,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                                   <DialogHeader>
                                     <DialogTitle>Serie {index + 1}</DialogTitle>
                                     <DialogDescription>
-                                      {exercise.name} · {formatSet({ ...set, weight: Number(set.weight) }, workout.weightUnit)}
+                                      {exercise.name} · <WeightSet value={{ ...set, weight: Number(set.weight) }} from={workout.weightUnit} />
                                     </DialogDescription>
                                   </DialogHeader>
 
@@ -533,6 +541,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                   </div>
                 )}
 
+                </WeightView></div>
                 <SetEntryForm />
               </Card>
             );

@@ -1,7 +1,10 @@
 "use client";
+import { WeightView, WeightSet } from "@/components/weight-view";
+import { useOfflinePlans } from "@/components/offline-plans-provider";
+import type { WeightUnit } from "@/lib/weight-units";
 import { TrainingBlockCard } from "@/components/training-block-card";
 import type { BlockProgress } from "@/lib/training-blocks";
-import { formatSet, formatTarget, validSet, type SetMetrics } from "@/lib/training-metrics";
+import { formatTarget, validSet, type SetMetrics } from "@/lib/training-metrics";
 
 import { DocumentLink } from "@/components/document-link";
 import { OfflineSyncStatus } from "@/components/offline-sync-status";
@@ -43,6 +46,7 @@ import {
  * fresca cuando hay red.
  */
 export default function EntrenoPage() {
+  const { catalog } = useOfflinePlans();
   const [sesion, setSesion] = useState<LocalWorkout | null>(null);
   const [workouts, setWorkouts] = useState<LocalWorkout[]>([]);
   const [legacyPending, setLegacyPending] = useState(0);
@@ -269,6 +273,8 @@ export default function EntrenoPage() {
             ejercicio={ejercicio}
             indice={indice}
             unidad={sesion.weightUnit}
+            displayUnit={catalog?.userId === sesion.userId ? catalog.data.weightUnit : sesion.weightUnit}
+            viewKey={`${sesion.userId}:${sesion.workoutId}:${ejercicio.workoutExerciseId}`}
             onRegistrar={registrar}
             onBorrar={borrarSerie}
           />
@@ -279,7 +285,7 @@ export default function EntrenoPage() {
         {block.format === "sets" ? <section className="mt-6" aria-label={`Bloque ${block.name}`}><h2 className="text-xl font-bold">{block.name}</h2>
           <div className="mt-4 grid items-start gap-4 md:grid-cols-2">{block.exerciseIds.map((exerciseId, index) => {
             const exercise = sesion.exercises.find((item) => item.exerciseId === exerciseId);
-            return exercise && <TarjetaEjercicio key={exercise.workoutExerciseId} ejercicio={exercise} indice={index} unidad={sesion.weightUnit} onRegistrar={registrar} onBorrar={borrarSerie} />;
+            return exercise && <TarjetaEjercicio key={exercise.workoutExerciseId} ejercicio={exercise} indice={index} unidad={sesion.weightUnit} displayUnit={catalog?.userId === sesion.userId ? catalog.data.weightUnit : sesion.weightUnit} viewKey={`${sesion.userId}:${sesion.workoutId}:${exercise.workoutExerciseId}`} onRegistrar={registrar} onBorrar={borrarSerie} />;
           })}</div>
         </section> : <TrainingBlockCard block={block} exercises={block.exerciseIds.map((id) => sesion.exercises.find((item) => item.exerciseId === id)!).filter(Boolean)} progress={sesion.blockProgress?.[block.id]} onSave={saveBlock} />}
       </div>)}
@@ -316,12 +322,16 @@ function TarjetaEjercicio({
   ejercicio,
   indice,
   unidad,
+  displayUnit,
+  viewKey,
   onRegistrar,
   onBorrar,
 }: {
   ejercicio: WorkoutSnapshot["exercises"][number];
   indice: number;
   unidad: string;
+  displayUnit: string;
+  viewKey: string;
   onRegistrar: (
     ejercicio: WorkoutSnapshot["exercises"][number],
     peso: number,
@@ -370,7 +380,8 @@ function TarjetaEjercicio({
         </div>
       </div>
 
-      <div className="space-y-2 px-5 pt-4">
+      <div className="px-5"><WeightView defaultUnit={displayUnit as WeightUnit} storageKey={viewKey} selectable={!bodyweight}>
+      <div className="space-y-2 pt-4">
         {faltan !== null && (
           <div className="space-y-2">
             <Badge variant={faltan === 0 ? "default" : "outline"}>
@@ -388,7 +399,7 @@ function TarjetaEjercicio({
             <HistoryIcon />
             <AlertTitle>Última vez</AlertTitle>
             <AlertDescription>
-              {ejercicio.previous.map((s) => formatSet(s, ejercicio.previousWeightUnit ?? unidad)).join(" · ")}
+              {ejercicio.previous.map((s, index) => <span key={index}>{index > 0 ? " · " : ""}<WeightSet value={s} from={(ejercicio.previousWeightUnit ?? unidad) as WeightUnit} /></span>)}
             </AlertDescription>
           </Alert>
         )}
@@ -413,7 +424,7 @@ function TarjetaEjercicio({
             >
               <span className="text-muted-foreground">{i + 1}</span>
               <span className="flex-1 text-right font-semibold text-foreground">
-                {formatSet(serie, unidad)}
+                <WeightSet value={serie} from={unidad as WeightUnit} />
               </span>
               <button
                 type="button"
@@ -428,6 +439,8 @@ function TarjetaEjercicio({
         </ul>
       )}
 
+      </WeightView></div>
+      {!bodyweight && <p className="px-5 pt-3 text-xs text-muted-foreground">Registra las nuevas series en {unidad}. El selector solo cambia la consulta.</p>}
       <form
         className="mt-4 grid grid-cols-[1fr_1fr_auto] gap-2 border-t border-border p-5"
         onSubmit={async (evento) => {

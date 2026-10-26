@@ -2,7 +2,9 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import Link from "next/link";
 import { db } from "@/db";
 import { exercises, workoutExercises, workouts, workoutSets } from "@/db/schema";
-import { formatSet, LOAD_LABELS, type SetMetrics } from "@/lib/training-metrics";
+import { convertWeight } from "@/lib/weight-units";
+import { WeightSet } from "@/components/weight-view";
+import { LOAD_LABELS, type SetMetrics } from "@/lib/training-metrics";
 
 /** Comparar únicamente la misma variante, carga y asistencia; nunca kilos con segundos. */
 export async function CalisthenicsProgress({ userId, exerciseId }: { userId: string; exerciseId?: string }) {
@@ -23,9 +25,9 @@ export async function CalisthenicsProgress({ userId, exerciseId }: { userId: str
   type Entry = { exerciseId: string; name: string; best: SetMetrics; sessions: Set<string>; recent: Array<{ workoutId: string; date: Date; value: SetMetrics }> };
   const groups = new Map<string, Entry>();
   for (const row of rows) {
-    const kg = Math.round(Number(row.weight) * (row.unit === "lb" ? 0.45359237 : 1) * 100) / 100;
+    const kg = convertWeight(Number(row.weight), row.unit, "kg");
     const value: SetMetrics = { ...row, weight: kg };
-    const key = JSON.stringify([row.exerciseId, row.variation, row.loadType, row.durationSeconds != null, kg, row.assistanceNote?.trim().toLocaleLowerCase() ?? ""]);
+    const key = JSON.stringify([row.exerciseId, row.variation, row.loadType, row.durationSeconds != null, Number(kg.toFixed(2)), row.assistanceNote?.trim().toLocaleLowerCase() ?? ""]);
     const entry = groups.get(key) ?? { exerciseId: row.exerciseId, name: `${row.name}${row.variation ? ` · ${row.variation}` : ""}`, best: value, sessions: new Set<string>(), recent: [] };
     if ((value.durationSeconds ?? value.reps) > (entry.best.durationSeconds ?? entry.best.reps)) entry.best = value;
     entry.sessions.add(row.workoutId);
@@ -39,11 +41,11 @@ export async function CalisthenicsProgress({ userId, exerciseId }: { userId: str
       {[...groups.entries()].map(([key, entry]) => <article key={key} className="py-5">
         <Link href={`/exercises/${entry.exerciseId}`} className="font-semibold underline-offset-4 hover:underline">{entry.name}</Link>
         <p className="mt-1 text-sm text-muted-foreground">{LOAD_LABELS[entry.best.loadType ?? "external"]} · {entry.sessions.size} sesiones</p>
-        <p className="mt-2 font-semibold">Mejor: {formatSet(entry.best, "kg")}</p>
+        <p className="mt-2 font-semibold">Mejor: <WeightSet value={entry.best} from="kg" /></p>
         <details className="mt-3 text-sm">
           <summary className="min-h-11 cursor-pointer py-2 underline underline-offset-4">Ver registros recientes</summary>
           <ul className="space-y-3 text-muted-foreground">{entry.recent.map((item, index) => <li key={index}>
-            <Link href={`/history/${item.workoutId}`} className="underline underline-offset-4">{item.date.toLocaleDateString("es")}</Link> · {formatSet(item.value, "kg")}
+            <Link href={`/history/${item.workoutId}`} className="underline underline-offset-4">{item.date.toLocaleDateString("es")}</Link> · <WeightSet value={item.value} from="kg" />
           </li>)}</ul>
         </details>
       </article>)}

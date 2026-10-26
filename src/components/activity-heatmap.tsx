@@ -1,3 +1,4 @@
+import { convertWeight, formatWeight, type WeightUnit } from "@/lib/weight-units";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { heatmapOf, trainedDaysIn, weekStreakOf, type TrainedDay } from "@/lib/activity-heatmap";
@@ -22,7 +23,7 @@ const monthFormatter = new Intl.DateTimeFormat("es", { month: "short" });
 /** Lunes, miércoles y viernes: con las siete iniciales no se lee nada. */
 const WEEKDAY_LABELS = ["L", "", "X", "", "V", "", ""];
 
-export function ActivityHeatmap({ trained }: { trained: TrainedDay[] }) {
+export function ActivityHeatmap({ trained, unit = "kg" }: { trained: TrainedDay[]; unit?: WeightUnit }) {
   const weeks = heatmapOf(trained);
   const days = trainedDaysIn(weeks);
   const streak = weekStreakOf(weeks);
@@ -92,7 +93,7 @@ export function ActivityHeatmap({ trained }: { trained: TrainedDay[] }) {
                     className={`block size-[11px] rounded-[2px] ${TONES[cell.level]}`}
                     title={
                       cell.level > 0
-                        ? `${dayFormatter.format(localDate(cell.day))}: ${cell.volume > 0 ? `${Math.round(cell.volume)} kg de carga externa` : "entrenamiento completado"}`
+                        ? `${dayFormatter.format(localDate(cell.day))}: ${cell.volume > 0 ? `${formatWeight(convertWeight(cell.volume, "kg", unit))} ${unit} de carga externa` : "entrenamiento completado"}`
                         : dayFormatter.format(localDate(cell.day))
                     }
                   />
@@ -109,7 +110,7 @@ export function ActivityHeatmap({ trained }: { trained: TrainedDay[] }) {
             ? "Cada sesión que termines pinta un cuadro."
             : streak > 1
               ? `${streak} semanas seguidas entrenando.`
-              : "El tono sube con los kilos que moviste ese día."}
+              : "El tono sube con la carga que moviste ese día."}
         </p>
         <div className="flex shrink-0 items-center gap-1" aria-hidden="true">
           <span className="text-[10px] text-muted-foreground">Menos</span>

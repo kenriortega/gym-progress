@@ -1,3 +1,4 @@
+import { convertWeight, formatWeight, type WeightUnit } from "@/lib/weight-units";
 import Link from "next/link";
 
 import { BodyWeightForm } from "@/components/body-weight-form";
@@ -10,9 +11,6 @@ export type WeighIn = { measuredOn: string; weight: number };
 const WIDTH = 320;
 const HEIGHT = 72;
 const PAD = 4;
-
-/** Un decimal como mucho: la báscula da 78.4, no 78.40. */
-const kg = (value: number) => value.toFixed(1).replace(/\.0$/, "");
 
 const dayFormatter = new Intl.DateTimeFormat("es", { day: "numeric", month: "short" });
 
@@ -48,11 +46,14 @@ function shape(history: WeighIn[], goal: number | null) {
 export function BodyWeightCard({
   history,
   goal,
+  unit = "kg",
 }: {
   /** De la más antigua a la más reciente. */
   history: WeighIn[];
   goal: number | null;
+  unit?: WeightUnit;
 }) {
+  const display = (value: number) => formatWeight(convertWeight(value, "kg", unit));
   const latest = history.at(-1) ?? null;
   const previous = history.at(-2) ?? null;
   const change = latest && previous ? latest.weight - previous.weight : null;
@@ -60,18 +61,18 @@ export function BodyWeightCard({
 
   return (
     <Card className="mt-6 p-5">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <CardDescription>Peso corporal</CardDescription>
           {latest ? (
             <div className="mt-1 flex items-baseline gap-2">
               <CardTitle className="text-3xl font-black tabular-nums">
-                {kg(latest.weight)} kg
+                {display(latest.weight)} {unit}
               </CardTitle>
               {change !== null && change !== 0 ? (
                 <span className="text-sm font-semibold tabular-nums text-muted-foreground">
                   {change > 0 ? "+" : "−"}
-                  {kg(Math.abs(change))}
+                  {display(Math.abs(change))}
                 </span>
               ) : null}
             </div>
@@ -84,7 +85,7 @@ export function BodyWeightCard({
           <Badge variant="outline" className="shrink-0 tabular-nums">
             {Math.abs(toGoal) < 0.05
               ? "En tu objetivo"
-              : `${kg(Math.abs(toGoal))} kg ${toGoal > 0 ? "por bajar" : "por subir"}`}
+              : `${display(Math.abs(toGoal))} ${unit} ${toGoal > 0 ? "por bajar" : "por subir"}`}
           </Badge>
         ) : null}
       </div>
@@ -95,7 +96,7 @@ export function BodyWeightCard({
             viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
             className="mt-4 h-20 w-full"
             role="img"
-            aria-label={`Evolución de tu peso en las últimas ${history.length} pesadas, de ${kg(history[0]!.weight)} a ${kg(history.at(-1)!.weight)} kilos`}
+            aria-label={`Evolución de tu peso en las últimas ${history.length} pesadas, de ${display(history[0]!.weight)} a ${display(history.at(-1)!.weight)} ${unit}`}
           >
             {(() => {
               const { line, goalY, last } = shape(history, goal);
@@ -129,13 +130,13 @@ export function BodyWeightCard({
           </svg>
           <div className="flex justify-between text-[10px] text-muted-foreground">
             <span>{dayFormatter.format(localDate(history[0]!.measuredOn))}</span>
-            {goal !== null ? <span className="tabular-nums">meta {kg(goal)} kg</span> : null}
+            {goal !== null ? <span className="tabular-nums">meta {display(goal)} {unit}</span> : null}
             <span>{dayFormatter.format(localDate(history.at(-1)!.measuredOn))}</span>
           </div>
         </>
       ) : null}
 
-      <BodyWeightForm latest={latest?.weight ?? null} />
+      <BodyWeightForm latest={latest?.weight ?? null} unit={unit} />
 
       <p className="mt-3 text-[11px] text-muted-foreground">
         Una pesada al día: si registras otra hoy, sustituye a la anterior.

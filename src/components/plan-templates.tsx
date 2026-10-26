@@ -1,6 +1,7 @@
 "use client";
 
 import { UsersIcon, VenusIcon } from "lucide-react";
+import { ButtonLink } from "@/components/button-link";
 
 import { createPlanFromTemplate } from "@/app/actions/plans";
 import { PendingButton } from "@/components/pending-button";
@@ -59,7 +60,7 @@ export function PlanTemplates({ titulo }: { titulo?: string }) {
           <Card key={plantilla.id} className="gap-3 p-5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <CardTitle className="text-base">{plantilla.name}</CardTitle>
+                <CardTitle className="text-base"><a href={`/plans/templates/${plantilla.id}`} className="underline-offset-4 hover:underline">{plantilla.name}</a></CardTitle>
                 <p className="mt-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   {plantilla.audience}
                 </p>
@@ -95,6 +96,7 @@ export function PlanTemplates({ titulo }: { titulo?: string }) {
               ))}
             </ul>
 
+            <ButtonLink href={`/plans/templates/${plantilla.id}`} variant="outline" className="min-h-11 w-full">Ver detalle</ButtonLink>
             <form action={createPlanFromTemplate}>
               <input type="hidden" name="templateId" value={plantilla.id} />
               <PendingButton

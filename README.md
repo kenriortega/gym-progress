@@ -73,7 +73,7 @@ En producción las variables viven en Vercel: `DATABASE_URL` (la de Neon **con `
 
 ## Modelo de datos
 
-- `users` — propietario de los datos y su preferencia kg/lb.
+- `users` — propietario de los datos y sus preferencias independientes de unidades corporales y de entrenamiento.
 - `accounts`, `sessions` — identidad de Google y sesiones activas.
 - `exercises` — catálogo. Con `user_id` nulo son del sistema; con valor, propios de esa persona.
 - `training_plans` — planes reutilizables, con día de la semana opcional y archivado lógico.
@@ -102,11 +102,24 @@ El navegador nunca habla directamente con PostgreSQL. Todas las consultas se eje
 | `/plans`, `/plans/[id]` | Planes, plantillas y archivados. |
 | `/progress`, `/exercises/[id]` | Récords y evolución por ejercicio. |
 | `/history`, `/history/[id]` | Historial de sesiones. |
-| `/ajustes`, `/ayuda`, `/novedades` | Unidad de peso, guía de uso y registro de cambios. |
+| `/ajustes`, `/ayuda`, `/novedades` | Preferencias de unidades, objetivo corporal, guía de uso y registro de cambios. |
+| `/plans/templates/[id]` | Detalle de una plantilla antes de copiarla. |
 | `/privacidad`, `/terminos` | Páginas legales, públicas porque Google las consulta sin sesión. |
 | `/planes-guardados` | Consulta offline de todos los planes descargados, calendario y últimas marcas. |
 | `/api/offline/plans` | Descarga autenticada de los planes activos y sus referencias. |
 | `/api/snapshot`, `/api/sync` | Descarga de la sesión y recepción de la cola offline. |
+
+## Unidades de medida
+
+En Ajustes puedes combinar medidas corporales métricas (kg) o imperiales (lb)
+con pesos de entrenamiento en kg o lb. Las vistas de consulta parten de esas
+preferencias. En cada ejercicio con carga puedes elegir kg, lb o ambas unidades;
+la selección se conserva durante la sesión en esa pestaña, también sin red.
+
+El selector solo cambia la consulta: las nuevas series se introducen en la
+unidad indicada en el campo de peso. El historial conserva su valor y unidad
+originales. Las conversiones se muestran con hasta dos decimales.
+Decisiones y validaciones: [unidades de peso](docs/weight-units.md).
 
 ## Cómo funciona sin conexión
 

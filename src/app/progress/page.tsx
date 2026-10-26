@@ -6,6 +6,9 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { weightInKgSql } from "@/db/weight";
+import { getWeightPreferences } from "@/db/preferences";
+import { WeightView, WeightValue } from "@/components/weight-view";
 import { exerciseMuscles, exercises, workoutExercises, workouts, workoutSets } from "@/db/schema";
 import { SECONDARY_SHARE } from "@/lib/muscles";
 import { AppHeader } from "@/components/app-header";
@@ -15,10 +18,13 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 
 /** Un mes: suficiente para ver un desequilibrio, corto para que puedas corregirlo. */
 const BALANCE_DAYS = 30;
+const weightKg = weightInKgSql(workoutSets.weight, workouts.weightUnit);
 
 export default async function ProgressPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
+
+  const { trainingUnit } = await getWeightPreferences(session.user.id);
 
   // Volumen por músculo del último mes. El secundario cuenta menos: el press de
   // banca trabaja el tríceps de verdad, pero no como el pecho.
@@ -30,7 +36,7 @@ export default async function ProgressPage() {
     .select({
       muscle: exerciseMuscles.muscle,
       volume: sql<string>`sum(
-        ${workoutSets.weight} * ${workoutSets.reps}
+        ${weightKg} * ${workoutSets.reps}
         * case ${exerciseMuscles.role} when 'primary' then 1::numeric else ${SECONDARY_SHARE} end
       )`,
     })
@@ -55,7 +61,7 @@ export default async function ProgressPage() {
       name: exercises.name,
       muscleGroup: exercises.muscleGroup,
       workoutCount: countDistinct(workouts.id),
-      bestWeight: max(workoutSets.weight),
+      bestWeight: max(weightKg),
       lastPerformedAt: max(workouts.performedAt),
     })
     .from(workoutSets)
@@ -73,6 +79,7 @@ export default async function ProgressPage() {
       <MuscleBalanceCard volumes={volumes} days={BALANCE_DAYS} />
       <p className="mt-3 text-xs leading-5 text-muted-foreground">Este reparto usa solo carga externa con repeticiones. La calistenia, las series por tiempo y los WOD tienen sus registros separados a continuación.</p>
 
+      <WeightView defaultUnit={trainingUnit} selectable={false}>
       <CalisthenicsProgress userId={session.user.id} />
       <BlockProgressHistory userId={session.user.id} />
       <h2 className="mt-8 text-xl font-bold">Fuerza con carga externa</h2>
@@ -89,7 +96,7 @@ export default async function ProgressPage() {
                   <p className="mt-1 truncate text-sm text-muted-foreground">{exercise.muscleGroup} · {exercise.workoutCount} {exercise.workoutCount === 1 ? "sesión" : "sesiones"}</p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="whitespace-nowrap font-bold text-foreground">{Number(exercise.bestWeight)} kg</p>
+                  <p className="whitespace-nowrap font-bold text-foreground"><WeightValue value={Number(exercise.bestWeight)} /></p>
                   <p className="mt-1 text-xs text-muted-foreground">máximo</p>
                 </div>
               </Card>
@@ -106,6 +113,7 @@ export default async function ProgressPage() {
           </CardHeader>
         </Card>
       )}
+      </WeightView>
     </main>
   );
 }

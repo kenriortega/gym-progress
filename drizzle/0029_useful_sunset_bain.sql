@@ -1,0 +1,2 @@
+CREATE TYPE "public"."body_measurement_system" AS ENUM('metric', 'imperial');--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "preferred_body_system" "body_measurement_system" DEFAULT 'metric' NOT NULL;

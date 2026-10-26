@@ -1,3 +1,5 @@
+import { getWeightPreferences } from "@/db/preferences";
+import { WeightView, WeightValue, WeightSet } from "@/components/weight-view";
 import { CalisthenicsProgress } from "@/components/calisthenics-progress";
 import { and, asc, eq, isNull, or } from "drizzle-orm";
 import Link from "next/link";
@@ -5,6 +7,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { weightInKgSql } from "@/db/weight";
 import { exerciseMuscles, exercises, workoutExercises, workouts, workoutSets } from "@/db/schema";
 import { AppHeader } from "@/components/app-header";
 import { BodyMap } from "@/components/body-map";
@@ -24,6 +27,7 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
+  const { trainingUnit } = await getWeightPreferences(session.user.id);
   const { id } = await params;
   const [exercise] = await db
     .select({
@@ -51,7 +55,7 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
     .select({
       workoutId: workouts.id,
       performedAt: workouts.performedAt,
-      weight: workoutSets.weight,
+      weight: weightInKgSql(workoutSets.weight, workouts.weightUnit),
       reps: workoutSets.reps,
       position: workoutSets.position,
     })
@@ -81,8 +85,6 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
   const timeFormatter = new Intl.DateTimeFormat("es", { hour: "2-digit", minute: "2-digit" });
   const chartDayFormatter = new Intl.DateTimeFormat("es", { day: "numeric", month: "short" });
 
-  /** Pesos con un decimal como mucho: "50.99" no dice nada que no diga "51". */
-  const kg = (value: number) => value.toFixed(1).replace(/\.0$/, "");
 
   // Dos entrenamientos del mismo día daban dos barras con la etiqueta idéntica,
   // porque las sesiones se agrupan por entrenamiento y no por fecha.
@@ -128,6 +130,7 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
         icon={<MuscleIcon group={exercise.muscleGroup} className="h-12 w-auto text-foreground" />}
       />
 
+      <WeightView defaultUnit={trainingUnit} storageKey={`${session.user.id}:detail:${id}`}>
       <CalisthenicsProgress userId={session.user.id} exerciseId={exercise.id} />
       {hasFigure(exercise.equipmentKey, exercise.name) ? (
         <Card className="mt-6 p-5">
@@ -158,16 +161,16 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
 
       {bestSet ? (
         <>
-          <section className="mt-7 grid grid-cols-2 gap-3 md:gap-4">
+          <section className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
             <Card className="gap-1 bg-primary p-4 text-primary-foreground">
               <p className="text-xs font-medium uppercase tracking-wider text-primary-foreground/75">Récord de peso</p>
-              <p className="text-3xl font-bold tabular-nums">{kg(bestSet.weight)} kg</p>
+              <p className="text-2xl sm:text-3xl font-bold tabular-nums"><WeightValue value={bestSet.weight} /></p>
               <p className="text-sm text-primary-foreground/75">× {bestSet.reps} reps</p>
             </Card>
             <Card className="gap-1 p-4">
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Mejor volumen</p>
-              <p className="text-3xl font-bold tabular-nums text-foreground">{Math.round(bestVolume)}</p>
-              <p className="text-sm text-muted-foreground">kg movidos en una sesión</p>
+              <p className="text-2xl sm:text-3xl font-bold tabular-nums text-foreground"><WeightValue value={bestVolume} /></p>
+              <p className="text-sm text-muted-foreground">de carga acumulada en una sesión</p>
             </Card>
           </section>
 
@@ -187,7 +190,7 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
                 <div className="mt-6 flex h-52 items-end gap-2 overflow-x-auto pb-1">
                   {sessionList.map((item) => (
                     <div key={item.id} className="flex min-w-12 max-w-16 flex-1 flex-col items-center justify-end gap-2">
-                      <span className="text-[11px] font-bold tabular-nums text-muted-foreground">{kg(item.maxWeight)}</span>
+                      <span className="text-[11px] font-bold tabular-nums text-muted-foreground"><WeightValue value={item.maxWeight} single /></span>
                       <div className="w-full rounded-t-md bg-foreground" style={{ height: `${barHeight(item.maxWeight)}px` }} />
                       <span className="whitespace-nowrap text-[10px] text-muted-foreground">{labelOf(item.date)}</span>
                     </div>
@@ -202,17 +205,17 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
               <div className="mt-5">
                 {change !== null && latest && previous ? (
                   <>
-                    <p className="text-3xl font-bold tabular-nums text-foreground">
+                    <p className="text-2xl sm:text-3xl font-bold tabular-nums text-foreground">
                       {change > 0 ? "+" : ""}
-                      {kg(change)} kg
+                      <WeightValue value={change} />
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      desde la sesión anterior · {kg(previous.maxWeight)} → {kg(latest.maxWeight)} kg
+                      desde la sesión anterior · <WeightValue value={previous.maxWeight} /> → <WeightValue value={latest.maxWeight} />
                     </p>
                   </>
                 ) : latest ? (
                   <>
-                    <p className="text-3xl font-bold tabular-nums text-foreground">{kg(latest.maxWeight)} kg</p>
+                    <p className="text-2xl sm:text-3xl font-bold tabular-nums text-foreground"><WeightValue value={latest.maxWeight} /></p>
                     <p className="mt-1 text-sm text-muted-foreground">en tu primera sesión registrada</p>
                   </>
                 ) : null}
@@ -229,11 +232,11 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
               {[...sessionList].reverse().map((item) => (
                 <Link key={item.id} href={`/history/${item.id}`} className="block min-w-0">
                   <Card className="gap-2 p-4 transition hover:border-foreground/25">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="font-semibold capitalize text-foreground">{dateFormatter.format(item.date)}</p>
-                      <Badge variant="secondary">máx. {kg(item.maxWeight)} kg</Badge>
+                      <Badge variant="secondary">máx. <WeightValue value={item.maxWeight} /></Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">{item.sets.map((set) => `${kg(set.weight)}×${set.reps}`).join(" · ")}</p>
+                    <p className="text-sm text-muted-foreground">{item.sets.map((set, index) => <span key={index}>{index > 0 ? " · " : ""}<WeightSet value={set} from="kg" /></span>)}</p>
                   </Card>
                 </Link>
               ))}
@@ -250,6 +253,7 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
           </CardHeader>
         </Card>
       )}
+      </WeightView>
     </main>
   );
 }

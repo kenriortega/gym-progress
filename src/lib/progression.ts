@@ -1,4 +1,8 @@
+import { convertWeight, type WeightUnit } from "./weight-units";
+
 export type ProgressionSession = {
+  /** Ausencia = kg, para referencias anteriores a la separación de unidades. */
+  weightUnit?: WeightUnit;
   performedAt: Date;
   targetSets: number | null;
   targetRepsMax: number | null;
@@ -49,7 +53,7 @@ function weightClearingTopOfRange(session: ProgressionSession): number | null {
     return null;
   }
 
-  return Math.min(...atTop.map((set) => set.weight));
+  return Math.min(...atTop.map((set) => convertWeight(set.weight, session.weightUnit ?? "kg", "kg")));
 }
 
 /**
@@ -61,6 +65,7 @@ function weightClearingTopOfRange(session: ProgressionSession): number | null {
  */
 export function suggestProgression(
   sessions: ProgressionSession[],
+  displayUnit: WeightUnit = "kg",
 ): ProgressionSuggestion | null {
   // Racha de sesiones en el tope, contando desde la más reciente hacia atrás.
   const streak: Array<{ performedAt: Date; weight: number }> = [];
@@ -88,9 +93,9 @@ export function suggestProgression(
   const increment = weightIncrementFor(fromWeight);
 
   return {
-    fromWeight,
-    increment,
-    toWeight: Math.round((fromWeight + increment) * 100) / 100,
+    fromWeight: convertWeight(fromWeight, "kg", displayUnit),
+    increment: convertWeight(increment, "kg", displayUnit),
+    toWeight: convertWeight(fromWeight + increment, "kg", displayUnit),
     sessions: streak.length,
     days,
   };

@@ -47,13 +47,13 @@ export function matchesExercise(set: SetMetrics, exercise: ExerciseMetrics): boo
   return (set.loadType ?? "external") === (exercise.loadType ?? "external") &&
     (set.durationSeconds != null) === (exercise.measurement === "time");
 }
-export function formatSet(set: SetMetrics, unit: string): string {
+export function formatSet(set: SetMetrics, unit: string, formatLoad = (weight: number) => `${weight} ${unit}`): string {
   const result = set.durationSeconds != null ? `${set.durationSeconds} s` : `${set.reps} reps`;
   switch (set.loadType ?? "external") {
     case "bodyweight": return `${result} · peso corporal`;
-    case "weighted": return `${result} · +${set.weight} ${unit} de lastre`;
-    case "assisted": return `${result} · ${set.weight > 0 ? `${set.weight} ${unit} de asistencia` : "banda"}${set.assistanceNote ? ` (${set.assistanceNote})` : ""}`;
-    default: return set.durationSeconds != null ? `${set.durationSeconds} s · ${set.weight} ${unit}` : `${set.weight} ${unit} × ${set.reps}`;
+    case "weighted": return `${result} · +${formatLoad(set.weight)} de lastre`;
+    case "assisted": return `${result} · ${set.weight > 0 ? `${formatLoad(set.weight)} de asistencia` : "banda"}${set.assistanceNote ? ` (${set.assistanceNote})` : ""}`;
+    default: return set.durationSeconds != null ? `${set.durationSeconds} s · ${formatLoad(set.weight)}` : `${formatLoad(set.weight)} × ${set.reps}`;
   }
 }
 export function formatTarget(value: ExerciseMetrics & { targetSets: number | null; targetRepsMin: number | null; targetRepsMax: number | null }): string {

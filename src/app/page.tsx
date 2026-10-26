@@ -8,6 +8,9 @@ import { redirect } from "next/navigation";
 import { StartWorkoutButton } from "@/components/start-workout-button";
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { bodyWeightUnit } from "@/lib/weight-units";
+import { WeightView, WeightValue } from "@/components/weight-view";
+import { weightInKgSql } from "@/db/weight";
 import { AppHeader } from "@/components/app-header";
 import { dayOf, localDate } from "@/lib/dates";
 import { plansOn } from "@/lib/schedule";
@@ -142,7 +145,7 @@ export default async function Home() {
     .reverse();
 
   const [profile] = await db
-    .select({ goalWeight: users.goalWeight })
+    .select({ goalWeight: users.goalWeight, bodySystem: users.preferredBodySystem, trainingUnit: users.preferredWeightUnit })
     .from(users)
     .where(eq(users.id, session.user.id))
     .limit(1);
@@ -153,7 +156,7 @@ export default async function Home() {
   const trainedRows = await db
     .select({
       day: sql<string>`to_char(${workouts.performedAt}, 'YYYY-MM-DD')`,
-      volume: sql<string>`coalesce(sum(case when ${workoutSets.loadType} = 'external' and ${workoutSets.durationSeconds} is null then ${workoutSets.weight} * ${workoutSets.reps} else 0 end), 0)`,
+      volume: sql<string>`coalesce(sum(case when ${workoutSets.loadType} = 'external' and ${workoutSets.durationSeconds} is null then ${weightInKgSql(workoutSets.weight, workouts.weightUnit)} * ${workoutSets.reps} else 0 end), 0)`,
     })
     .from(workouts)
     .leftJoin(workoutExercises, eq(workoutExercises.workoutId, workouts.id))
@@ -330,7 +333,7 @@ export default async function Home() {
         )}
       </Card>
 
-      <BodyWeightCard history={weighIns} goal={goalWeight} />
+      <BodyWeightCard history={weighIns} goal={goalWeight} unit={bodyWeightUnit(profile?.bodySystem ?? "metric")} />
 
       {/*
         Solo con historial. El componente dibuja la rejilla vacía con un texto
@@ -338,7 +341,7 @@ export default async function Home() {
         pero en portada le ocupa media pantalla a quien acaba de instalar la app
         para no decirle nada.
       */}
-      {trained.length > 0 ? <ActivityHeatmap trained={trained} /> : null}
+      {trained.length > 0 ? <ActivityHeatmap trained={trained} unit={profile?.trainingUnit ?? "kg"} /> : null}
 
       <section id="planes" className="mt-8 scroll-mt-5">
         <div className="flex items-end justify-between">
@@ -465,7 +468,7 @@ export default async function Home() {
                   <p className="mt-1 text-sm text-muted-foreground">
                     {exercise.sets} {exercise.sets === 1 ? "serie" : "series"}
                     {exercise.external && exercise.sets > 0 && lastWorkout
-                      ? ` · hasta ${exercise.maxWeight} ${lastWorkout.weightUnit}`
+                      ? <WeightView defaultUnit={profile?.trainingUnit ?? "kg"} selectable={false}> · hasta <WeightValue value={Number(exercise.maxWeight)} from={lastWorkout.weightUnit} /></WeightView>
                       : ""}
                   </p>
                 </div>

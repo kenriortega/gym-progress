@@ -3,6 +3,7 @@
 import { logBodyWeight } from "@/app/actions/body-weight";
 import { PendingButton } from "@/components/pending-button";
 import { Input } from "@/components/ui/input";
+import { convertWeight, type WeightUnit } from "@/lib/weight-units";
 import { dayOf } from "@/lib/dates";
 
 /**
@@ -11,7 +12,7 @@ import { dayOf } from "@/lib/dates";
  */
 const today = () => dayOf(new Date());
 
-export function BodyWeightForm({ latest }: { latest: number | null }) {
+export function BodyWeightForm({ latest, unit = "kg" }: { latest: number | null; unit?: WeightUnit }) {
   return (
     <form action={logBodyWeight} className="mt-4 flex gap-2">
       {/*
@@ -26,17 +27,19 @@ export function BodyWeightForm({ latest }: { latest: number | null }) {
           if (node) node.value = today();
         }}
       />
+      <input type="hidden" name="unit" value={unit} />
       <Input
+        key={unit}
         name="weight"
         type="number"
         inputMode="decimal"
-        step="0.1"
-        min={20}
-        max={500}
+        step="0.01"
+        min={Number(convertWeight(20, "kg", unit).toFixed(2))}
+        max={Number(convertWeight(500, "kg", unit).toFixed(2))}
         required
-        defaultValue={latest ?? undefined}
+        defaultValue={latest === null ? undefined : Number(convertWeight(latest, "kg", unit).toFixed(2))}
         placeholder="78.4"
-        aria-label="Peso de hoy en kilos"
+        aria-label={`Peso de hoy en ${unit}`}
         className="h-12 flex-1 rounded-xl px-4 text-base font-semibold tabular-nums"
       />
       <PendingButton type="submit" className="h-12">

@@ -1,6 +1,7 @@
 "use client";
 import { describeBlock, DISCIPLINES } from "@/lib/training-blocks";
-import { formatTarget, formatSet } from "@/lib/training-metrics";
+import { WeightView, WeightSet } from "@/components/weight-view";
+import { formatTarget } from "@/lib/training-metrics";
 
 import { useState, useSyncExternalStore } from "react";
 import { DocumentLink } from "@/components/document-link";
@@ -89,9 +90,11 @@ export default function SavedPlansPage() {
                         <h3 className="font-semibold">{exercise.name}</h3>
                         <p className="mt-1 text-sm text-muted-foreground">{exercise.muscleGroup} · {formatTarget(exercise)}</p>
                         {exercise.notes && <p className="mt-2 max-w-prose whitespace-pre-wrap text-sm leading-6">{exercise.notes}</p>}
+                        <WeightView defaultUnit={catalog.data.weightUnit} storageKey={`${catalog.userId}:plan:${plan.id}:${exercise.id}`} selectable={exercise.loadType !== "bodyweight"}>
                         {exercise.previous && exercise.previous.sets.length > 0 && <p className="mt-2 max-w-prose text-sm leading-6 text-muted-foreground">
-                          Última sesión ({new Date(exercise.previous.performedAt).toLocaleDateString("es")}): {exercise.previous.sets.map((set) => formatSet(set, exercise.previous!.weightUnit)).join(" · ")}.
+                          Última sesión ({new Date(exercise.previous.performedAt).toLocaleDateString("es")}): {exercise.previous.sets.map((set, index) => <span key={index}>{index > 0 ? " · " : ""}<WeightSet value={set} from={exercise.previous!.weightUnit} /></span>)}.
                         </p>}
+                        </WeightView>
                       </li>
                     ))}
                   </ol>

@@ -20,6 +20,7 @@ import {
 import type { AdapterAccountType } from "next-auth/adapters";
 
 export const weightUnit = pgEnum("weight_unit", ["kg", "lb"]);
+export const bodyMeasurementSystem = pgEnum("body_measurement_system", ["metric", "imperial"]);
 export const muscleRole = pgEnum("muscle_role", ["primary", "secondary"]);
 export const workoutStatus = pgEnum("workout_status", [
   "active",
@@ -48,6 +49,7 @@ export const users = pgTable("users", {
   emailVerified: timestamp("email_verified", { withTimezone: true }),
   image: text("image"),
   preferredWeightUnit: weightUnit("preferred_weight_unit").notNull().default("kg"),
+  preferredBodySystem: bodyMeasurementSystem("preferred_body_system").notNull().default("metric"),
   /** Peso al que apuntas, en kg. Null mientras no te marques ninguno. */
   goalWeight: numeric("goal_weight", { precision: 5, scale: 2 }),
   ...timestamps,
