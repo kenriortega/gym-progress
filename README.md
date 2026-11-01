@@ -48,24 +48,24 @@ Mientras detecte los valores de ejemplo, `/login` deja el botón de Google desha
 
 ## Comandos
 
-| Comando | Qué hace |
-|---|---|
-| `npm run dev` | Servidor de desarrollo (Turbopack; el service worker va desactivado). |
-| `npm run build` | Compilación de producción. Genera `public/sw.js`. |
-| `npm run lint` | Análisis estático. |
-| `npm run db:generate` | Genera migraciones a partir de `src/db/schema.ts`. |
-| `npm run db:migrate` | Aplica las migraciones pendientes **en local**. |
-| `npm run db:migrate:prod` | Las aplica **en producción**, leyendo `.env.neon`. |
-| `npm run db:studio` | Explorador de la base de datos. |
-| `./scripts/backup.sh` | Volcado comprimido de la base de producción. |
+| Comando                   | Qué hace                                                              |
+| ------------------------- | --------------------------------------------------------------------- |
+| `npm run dev`             | Servidor de desarrollo (Turbopack; el service worker va desactivado). |
+| `npm run build`           | Compilación de producción. Genera `public/sw.js`.                     |
+| `npm run lint`            | Análisis estático.                                                    |
+| `npm run db:generate`     | Genera migraciones a partir de `src/db/schema.ts`.                    |
+| `npm run db:migrate`      | Aplica las migraciones pendientes **en local**.                       |
+| `npm run db:migrate:prod` | Las aplica **en producción**, leyendo `.env.neon`.                    |
+| `npm run db:studio`       | Explorador de la base de datos.                                       |
+| `./scripts/backup.sh`     | Volcado comprimido de la base de producción.                          |
 
 ## Entornos y variables
 
-| Archivo | Para qué | ¿En git? |
-|---|---|---|
-| `.env.local` | Desarrollo: apunta al PostgreSQL de Docker. | no |
-| `.env.neon` | Credenciales de producción, solo para migrar y hacer copias. | no |
-| `.env.example` | Plantilla documentada. | sí |
+| Archivo        | Para qué                                                     | ¿En git? |
+| -------------- | ------------------------------------------------------------ | -------- |
+| `.env.local`   | Desarrollo: apunta al PostgreSQL de Docker.                  | no       |
+| `.env.neon`    | Credenciales de producción, solo para migrar y hacer copias. | no       |
+| `.env.example` | Plantilla documentada.                                       | sí       |
 
 En producción las variables viven en Vercel: `DATABASE_URL` (la de Neon **con `-pooler`**), `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` y `AUTH_TRUST_HOST=true`.
 
@@ -92,22 +92,22 @@ El navegador nunca habla directamente con PostgreSQL. Todas las consultas se eje
 
 ## Pantallas
 
-| Ruta | Qué es |
-|---|---|
-| `/` | Inicio: plan de hoy, tus planes y resumen del último entrenamiento. |
-| `/abrir` | Entrada estática del icono: sesión activa, Inicio o planes guardados según disponibilidad. |
-| `/offline` | Inicio sin conexión con acceso a la sesión y los planes del dispositivo. |
-| `/entreno` | **Entrenamiento. Funciona sin conexión.** Estática y precacheada. |
-| `/workout/[id]` | Ajustes de la sesión: reordenar, editar objetivos, notas. Necesita red. |
-| `/plans`, `/plans/[id]` | Planes, plantillas y archivados. |
-| `/progress`, `/exercises/[id]` | Récords y evolución por ejercicio. |
-| `/history`, `/history/[id]` | Historial de sesiones. |
-| `/ajustes`, `/ayuda`, `/novedades` | Preferencias de unidades, objetivo corporal, guía de uso y registro de cambios. |
-| `/plans/templates/[id]` | Detalle de una plantilla antes de copiarla. |
-| `/privacidad`, `/terminos` | Páginas legales, públicas porque Google las consulta sin sesión. |
-| `/planes-guardados` | Consulta offline de todos los planes descargados, calendario y últimas marcas. |
-| `/api/offline/plans` | Descarga autenticada de los planes activos y sus referencias. |
-| `/api/snapshot`, `/api/sync` | Descarga de la sesión y recepción de la cola offline. |
+| Ruta                               | Qué es                                                                                     |
+| ---------------------------------- | ------------------------------------------------------------------------------------------ |
+| `/`                                | Inicio: plan de hoy, tus planes y resumen del último entrenamiento.                        |
+| `/abrir`                           | Entrada estática del icono: sesión activa, Inicio o planes guardados según disponibilidad. |
+| `/offline`                         | Inicio sin conexión con acceso a la sesión y los planes del dispositivo.                   |
+| `/entreno`                         | **Entrenamiento. Funciona sin conexión.** Estática y precacheada.                          |
+| `/workout/[id]`                    | Ajustes de la sesión: reordenar, editar objetivos, notas. Necesita red.                    |
+| `/plans`, `/plans/[id]`            | Planes, plantillas y archivados.                                                           |
+| `/progress`, `/exercises/[id]`     | Récords y evolución por ejercicio.                                                         |
+| `/history`, `/history/[id]`        | Historial de sesiones.                                                                     |
+| `/ajustes`, `/ayuda`, `/novedades` | Preferencias de unidades, objetivo corporal, guía de uso y registro de cambios.            |
+| `/plans/templates/[id]`            | Detalle de una plantilla antes de copiarla.                                                |
+| `/privacidad`, `/terminos`         | Páginas legales, públicas porque Google las consulta sin sesión.                           |
+| `/planes-guardados`                | Consulta offline de todos los planes descargados, calendario y últimas marcas.             |
+| `/api/offline/plans`               | Descarga autenticada de los planes activos y sus referencias.                              |
+| `/api/snapshot`, `/api/sync`       | Descarga de la sesión y recepción de la cola offline.                                      |
 
 ## Unidades de medida
 
@@ -181,3 +181,8 @@ movimiento distingue repeticiones/segundos y carga externa/peso corporal/lastre/
 asistencia. Los bloques, relojes y resultados se guardan primero en el dispositivo.
 Consulta [modalidades y bloques](docs/training-modalities.md) para el modelo,
 las migraciones 0025–0028, las validaciones y los límites de esta primera versión.
+
+## Resources Blogs
+
+[https://fitgeneration.es/rutina-gimnasio-mujeres-niveles/](https://fitgeneration.es/rutina-gimnasio-mujeres-niveles/)
+[https://fitgeneration.es/5-mejores-rutinas-4-dias-frecuencia-2/](https://fitgeneration.es/5-mejores-rutinas-4-dias-frecuencia-2/)
