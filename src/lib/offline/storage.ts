@@ -1,5 +1,6 @@
 import { validProgress } from "../training-blocks";
 import { sameVariant, validSet, matchesExercise } from "../training-metrics";
+import { nextSetPosition } from "../set-prescription";
 import type { LocalWorkout, QueuedMutation, WorkoutSnapshot } from "./types";
 import type { SavedOfflinePlans } from "./plan-types";
 import { abortTransaction, transaction } from "./database";
@@ -32,10 +33,10 @@ function apply(workout: LocalWorkout, mutation: QueuedMutation): LocalWorkout {
       if (mutation.kind === "deleteSet") return { ...exercise, sets: exercise.sets.filter((set) => set.id !== mutation.setId) };
       if (exercise.workoutExerciseId !== mutation.workoutExerciseId || exercise.sets.some((set) => set.id === mutation.setId)) return exercise;
       return { ...exercise, sets: [...exercise.sets, {
-        id: mutation.setId, position: Math.max(-1, ...exercise.sets.map((set) => set.position)) + 1,
+        id: mutation.setId, position: nextSetPosition(exercise.sets, !!exercise.prescription),
         reps: mutation.reps, weight: mutation.weight, rpe: mutation.rpe,
         durationSeconds: mutation.durationSeconds, loadType: mutation.loadType, assistanceNote: mutation.assistanceNote,
-      }] };
+      }].sort((a, b) => a.position - b.position) };
     }),
   };
 }
@@ -109,7 +110,7 @@ export function iniciarSesionLocal(userId: string, planId: string): Promise<Loca
             return {
               workoutExerciseId: crypto.randomUUID(), exerciseId: exercise.exerciseId,
               name: exercise.name, muscleGroup: exercise.muscleGroup, position,
-              variation: exercise.variation ?? null, progressionSteps: exercise.progressionSteps ?? [], progressionStep: exercise.progressionStep ?? null,
+              prescription: exercise.prescription ?? null, variation: exercise.variation ?? null, progressionSteps: exercise.progressionSteps ?? [], progressionStep: exercise.progressionStep ?? null,
               measurement: exercise.measurement ?? "reps", loadType: exercise.loadType ?? "external", targetSeconds: exercise.targetSeconds ?? null,
               targetSets: exercise.targetSets, targetRepsMin: exercise.targetRepsMin,
               targetRepsMax: exercise.targetRepsMax, notes: exercise.notes, completed: false, sets: [],
@@ -124,7 +125,7 @@ export function iniciarSesionLocal(userId: string, planId: string): Promise<Loca
           createdAt: now, localSequence: data.revision + 1,
           exercises: workout.exercises.map((exercise) => ({
             workoutExerciseId: exercise.workoutExerciseId, exerciseId: exercise.exerciseId,
-            position: exercise.position, variation: exercise.variation, progressionSteps: exercise.progressionSteps, progressionStep: exercise.progressionStep, measurement: exercise.measurement, loadType: exercise.loadType, targetSeconds: exercise.targetSeconds, targetSets: exercise.targetSets,
+            position: exercise.position, prescription: exercise.prescription, variation: exercise.variation, progressionSteps: exercise.progressionSteps, progressionStep: exercise.progressionStep, measurement: exercise.measurement, loadType: exercise.loadType, targetSeconds: exercise.targetSeconds, targetSets: exercise.targetSets,
             targetRepsMin: exercise.targetRepsMin, targetRepsMax: exercise.targetRepsMax, notes: exercise.notes ?? null,
           })),
         };

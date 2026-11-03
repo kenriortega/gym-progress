@@ -29,9 +29,12 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { db } from "@/db";
 import { exercises, trainingPlanExercises, trainingPlans } from "@/db/schema";
 import { AppHeader } from "@/components/app-header";
+import { ProgramCycleForm } from "@/components/program-cycle-form";
+import { SetPrescription } from "@/components/set-prescription";
 import { ExercisePicker } from "@/components/exercise-picker";
 
 const weekdays = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
@@ -57,11 +60,12 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
       name: exercises.name,
       muscleGroup: exercises.muscleGroup,
       position: trainingPlanExercises.position,
-      variation: trainingPlanExercises.variation, progressionSteps: trainingPlanExercises.progressionSteps, progressionStep: trainingPlanExercises.progressionStep,
+      prescription: trainingPlanExercises.prescription, variation: trainingPlanExercises.variation, progressionSteps: trainingPlanExercises.progressionSteps, progressionStep: trainingPlanExercises.progressionStep,
       measurement: trainingPlanExercises.measurement, loadType: trainingPlanExercises.loadType, targetSeconds: trainingPlanExercises.targetSeconds,
       targetSets: trainingPlanExercises.targetSets,
       targetRepsMin: trainingPlanExercises.targetRepsMin,
       targetRepsMax: trainingPlanExercises.targetRepsMax,
+      notes: trainingPlanExercises.notes,
     })
     .from(trainingPlanExercises)
     .innerJoin(exercises, eq(exercises.id, trainingPlanExercises.exerciseId))
@@ -79,6 +83,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
   return (
     <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-12 pt-6">
       <AppHeader backHref="/plans" eyebrow="Configurar plan" title={plan.name} />
+      {plan.programCycle && <ProgramCycleForm planId={plan.id} microcycle={plan.programCycle.microcycle} />}
 
       <StartWorkoutButton refreshBeforeStart userId={userId} planId={plan.id} disabled={plannedExercises.length === 0}
         className="mt-6 h-14 w-full rounded-2xl bg-primary text-base font-black text-primary-foreground disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground">
@@ -100,7 +105,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
             aria-label="Día de la semana"
           />
           <FormSelect placeholder="Disciplina" name="discipline" defaultValue={plan.discipline} aria-label="Disciplina" options={Object.entries(DISCIPLINES).map(([value, label]) => ({ value, label }))} />
-          <Input name="description" maxLength={500} defaultValue={plan.description ?? ""} placeholder="Nota opcional" className="h-12" aria-label="Nota" />
+          <Textarea name="description" maxLength={Math.max(4000, plan.description?.length ?? 0)} defaultValue={plan.description ?? ""} placeholder="Nota opcional" className="max-h-72" aria-label="Nota" />
           <PendingButton type="submit" className="h-11 w-full">Guardar cambios</PendingButton>
         </form>
         </CollapsibleContent>
@@ -147,6 +152,8 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
                   </div>
                 </div>
 
+                {exercise.notes && <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{exercise.notes}</p>}
+                <SetPrescription value={exercise.prescription} />
                 <Collapsible className="mt-3 border-t border-border pt-3">
                   <CollapsibleTrigger className="w-full text-left text-sm font-medium text-muted-foreground">Editar objetivo</CollapsibleTrigger>
                   <CollapsibleContent>

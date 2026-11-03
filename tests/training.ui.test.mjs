@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { test } from "node:test";
+import { LATEST_CHANGELOG_TITLE } from "./fixtures/changelog.mjs";
 
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE_PATH || "playwright");
@@ -47,7 +48,7 @@ await test("planes, bloques y WOD en la app real con PostgreSQL aislado", { time
     let page = await context.newPage(); const errors = []; page.on("pageerror", (error) => errors.push(error.message));
     // Las novedades deben poder leerse y cerrarse incluso con poca altura.
     await page.goto(origin);
-    const news = page.getByRole("dialog", { name: "Nuevas formas de entrenar", exact: true });
+    const news = page.getByRole("dialog", { name: LATEST_CHANGELOG_TITLE, exact: true });
     await news.waitFor();
     for (const viewport of [{ width: 320, height: 568 }, { width: 667, height: 320 }, { width: 1440, height: 900 }]) {
       await page.setViewportSize(viewport);
@@ -143,7 +144,7 @@ await test("planes, bloques y WOD en la app real con PostgreSQL aislado", { time
     }
     const completed = (await pool.query("select id from workouts where user_id=$1 order by performed_at desc limit 1", [userId])).rows[0].id;
     await page.goto(`${origin}/history/${completed}`);
-    await page.getByText("10 intervalos · Según plan", { exact: true }).waitFor();
+    await page.getByText("10 intervalos · Según plan", { exact: true }).filter({ visible: true }).waitFor();
     await page.goto(`${origin}/progress`);
     await page.getByRole("region", { name: "Progreso de circuitos y WOD", exact: true }).waitFor();
     await page.screenshot({ path: "/tmp/gym-wod-progress-desktop.png", fullPage: true });

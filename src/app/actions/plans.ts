@@ -10,6 +10,9 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { findTemplate } from "@/lib/plan-templates";
+import { findProgramTemplate, PROGRAM_GUIDANCE, PROGRAM_PROGRESSION } from "@/lib/program-templates";
+import { hasPdfProgram, pdfProgram } from "@/lib/pdf-programs";
+import { prescriptionTargets } from "@/lib/set-prescription";
 import { db } from "@/db";
 import {
   exercises,
@@ -260,7 +263,7 @@ export async function updatePlanExercise(formData: FormData) {
 
   await db
     .update(trainingPlanExercises)
-    .set({ measurement, loadType, targetSeconds, variation, progressionSteps, progressionStep, targetSets, targetRepsMin, targetRepsMax, updatedAt: new Date() })
+    .set({ prescription: null, measurement, loadType, targetSeconds, variation, progressionSteps, progressionStep, targetSets, targetRepsMin, targetRepsMax, updatedAt: new Date() })
     .where(
       and(
         eq(trainingPlanExercises.id, planExerciseId),
@@ -388,7 +391,7 @@ export async function duplicatePlan(formData: FormData) {
       .select({
         exerciseId: trainingPlanExercises.exerciseId,
         position: trainingPlanExercises.position,
-        variation: trainingPlanExercises.variation, progressionSteps: trainingPlanExercises.progressionSteps, progressionStep: trainingPlanExercises.progressionStep,
+        prescription: trainingPlanExercises.prescription, variation: trainingPlanExercises.variation, progressionSteps: trainingPlanExercises.progressionSteps, progressionStep: trainingPlanExercises.progressionStep,
       measurement: trainingPlanExercises.measurement, loadType: trainingPlanExercises.loadType, targetSeconds: trainingPlanExercises.targetSeconds,
       targetSets: trainingPlanExercises.targetSets,
         targetRepsMin: trainingPlanExercises.targetRepsMin,
@@ -480,6 +483,122 @@ export async function unarchivePlan(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath("/plans");
+  redirect(`/plans/${planId}`);
+}
+
+export async function createProgramFromTemplate(
+  _state: { error: string } | null,
+  formData: FormData,
+): Promise<{ error: string } | null> {
+  const userId = await requireUserId();
+  const template = findProgramTemplate(String(formData.get("programId") ?? ""));
+  if (!template) return { error: "Ese programa no existe. Vuelve a Planes y elige uno del catálogo." };
+  const requestedCycle = formData.get("microcycle");
+  const microcycle = requestedCycle === null ? null : Number(requestedCycle);
+  if (microcycle !== null && (!Number.isInteger(microcycle) || microcycle < 1 || microcycle > 8 || !hasPdfProgram(template.id))) {
+    return { error: "Elige un microciclo del 1 al 8 en un programa de 8 microciclos." };
+  }
+  const program = microcycle === null ? template : pdfProgram(template, microcycle);
+  const instanceId = randomUUID();
+
+  try {
+    await db.transaction(async (tx) => {
+      // Serializa copias simultáneas de programas de una misma cuenta.
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}), hashtext('program-templates'))`);
+      const existing = await tx.select({ name: trainingPlans.name }).from(trainingPlans)
+        .where(and(eq(trainingPlans.userId, userId), isNull(trainingPlans.archivedAt)));
+      const used = new Set(existing.map((plan) => plan.name.toLowerCase()));
+      let copy = 1;
+      const sessionName = (name: string) => `${program.name}${copy === 1 ? "" : ` ${copy}`} · ${name}`;
+      while (program.sessions.some((session) => used.has(sessionName(session.name).toLowerCase()))) copy += 1;
+
+      const catalog = await tx.select({ id: exercises.id, name: exercises.name, userId: exercises.userId })
+        .from(exercises).where(and(isNull(exercises.archivedAt), or(isNull(exercises.userId), eq(exercises.userId, userId))));
+      // Un movimiento privado homónimo no reemplaza el movimiento del sistema.
+      const byName = new Map<string, string>();
+      for (const exercise of [...catalog.filter((item) => item.userId !== null), ...catalog.filter((item) => item.userId === null)]) {
+        byName.set(exercise.name.toLowerCase(), exercise.id);
+      }
+      for (const [sessionIndex, session] of program.sessions.entries()) {
+        for (const exercise of session.exercises) {
+          if (!byName.has(exercise.name.toLowerCase())) {
+            const [created] = await tx.insert(exercises).values({ userId, name: exercise.name, muscleGroup: exercise.muscleGroup })
+              .returning({ id: exercises.id });
+            byName.set(exercise.name.toLowerCase(), created.id);
+          }
+        }
+        const [plan] = await tx.insert(trainingPlans).values({
+          userId, name: sessionName(session.name), discipline: "strength", weekday: session.weekday,
+          programCycle: microcycle === null ? null : { instanceId, programId: template.id, sessionIndex, microcycle },
+          description: [
+            program.description, `Material: ${program.equipment}`, `Duración orientativa: ${program.duration}.`,
+            program.instructions,
+            ...(microcycle === null ? [PROGRAM_GUIDANCE, PROGRAM_PROGRESSION] : ["Los objetivos por serie conservan el microciclo que elijas. Cambia de microciclo desde cualquiera de las sesiones de esta copia cuando estés preparado; no es una subida automática de carga."]),
+            microcycle === null
+              ? "Programa con objetivos estables. Ajusta las cargas según tu experiencia y recuperación."
+              : "Programa de 8 microciclos. Cuando no hay un objetivo fijo de repeticiones o de reducción de carga, registra lo que realices.",
+          ].join("\n\n"),
+        }).returning({ id: trainingPlans.id });
+        await tx.insert(trainingPlanExercises).values(session.exercises.map((exercise, position) => {
+          const exerciseId = byName.get(exercise.name.toLowerCase());
+          if (!exerciseId) throw new Error("No se pudo resolver un ejercicio del programa.");
+          return {
+            planId: plan.id, exerciseId, position, notes: exercise.notes,
+            prescription: exercise.prescription ?? null,
+            measurement: exercise.measurement ?? "reps", loadType: exercise.loadType ?? "external",
+            targetSeconds: exercise.targetSeconds ?? null, targetSets: exercise.sets,
+            targetRepsMin: exercise.measurement === "time" ? null : exercise.repsMin,
+            targetRepsMax: exercise.measurement === "time" ? null : exercise.repsMax,
+          };
+        }));
+      }
+    });
+  } catch (error) {
+    console.error("No se pudo copiar el programa completo", error);
+    return { error: "No se pudo añadir el programa. No se guardó ninguna sesión de este intento. Vuelve a intentarlo con conexión." };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/plans");
+  redirect("/plans");
+}
+
+export async function changeProgramMicrocycle(_state: { error: string } | null, formData: FormData): Promise<{ error: string } | null> {
+  const userId = await requireUserId();
+  const planId = requiredUuid(formData, "planId");
+  const microcycle = Number(formData.get("microcycle"));
+  if (!Number.isInteger(microcycle) || microcycle < 1 || microcycle > 8) return { error: "Elige un microciclo del 1 al 8." };
+  try {
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}), hashtext('program-templates'))`);
+      const [selected] = await tx.select().from(trainingPlans)
+        .where(and(eq(trainingPlans.id, planId), eq(trainingPlans.userId, userId), isNull(trainingPlans.archivedAt)));
+      const cycle = selected?.programCycle;
+      const template = cycle && findProgramTemplate(cycle.programId);
+      if (!cycle || !template || !hasPdfProgram(template.id)) throw new Error("Copia del programa no disponible.");
+      const target = pdfProgram(template, microcycle);
+      const related = await tx.select().from(trainingPlans).where(and(eq(trainingPlans.userId, userId), isNull(trainingPlans.archivedAt),
+        sql`${trainingPlans.programCycle}->>'instanceId' = ${cycle.instanceId}`));
+      for (const plan of related) {
+        const session = target.sessions[plan.programCycle!.sessionIndex];
+        const rows = await tx.select().from(trainingPlanExercises).where(eq(trainingPlanExercises.planId, plan.id)).for("update");
+        for (const row of rows) {
+          const p = row.prescription;
+          if (!p || p.programId !== template.id || p.sessionIndex !== plan.programCycle!.sessionIndex) continue;
+          const exercise = session.exercises[p.exerciseIndex];
+          if (!exercise?.prescription) throw new Error("Objetivos del ejercicio no disponibles.");
+          await tx.update(trainingPlanExercises).set({ ...prescriptionTargets(exercise.prescription), updatedAt: new Date() })
+            .where(eq(trainingPlanExercises.id, row.id));
+        }
+        await tx.update(trainingPlans).set({ programCycle: { ...plan.programCycle!, microcycle }, updatedAt: new Date() }).where(eq(trainingPlans.id, plan.id));
+      }
+    });
+  } catch (error) {
+    console.error("No se pudo cambiar el microciclo", error);
+    return { error: "No se cambió el microciclo. Comprueba que esta copia del programa sigue activa y vuelve a intentarlo con conexión." };
+  }
+  revalidatePath("/");
+  revalidatePath("/plans", "layout");
   redirect(`/plans/${planId}`);
 }
 

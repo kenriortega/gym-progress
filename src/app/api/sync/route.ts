@@ -1,7 +1,8 @@
 import { isDeepStrictEqual } from "node:util";
 import { validBlocks, validProgress, validDiscipline } from "@/lib/training-blocks";
 import { validMetrics, validSet, matchesExercise } from "@/lib/training-metrics";
-import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { nextSetPosition } from "@/lib/set-prescription";
+import { and, eq, inArray, isNull, or } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
@@ -135,10 +136,10 @@ export async function POST(request: Request) {
         .where(and(eq(workoutExercises.id, workoutExerciseId), eq(workoutExercises.workoutId, workoutId))).limit(1);
       if (!exercise) return failure("El ejercicio no pertenece a la sesión");
       if (!matchesExercise(m as unknown as import("@/lib/training-metrics").SetMetrics, exercise)) return failure("La medición o carga no coincide con el ejercicio");
-      const [last] = await tx.select({ value: sql<number>`coalesce(max(${workoutSets.position}), -1)` }).from(workoutSets)
+      const positions = await tx.select({ position: workoutSets.position }).from(workoutSets)
         .where(eq(workoutSets.workoutExerciseId, workoutExerciseId));
       await tx.insert(workoutSets).values({
-        id: setId, workoutExerciseId, position: Number(last?.value ?? -1) + 1,
+        id: setId, workoutExerciseId, position: nextSetPosition(positions, !!exercise.prescription),
         reps: Number(m.reps), weight: Number(m.weight).toFixed(2),
         durationSeconds: m.durationSeconds == null ? null : Number(m.durationSeconds), loadType: (m.loadType ?? "external") as import("@/lib/training-metrics").LoadType, assistanceNote: m.assistanceNote == null ? null : String(m.assistanceNote),
         rpe: m.rpe == null ? null : Number(m.rpe).toFixed(1), completedAt: new Date(Number(m.createdAt)),
@@ -183,7 +184,7 @@ async function startWorkout(userId: string, m: StartMutation) {
     }
     await tx.insert(workoutExercises).values(m.exercises.map((exercise) => ({
       id: exercise.workoutExerciseId, workoutId: m.workoutId, exerciseId: exercise.exerciseId,
-      position: exercise.position, variation: exercise.variation ?? null, progressionSteps: exercise.progressionSteps ?? [], progressionStep: exercise.progressionStep ?? null, measurement: exercise.measurement ?? "reps", loadType: exercise.loadType ?? "external", targetSeconds: exercise.targetSeconds ?? null, targetSets: exercise.targetSets,
+      position: exercise.position, prescription: exercise.prescription ?? null, variation: exercise.variation ?? null, progressionSteps: exercise.progressionSteps ?? [], progressionStep: exercise.progressionStep ?? null, measurement: exercise.measurement ?? "reps", loadType: exercise.loadType ?? "external", targetSeconds: exercise.targetSeconds ?? null, targetSets: exercise.targetSets,
       targetRepsMin: exercise.targetRepsMin, targetRepsMax: exercise.targetRepsMax, notes: exercise.notes,
     })));
     return ok();

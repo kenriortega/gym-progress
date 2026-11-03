@@ -1,7 +1,9 @@
+import { validPrescription, type SetPrescription } from "./set-prescription";
 /** Contrato compartido entre formularios, IndexedDB y API. Ausencia = formato histórico. */
 export type Measurement = "reps" | "time";
 export type LoadType = "external" | "bodyweight" | "weighted" | "assisted";
 export type ExerciseMetrics = {
+  prescription?: SetPrescription | null;
   variation?: string | null;
   progressionSteps?: string[];
   progressionStep?: number | null;
@@ -22,6 +24,8 @@ export const LOAD_LABELS: Record<LoadType, string> = {
 export const isLoadType = (value: unknown): value is LoadType => typeof value === "string" && value in LOAD_LABELS && Object.hasOwn(LOAD_LABELS, value);
 const integer = (value: unknown, min: number, max: number) => typeof value === "number" && Number.isInteger(value) && value >= min && value <= max;
 export function validMetrics(value: Record<string, unknown>): boolean {
+  if (!validPrescription(value.prescription) || value.prescription != null &&
+      ((value.measurement ?? "reps") !== "reps" || value.targetSets !== value.prescription.sets.length)) return false;
   const measurement = value.measurement ?? "reps";
   const steps = value.progressionSteps ?? [];
   const step = value.progressionStep ?? null;
@@ -57,6 +61,7 @@ export function formatSet(set: SetMetrics, unit: string, formatLoad = (weight: n
   }
 }
 export function formatTarget(value: ExerciseMetrics & { targetSets: number | null; targetRepsMin: number | null; targetRepsMax: number | null }): string {
+  if (value.prescription) return `Microciclo ${value.prescription.microcycle} · ${value.prescription.sets.length} series · ${LOAD_LABELS[value.loadType ?? "external"]}`;
   const target = value.measurement === "time" ? `${value.targetSeconds} s` : `${value.targetRepsMin ?? "—"}${value.targetRepsMax !== value.targetRepsMin ? `–${value.targetRepsMax ?? "—"}` : ""} reps`;
   return `${value.targetSets ?? "—"} ${value.targetSets === 1 ? "serie" : "series"} · ${target} · ${LOAD_LABELS[value.loadType ?? "external"]}${value.variation ? ` · ${value.variation}` : ""}`;
 }

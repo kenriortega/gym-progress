@@ -2,6 +2,8 @@ import { getWeightPreferences } from "@/db/preferences";
 import { WeightView, WeightSet } from "@/components/weight-view";
 import { describeBlock, describeResult } from "@/lib/training-blocks";
 import { formatTarget, type ExerciseMetrics, type SetMetrics } from "@/lib/training-metrics";
+import { SetPrescription } from "@/components/set-prescription";
+import { completedTargetSets } from "@/lib/set-prescription";
 import { and, asc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -72,7 +74,7 @@ export default async function HistoryDetailPage({
       name: exercises.name,
       muscleGroup: exercises.muscleGroup,
       exercisePosition: workoutExercises.position,
-      variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
+      prescription: workoutExercises.prescription, variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
       measurement: workoutExercises.measurement, loadType: workoutExercises.loadType, targetSeconds: workoutExercises.targetSeconds,
       targetSets: workoutExercises.targetSets,
       targetRepsMin: workoutExercises.targetRepsMin,
@@ -103,12 +105,14 @@ export default async function HistoryDetailPage({
       muscleGroup: string;
       position: number;
       variation?: string | null; progressionSteps?: string[]; progressionStep?: number | null;
+      prescription?: ExerciseMetrics["prescription"];
       measurement?: ExerciseMetrics["measurement"]; loadType?: ExerciseMetrics["loadType"]; targetSeconds?: number | null;
       targetSets: number | null;
       targetRepsMin: number | null;
       targetRepsMax: number | null;
       sets: Array<{
         id: string;
+        position: number;
         durationSeconds?: number | null; loadType?: SetMetrics["loadType"]; assistanceNote?: string | null;
         reps: number;
         weight: string;
@@ -124,7 +128,7 @@ export default async function HistoryDetailPage({
       name: row.name,
       muscleGroup: row.muscleGroup,
       position: row.exercisePosition,
-      variation: row.variation, progressionSteps: row.progressionSteps, progressionStep: row.progressionStep,
+      prescription: row.prescription, variation: row.variation, progressionSteps: row.progressionSteps, progressionStep: row.progressionStep,
         measurement: row.measurement, loadType: row.loadType, targetSeconds: row.targetSeconds,
       targetSets: row.targetSets,
       targetRepsMin: row.targetRepsMin,
@@ -135,6 +139,7 @@ export default async function HistoryDetailPage({
     if (row.setId && row.reps !== null && row.weight !== null) {
       exercise.sets.push({
         id: row.setId,
+        position: row.setPosition ?? 0,
         durationSeconds: row.durationSeconds, loadType: row.setLoadType ?? undefined, assistanceNote: row.assistanceNote,
         reps: row.reps,
         weight: row.weight,
@@ -204,14 +209,14 @@ export default async function HistoryDetailPage({
                     </Badge>
                     <Badge
                       variant={
-                        exercise.sets.length >= exercise.targetSets
+                        completedTargetSets(exercise) >= exercise.targetSets
                           ? "default"
                           : "outline"
                       }
                     >
-                      {exercise.sets.length >= exercise.targetSets
+                      {completedTargetSets(exercise) >= exercise.targetSets
                         ? "Cumplido"
-                        : `Quedaron ${exercise.targetSets - exercise.sets.length}`}
+                        : `Quedaron ${exercise.targetSets - completedTargetSets(exercise)}`}
                     </Badge>
                   </div>
                 )}
@@ -221,7 +226,7 @@ export default async function HistoryDetailPage({
               </Badge>
             </div>
 
-            <div className="px-5"><WeightView defaultUnit={trainingUnit} storageKey={`${userId}:${workout.id}:${exercise.id}`} selectable={exercise.loadType !== "bodyweight"}>
+            <div className="px-5"><SetPrescription value={exercise.prescription} /><WeightView defaultUnit={trainingUnit} storageKey={`${userId}:${workout.id}:${exercise.id}`} selectable={exercise.loadType !== "bodyweight"}>
             {exercise.sets.length > 0 ? (
               <div className="px-5 pb-2">
                 <Table>
@@ -236,7 +241,7 @@ export default async function HistoryDetailPage({
                     {exercise.sets.map((set, setIndex) => (
                       <TableRow key={set.id}>
                         <TableCell className="text-muted-foreground">
-                          {setIndex + 1}
+                          {exercise.prescription ? set.position + 1 : setIndex + 1}
                         </TableCell>
                         <TableCell className="font-semibold text-foreground">
                           <WeightSet value={{ ...set, weight: Number(set.weight) }} from={workout.weightUnit} />

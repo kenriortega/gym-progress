@@ -19,6 +19,19 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "2026-11-02-programas-completos",
+    date: "2 de noviembre de 2026",
+    title: "Elige una semana completa de entrenamiento",
+    items: [
+      "Elige entre ocho programas: iniciación de 3 días, cinco distribuciones generales de 4 días, prioridad de glúteos de 4 días y especialización de glúteos y hombros de 5 días.",
+      "Reconoce los tres programas orientados a mujeres con la misma etiqueta de tus plantillas. Las propuestas generales incluyen brazos, hombros, agenda flexible y fuerza y músculo. Puedes elegir cualquiera según tu experiencia y objetivo.",
+      "En los cinco programas generales puedes elegir la versión con objetivos estables o el programa de ocho microciclos, RIR y objetivos distintos por serie.",
+      "Cambia de microciclo cuando lo decidas desde una sesión del programa: se actualizan las sesiones activas de esa copia y se conservan tus objetivos personales. Los entrenamientos iniciados mantienen su prescripción, también sin conexión.",
+      "Revisa la semana, el material, las series y las indicaciones antes de añadir todas las sesiones de una vez. Después puedes editarlas y moverlas por separado.",
+      "Los descansos, el esfuerzo y las alternativas se conservan en cada ejercicio y en tus planes guardados sin conexión.",
+    ],
+  },
+  {
     id: "2026-10-26-cancelar-entreno",
     date: "26 de octubre de 2026",
     title: "Cancela un entreno abierto por error",

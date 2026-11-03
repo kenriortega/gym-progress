@@ -182,7 +182,86 @@ asistencia. Los bloques, relojes y resultados se guardan primero en el dispositi
 Consulta [modalidades y bloques](docs/training-modalities.md) para el modelo,
 las migraciones 0025–0028, las validaciones y los límites de esta primera versión.
 
-## Resources Blogs
+## Programas completos
+
+En Planes puedes revisar y añadir ocho adaptaciones propias de las estructuras
+de los artículos de referencia:
+
+| Programa | Días | Orientación |
+| --- | --- | --- |
+| Base · Glúteos y cuerpo completo | 3 | Mujeres · iniciación |
+| Prioridad · Glúteos y piernas | 4 | Mujeres · intermedio |
+| Especialización · Glúteos y hombros | 5 | Mujeres · avanzado |
+| Equilibrio · Torso y pierna | 4 | General |
+| Especialización · Brazos | 4 | General |
+| Agenda flexible · Completo y brazos | 4 | General |
+| Fuerza y músculo · Empuje y tirón | 4 | General |
+| Especialización · Hombros | 4 | General |
+
+La orientación aparece en el catálogo y el detalle;
+cualquier persona puede elegirlos. Incluyen objetivos estables,
+material, descansos, esfuerzo orientativo y alternativas. Las duraciones son
+estimaciones. Las alternativas se aplican editando el ejercicio y sus objetivos.
+Cada programa identifica su artículo de origen, también en la descripción copiada.
+Se cubren las tres distribuciones por nivel del artículo de mujeres y las cinco
+distribuciones del artículo de cuatro días. Son adaptaciones de Gym Progress,
+sin reproducir exactamente el volumen ni la selección completa de sus tablas.
+
+Cada incorporación crea todas sus sesiones en una transacción y numera el
+conjunto si sus nombres ya existen. Nunca omite movimientos: los ausentes del
+catálogo se crean en el catálogo privado de la cuenta. Los planes existentes
+se conservan, por lo que conviene revisar la carga semanal al combinar programas.
+
+Se reutilizan los planes diarios y su descarga offline, incluidas las notas.
+Espera a que Planes confirme el guardado en el dispositivo antes de desconectar.
+Cada sesión se edita, mueve o archiva por separado. Las adaptaciones conservan
+objetivos estables y las copias existentes no cambian al actualizar el catálogo.
+
+### Programación del PDF
+
+Los cinco programas generales ofrecen también la versión del PDF de referencia:
+20 páginas, cuatro sesiones por programa y ocho microciclos. En el detalle,
+abre «Ver programa de 8 microciclos», consulta el microciclo y añade
+esa versión. Se crea una copia independiente de las adaptaciones.
+
+Los objetivos por serie incluyen rangos de repeticiones y RIR, series con
+distintos objetivos y drop sets. Cuando el PDF no fija repeticiones (rueda
+abdominal) o no describe las repeticiones/reducción de un drop set, esos datos
+se muestran como no especificados. Los descansos y días de semana son orientación
+de Gym Progress. Algunos encabezados del PDF repiten el número de día: se conserva
+su orden dentro del conjunto de cuatro páginas y se guarda la página de origen.
+
+En una sesión copiada, «Programa de 8 microciclos» aplica el microciclo elegido a todas
+las sesiones activas de esa copia. El avance es manual y requiere conexión.
+Editar un objetivo lo desvincula del PDF; los cambios de ciclo conservan esos
+objetivos y los ejercicios añadidos por la persona. Duplicar una sola sesión
+conserva sus objetivos congelados pero no la vincula al cambio colectivo.
+No hay gestión colectiva de pausa/archivado ni avance automático por calendario.
+
+Las prescripciones se congelan al iniciar, viajan por IndexedDB y la cola de
+sincronización y se consultan en entreno, planes guardados e historial. Reponer
+una serie borrada ocupa su hueco original para mantener la correspondencia con
+su objetivo. Las sugerencias de carga uniforme excluyen estas prescripciones.
+
+La migración aditiva `0030` añade `program_cycle` en planes y `prescription` en
+ejercicios de plan y sesión; los valores anteriores quedan nulos. La descarga
+offline usa versión 4 y el cliente sigue aceptando paquetes 1–3. Los clientes
+antiguos no deben sobrescribir su copia con un paquete nuevo que no entiendan.
+Antes de probar en otra base local, aplica `npm run db:migrate`.
+
+Los datos fuente están en `src/lib/pdf-programs.json`, con el texto de las 1264
+celdas y SHA-256 del PDF. Se regeneran con
+`python scripts/extract-pdf-programs.py /ruta/Rutina-freq-2x-4ds-1.pdf` usando
+pdfplumber (solo herramienta de extracción; no dependencia de producción).
+El importador rechaza celdas desconocidas, en lugar de aproximar objetivos.
+
+La interfaz describe las versiones como «Objetivos estables» y «Programa de 8
+microciclos», sin mostrar la fuente ni el texto bruto de las celdas. La procedencia
+se conserva aquí y en los datos internos; este cambio de presentación no atribuye
+autoría propia ni concede derechos de publicación. Las descripciones de copias
+ya guardadas no se modifican automáticamente.
+
+## Referencias
 
 [https://fitgeneration.es/rutina-gimnasio-mujeres-niveles/](https://fitgeneration.es/rutina-gimnasio-mujeres-niveles/)
 [https://fitgeneration.es/5-mejores-rutinas-4-dias-frecuencia-2/](https://fitgeneration.es/5-mejores-rutinas-4-dias-frecuencia-2/)

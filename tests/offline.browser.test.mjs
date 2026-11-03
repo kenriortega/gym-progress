@@ -12,6 +12,7 @@ const root = new URL("../", import.meta.url);
 const modules = {
   "/training-blocks": "src/lib/training-blocks.ts",
   "/training-metrics": "src/lib/training-metrics.ts",
+  "/set-prescription": "src/lib/set-prescription.ts",
   "/offline-queue": "src/lib/offline-queue.ts",
   "/offline/storage": "src/lib/offline/storage.ts",
   "/offline/database": "src/lib/offline/database.ts",
@@ -744,6 +745,34 @@ await test("persistencia y sincronización con IndexedDB real", async (t) => {
       const elapsed = await page.evaluate((value) => import("/training-blocks").then((api) => api.elapsedBlock(value)), progress);
       assert.ok(elapsed >= 15);
       await context.setOffline(false); assert.equal((await page.evaluate(() => window.api.sincronizar())).quedan, 0);
+    });
+    await scenario("prescripción PDF se congela offline, conserva la cola y repone la serie borrada", async (page, context, reopen) => {
+      const data = structuredClone(plansFixture);
+      data.schemaVersion = 4;
+      const prescription = { programId: "equilibrio-torso-pierna-4-dias", microcycle: 3, sessionIndex: 0, exerciseIndex: 0, page: 1,
+        raw: "1x6-8 RIR2\n3x10-12 RIR2", sets: [
+          { kind: "work", repsMin: 6, repsMax: 8, rirMin: 2, rirMax: 2 },
+          ...Array.from({ length: 3 }, () => ({ kind: "work", repsMin: 10, repsMax: 12, rirMin: 2, rirMax: 2 })),
+        ] };
+      Object.assign(data.plans[0].exercises[0], { prescription, targetSets: 4, targetRepsMin: 6, targetRepsMax: 12 });
+      await page.evaluate(async (value) => {
+        await window.planStorage.setPlanAccount("user-a");
+        const token = await window.planStorage.beginPlanDownload();
+        await window.planStorage.saveOfflinePlans(value, token);
+      }, data);
+      const workout = await page.evaluate((id) => window.api.iniciarEntreno("user-a", id), data.plans[0].id);
+      await context.setOffline(true);
+      const base = { userId: "user-a", workoutId: workout.workoutId, workoutExerciseId: workout.exercises[0].workoutExerciseId, weight: 50, reps: 6, createdAt: Date.now() };
+      await enqueue(page, { ...base, kind: "addSet", id: "pdf-add-1", setId: "pdf-set-1" });
+      await enqueue(page, { ...base, kind: "addSet", id: "pdf-add-2", setId: "pdf-set-2" });
+      await enqueue(page, { ...base, kind: "deleteSet", id: "pdf-delete", setId: "pdf-set-1" });
+      await enqueue(page, { ...base, kind: "addSet", id: "pdf-add-3", setId: "pdf-set-3" });
+      await context.setOffline(false); await page.close(); page = await reopen(context); await context.setOffline(true);
+      const saved = await state(page);
+      assert.deepEqual(saved.workout.exercises[0].prescription, prescription);
+      assert.deepEqual(saved.workout.exercises[0].sets.map((set) => set.position), [0, 1]);
+      assert.equal(saved.workout.exercises[0].sets[0].id, "pdf-set-3");
+      assert.deepEqual(saved.queue.find((item) => item.kind === "startWorkout").exercises[0].prescription, prescription);
     });
   } finally {
     await browser?.close();

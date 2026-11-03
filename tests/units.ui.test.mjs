@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { test } from "node:test";
+import { LATEST_CHANGELOG_ID } from "./fixtures/changelog.mjs";
 
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE_PATH || "playwright");
@@ -69,7 +70,7 @@ test("preferencias independientes, detalle sin copiar y consulta kg/lb sin alter
     browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH } : {}) });
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "allow" });
     await context.addCookies([{ name: "authjs.session-token", value: sessionToken, url: origin }]);
-    await context.addInitScript(() => localStorage.setItem("gym-progress:novedades-vistas", "2026-10-26-cancelar-entreno"));
+    await context.addInitScript((id) => localStorage.setItem("gym-progress:novedades-vistas", id), LATEST_CHANGELOG_ID);
     await context.route("**/ingest/**", (route) => route.fulfill({ status: 200, json: {} }));
     page = await context.newPage(); const errors = []; page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(`${origin}/plans`);

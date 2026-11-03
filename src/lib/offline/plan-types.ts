@@ -29,7 +29,7 @@ export type OfflinePlan = SchedulablePlan & {
 };
 
 export type OfflinePlans = {
-  schemaVersion: 1 | 2 | 3;
+  schemaVersion: 1 | 2 | 3 | 4;
   userId: string;
   weightUnit: "kg" | "lb";
   generatedAt: number;
@@ -70,7 +70,7 @@ function exercise(value: unknown): boolean {
 
 /** No sustituir una copia válida por una descarga incompleta o incompatible. */
 export function isOfflinePlans(value: unknown): value is OfflinePlans {
-  if (!record(value) || (value.schemaVersion !== 1 && value.schemaVersion !== 2 && value.schemaVersion !== 3) || !text(value.userId) || !unit(value.weightUnit) ||
+  if (!record(value) || (value.schemaVersion !== 1 && value.schemaVersion !== 2 && value.schemaVersion !== 3 && value.schemaVersion !== 4) || !text(value.userId) || !unit(value.weightUnit) ||
       typeof value.generatedAt !== "number" || !Number.isFinite(value.generatedAt) ||
       !Array.isArray(value.plans) || !Array.isArray(value.reschedules)) return false;
   const validPlans = value.plans.every((plan: unknown) => record(plan) && text(plan.id) &&

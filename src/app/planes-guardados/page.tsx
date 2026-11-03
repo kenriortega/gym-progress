@@ -2,6 +2,7 @@
 import { describeBlock, DISCIPLINES } from "@/lib/training-blocks";
 import { WeightView, WeightSet } from "@/components/weight-view";
 import { formatTarget } from "@/lib/training-metrics";
+import { SetPrescription } from "@/components/set-prescription";
 
 import { useState, useSyncExternalStore } from "react";
 import { DocumentLink } from "@/components/document-link";
@@ -88,6 +89,7 @@ export default function SavedPlansPage() {
                     {plan.exercises.map((exercise) => (
                       <li key={exercise.id} className="break-words">
                         <h3 className="font-semibold">{exercise.name}</h3>
+                        <SetPrescription value={exercise.prescription} />
                         <p className="mt-1 text-sm text-muted-foreground">{exercise.muscleGroup} · {formatTarget(exercise)}</p>
                         {exercise.notes && <p className="mt-2 max-w-prose whitespace-pre-wrap text-sm leading-6">{exercise.notes}</p>}
                         <WeightView defaultUnit={catalog.data.weightUnit} storageKey={`${catalog.userId}:plan:${plan.id}:${exercise.id}`} selectable={exercise.loadType !== "bodyweight"}>

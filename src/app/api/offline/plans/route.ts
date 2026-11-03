@@ -33,7 +33,7 @@ export async function GET() {
       const rows = ids.length === 0 ? [] : await tx.select({
         id: trainingPlanExercises.id, planId: trainingPlanExercises.planId,
         exerciseId: exercises.id, name: exercises.name, muscleGroup: exercises.muscleGroup,
-        position: trainingPlanExercises.position, variation: trainingPlanExercises.variation, progressionSteps: trainingPlanExercises.progressionSteps, progressionStep: trainingPlanExercises.progressionStep,
+        position: trainingPlanExercises.position, prescription: trainingPlanExercises.prescription, variation: trainingPlanExercises.variation, progressionSteps: trainingPlanExercises.progressionSteps, progressionStep: trainingPlanExercises.progressionStep,
       measurement: trainingPlanExercises.measurement, loadType: trainingPlanExercises.loadType, targetSeconds: trainingPlanExercises.targetSeconds,
       targetSets: trainingPlanExercises.targetSets,
         targetRepsMin: trainingPlanExercises.targetRepsMin, targetRepsMax: trainingPlanExercises.targetRepsMax,
@@ -52,7 +52,7 @@ export async function GET() {
       const previousRows = exerciseIds.length === 0 ? [] : await tx
         .selectDistinctOn([workoutExercises.exerciseId, workoutExercises.measurement, workoutExercises.loadType, workoutExercises.variation], {
           id: workoutExercises.id, exerciseId: workoutExercises.exerciseId,
-          variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
+          prescription: workoutExercises.prescription, variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
       measurement: workoutExercises.measurement, loadType: workoutExercises.loadType,
           performedAt: workouts.performedAt, weightUnit: workouts.weightUnit,
         }).from(workoutExercises)
@@ -75,13 +75,13 @@ export async function GET() {
         })),
       }]));
       return {
-        schemaVersion: 3, userId, weightUnit: profile?.weightUnit ?? "kg", generatedAt: Date.now(),
+        schemaVersion: 4, userId, weightUnit: profile?.weightUnit ?? "kg", generatedAt: Date.now(),
         plans: plans.map((plan) => ({
           ...plan,
           exercises: rows.filter((row) => row.planId === plan.id).map((exercise) => ({
             id: exercise.id, exerciseId: exercise.exerciseId, name: exercise.name,
             muscleGroup: exercise.muscleGroup, position: exercise.position,
-            variation: exercise.variation, progressionSteps: exercise.progressionSteps, progressionStep: exercise.progressionStep,
+            prescription: exercise.prescription, variation: exercise.variation, progressionSteps: exercise.progressionSteps, progressionStep: exercise.progressionStep,
         measurement: exercise.measurement, loadType: exercise.loadType, targetSeconds: exercise.targetSeconds,
           targetSets: exercise.targetSets, targetRepsMin: exercise.targetRepsMin,
             targetRepsMax: exercise.targetRepsMax, notes: exercise.notes,

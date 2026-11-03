@@ -1,0 +1,2521 @@
+{
+  "source": "Rutina-freq-2x-4ds-1.pdf",
+  "sha256": "2e4921f552deaed11f7ff81efde3e8672a04f3189ea0a26b1b6e31513283dc21",
+  "programs": [
+    {
+      "id": "equilibrio-torso-pierna-4-dias",
+      "sessions": [
+        {
+          "page": 1,
+          "heading": "DÍA 1: TORSO 1",
+          "exercises": [
+            {
+              "name": "Press w/ mancuernas, banco a 15º",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR1",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0"
+              ]
+            },
+            {
+              "name": "Aperturas en máquina",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "3x10-12 RIR2",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Jalón al pecho agarre prono",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-12 RIR3",
+                "3x8-12 RIR2",
+                "4x8-12 RIR2",
+                "4x8-12 RIR1",
+                "4x8-12 RIR1",
+                "4x8-12 RIR0",
+                "4x8-12 RIR0 +\n1 DS",
+                "4x8-12 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Helms Row con mancuernas",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR1",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0"
+              ]
+            },
+            {
+              "name": "Curl bayesian en polea",
+              "muscleGroup": "Bíceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Extensiones katana en polea",
+              "muscleGroup": "Tríceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Elevaciones laterales desde polea baja",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            }
+          ]
+        },
+        {
+          "page": 6,
+          "heading": "DÍA 2: PIERNA 1",
+          "exercises": [
+            {
+              "name": "Extensión de tobillos de pie (en multipower mismo)",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x12-14 RIR 3",
+                "3x12-14 RIR 2",
+                "4x12-14 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1 DS",
+                "4x12-14 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Sentadilla hack",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR2",
+                "1x8-10 RIR1 +\n3x8-10 RIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "Extensión de rodillas en máquina",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x12-14 RIR 3",
+                "3x12-14 RIR 2",
+                "4x12-14 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1 DS",
+                "4x12-14 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Leg curl sentado",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            },
+            {
+              "name": "Hip Thrust en máquina",
+              "muscleGroup": "Glúteos",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR2",
+                "1x8-10 RIR1 +\n3x8-10 RIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "Abducción en máquina",
+              "muscleGroup": "Glúteos",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            },
+            {
+              "name": "Aductor en máquina",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            }
+          ]
+        },
+        {
+          "page": 11,
+          "heading": "DÍA 3: TORSO 2",
+          "exercises": [
+            {
+              "name": "Press multipower banco a 30º",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR1",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0"
+              ]
+            },
+            {
+              "name": "Press plano en máquina",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "3x10-12 RIR2",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Jalón al pecho agarres independientes",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-12 RIR3",
+                "3x8-12 RIR2",
+                "4x8-12 RIR2",
+                "4x8-12 RIR1",
+                "4x8-12 RIR1",
+                "4x8-12 RIR0",
+                "4x8-12 RIR0 +\n1 DS",
+                "4x8-12 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Remo T para trapecios",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR1",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0"
+              ]
+            },
+            {
+              "name": "Curl predicador",
+              "muscleGroup": "Bíceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Pushdown desde polea alta",
+              "muscleGroup": "Tríceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Elevaciones laterales polea altura rodilla",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            }
+          ]
+        },
+        {
+          "page": 16,
+          "heading": "DÍA 2: PIERNA 2",
+          "exercises": [
+            {
+              "name": "Extensión de tobillos sentado (en multipower mismo)",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x12-14 RIR\n3",
+                "3x12-14 RIR 2",
+                "4x12-14\nRIR2",
+                "4x12-14\nRIR1",
+                "4x12-14\nRIR1",
+                "4x12-14 RIR0",
+                "4x12-14\nRIR0 + 1 DS",
+                "4x12-14\nRIR0 + 1 DS"
+              ]
+            },
+            {
+              "name": "Peso muerto rumano",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1\n+ 2x8-10\nRIR3",
+                "1x8-10 RIR1\n+ 2x8-10\nRIR2",
+                "1x8-10 RIR1\n+ 3x8-10\nRIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "Leg curl tumbado",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12\nRIR2",
+                "4x12-14\nRIR1",
+                "4x12-14\nRIR0",
+                "4x12-14 RIR0 +\n1DS",
+                "4x12-14\nRIR0 + 1DS",
+                "4x12-14\nRIR0 + 1DS"
+              ]
+            },
+            {
+              "name": "Prensa 45º",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR 1 +\n2x8-10 RIR2",
+                "1x6-8 RIR 1 +\n2x8-10 RIR2",
+                "1x6-8 RIR 0 +\n2x8-10 RIR2",
+                "1x6-8 RIR 0 +\n2x8-10 RIR 1-2",
+                "1x6-8 RIR 0 +\n2x8-10 RIR 1",
+                "1x6-8 RIR 0 +\n2x8-10 RIR 1"
+              ]
+            },
+            {
+              "name": "Extensión de rodillas en máquina",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12\nRIR2",
+                "4x12-14\nRIR1",
+                "4x12-14\nRIR0",
+                "4x12-14 RIR0 +\n1DS",
+                "4x12-14\nRIR0 + 1DS",
+                "4x12-14\nRIR0 + 1DS"
+              ]
+            },
+            {
+              "name": "Patadas de glúteo",
+              "muscleGroup": "Glúteos",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12\nRIR2",
+                "4x12-14\nRIR1",
+                "4x12-14\nRIR0",
+                "4x12-14 RIR0 +\n1DS",
+                "4x12-14\nRIR0 + 1DS",
+                "4x12-14\nRIR0 + 1DS"
+              ]
+            },
+            {
+              "name": "Abwheel",
+              "muscleGroup": "Abdomen",
+              "loadType": "bodyweight",
+              "microcycles": [
+                "3x RIR 3",
+                "3x RIR 2",
+                "4x RIR2",
+                "4x RIR1",
+                "4x RIR0",
+                "4x RIR0",
+                "4x RIR0",
+                "4x RIR0"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "especializacion-brazos-4-dias",
+      "sessions": [
+        {
+          "page": 2,
+          "heading": "DÍA 1: TORSO 1",
+          "exercises": [
+            {
+              "name": "Curl martillo",
+              "muscleGroup": "Bíceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "4x8-10 RIR2",
+                "4x8-10 RIR1",
+                "4x8-10 RIR0",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0\n+ 1 DS",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Curl bayesian en polea",
+              "muscleGroup": "Bíceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Extensiones katana en polea",
+              "muscleGroup": "Tríceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Extensiones desde polea alta",
+              "muscleGroup": "Tríceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "4x8-10 RIR2",
+                "4x8-10 RIR1",
+                "4x8-10 RIR0",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0\n+ 1 DS",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Jalón al pecho agarre prono",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-12 RIR3",
+                "3x8-12 RIR2",
+                "4x8-12 RIR2",
+                "4x8-12 RIR1",
+                "4x8-12 RIR1",
+                "4x8-12 RIR0",
+                "4x8-12 RIR0 +\n1 DS",
+                "4x8-12 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Helms Row con mancuernas",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR1",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0"
+              ]
+            },
+            {
+              "name": "Press w/ mancuernas, banco a 15º",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR1",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0"
+              ]
+            },
+            {
+              "name": "Aperturas en máquina",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "3x10-12 RIR2",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Elevaciones laterales desde polea baja",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            }
+          ]
+        },
+        {
+          "page": 7,
+          "heading": "DÍA 2: PIERNA 1",
+          "exercises": [
+            {
+              "name": "Extensión de tobillos de pie (en multipower mismo)",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x12-14 RIR 3",
+                "3x12-14 RIR 2",
+                "4x12-14 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1 DS",
+                "4x12-14 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Sentadilla hack",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR2",
+                "1x8-10 RIR1 +\n3x8-10 RIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "RDL con mancuernas",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR2",
+                "1x8-10 RIR1 +\n3x8-10 RIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "Extensión de rodillas en máquina",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x12-14 RIR 3",
+                "3x12-14 RIR 2",
+                "4x12-14 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1 DS",
+                "4x12-14 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Leg curl sentado",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x12-14 RIR 3",
+                "3x12-14 RIR 2",
+                "4x12-14 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1 DS",
+                "4x12-14 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Hip Thrust en máquina",
+              "muscleGroup": "Glúteos",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR2",
+                "1x8-10 RIR1 +\n3x8-10 RIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "Abducción en máquina",
+              "muscleGroup": "Glúteos",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            },
+            {
+              "name": "Aductor en máquina",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            }
+          ]
+        },
+        {
+          "page": 12,
+          "heading": "DÍA 3: TORSO 2",
+          "exercises": [
+            {
+              "name": "Kaz press",
+              "muscleGroup": "Tríceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "4x8-10 RIR2",
+                "4x8-10 RIR1",
+                "4x8-10 RIR0",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Pushdown en polea alta",
+              "muscleGroup": "Tríceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Curl desde polea baja",
+              "muscleGroup": "Bíceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Curl predicador",
+              "muscleGroup": "Bíceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "4x8-10 RIR2",
+                "4x8-10 RIR1",
+                "4x8-10 RIR0",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Press multipower banco a 30º",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR1",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0"
+              ]
+            },
+            {
+              "name": "Press plano en máquina",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "3x10-12 RIR2",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Jalón al pecho agarres independientes",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-12 RIR3",
+                "3x8-12 RIR2",
+                "4x8-12 RIR2",
+                "4x8-12 RIR1",
+                "4x8-12 RIR1",
+                "4x8-12 RIR0",
+                "4x8-12 RIR0 +\n1 DS",
+                "4x8-12 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Remo T para trapecios",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR1",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0"
+              ]
+            },
+            {
+              "name": "Elevaciones laterales polea altura rodilla",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            }
+          ]
+        },
+        {
+          "page": 17,
+          "heading": "DÍA 2: PIERNA 2",
+          "exercises": [
+            {
+              "name": "Extensión de tobillos sentado (en multipower mismo)",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x12-14 RIR\n3",
+                "3x12-14 RIR 2",
+                "4x12-14\nRIR2",
+                "4x12-14\nRIR1",
+                "4x12-14\nRIR1",
+                "4x12-14 RIR0",
+                "4x12-14\nRIR0 + 1 DS",
+                "4x12-14\nRIR0 + 1 DS"
+              ]
+            },
+            {
+              "name": "Peso muerto rumano",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1\n+ 2x8-10\nRIR3",
+                "1x8-10 RIR1\n+ 2x8-10\nRIR2",
+                "1x8-10 RIR1\n+ 3x8-10\nRIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "Leg curl tumbado",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12\nRIR2",
+                "4x12-14\nRIR1",
+                "4x12-14\nRIR0",
+                "4x12-14 RIR0 +\n1DS",
+                "4x12-14\nRIR0 + 1DS",
+                "4x12-14\nRIR0 + 1DS"
+              ]
+            },
+            {
+              "name": "Prensa 45º",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR 1 +\n2x8-10 RIR2",
+                "1x6-8 RIR 1 +\n2x8-10 RIR2",
+                "1x6-8 RIR 0 +\n2x8-10 RIR2",
+                "1x6-8 RIR 0 +\n2x8-10 RIR 1-2",
+                "1x6-8 RIR 0 +\n2x8-10 RIR 1",
+                "1x6-8 RIR 0 +\n2x8-10 RIR 1"
+              ]
+            },
+            {
+              "name": "Extensión de rodillas en máquina",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12\nRIR2",
+                "4x12-14\nRIR1",
+                "4x12-14\nRIR0",
+                "4x12-14 RIR0 +\n1DS",
+                "4x12-14\nRIR0 + 1DS",
+                "4x12-14\nRIR0 + 1DS"
+              ]
+            },
+            {
+              "name": "Patadas de glúteo",
+              "muscleGroup": "Glúteos",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12\nRIR2",
+                "4x12-14\nRIR1",
+                "4x12-14\nRIR0",
+                "4x12-14 RIR0 +\n1DS",
+                "4x12-14\nRIR0 + 1DS",
+                "4x12-14\nRIR0 + 1DS"
+              ]
+            },
+            {
+              "name": "Abwheel",
+              "muscleGroup": "Abdomen",
+              "loadType": "bodyweight",
+              "microcycles": [
+                "3x RIR 3",
+                "3x RIR 2",
+                "4x RIR2",
+                "4x RIR1",
+                "4x RIR0",
+                "4x RIR0",
+                "4x RIR0",
+                "4x RIR0"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "agenda-flexible-4-dias",
+      "sessions": [
+        {
+          "page": 3,
+          "heading": "DÍA 1: TORSO 1",
+          "exercises": [
+            {
+              "name": "Curl martillo",
+              "muscleGroup": "Bíceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "4x8-10 RIR2",
+                "4x8-10 RIR1",
+                "4x8-10 RIR0",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0\n+ 1 DS",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Curl bayesian en polea",
+              "muscleGroup": "Bíceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Extensiones katana en polea",
+              "muscleGroup": "Tríceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Extensiones desde polea alta",
+              "muscleGroup": "Tríceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "4x8-10 RIR2",
+                "4x8-10 RIR1",
+                "4x8-10 RIR0",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0\n+ 1 DS",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Jalón al pecho agarre prono",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-12 RIR3",
+                "3x8-12 RIR2",
+                "4x8-12 RIR2",
+                "4x8-12 RIR1",
+                "4x8-12 RIR1",
+                "4x8-12 RIR0",
+                "4x8-12 RIR0 +\n1 DS",
+                "4x8-12 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Helms Row con mancuernas",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR1",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0"
+              ]
+            },
+            {
+              "name": "Press w/ mancuernas, banco a 15º",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR1",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0"
+              ]
+            },
+            {
+              "name": "Aperturas en máquina",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "3x10-12 RIR2",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Elevaciones laterales desde polea baja",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            }
+          ]
+        },
+        {
+          "page": 8,
+          "heading": "DÍA 2: PIERNA 1",
+          "exercises": [
+            {
+              "name": "Extensión de tobillos de pie (en multipower mismo)",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x12-14 RIR 3",
+                "3x12-14 RIR 2",
+                "4x12-14 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1 DS",
+                "4x12-14 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Sentadilla hack",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR2",
+                "1x8-10 RIR1 +\n3x8-10 RIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "RDL con mancuernas",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR2",
+                "1x8-10 RIR1 +\n3x8-10 RIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "Extensión de rodillas en máquina",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x12-14 RIR 3",
+                "3x12-14 RIR 2",
+                "4x12-14 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1 DS",
+                "4x12-14 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Leg curl sentado",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x12-14 RIR 3",
+                "3x12-14 RIR 2",
+                "4x12-14 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1 DS",
+                "4x12-14 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Hip Thrust en máquina",
+              "muscleGroup": "Glúteos",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR2",
+                "1x8-10 RIR1 +\n3x8-10 RIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "Abducción en máquina",
+              "muscleGroup": "Glúteos",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            },
+            {
+              "name": "Aductor en máquina",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            }
+          ]
+        },
+        {
+          "page": 13,
+          "heading": "DÍA 3: FULLBODY",
+          "exercises": [
+            {
+              "name": "Elevaciones laterales polea altura rodilla",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Peso muerto rumano",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR2",
+                "1x8-10 RIR1 +\n3x8-10 RIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "Prensa 45º",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR 1 +\n2x8-10 RIR2",
+                "1x6-8 RIR 1 +\n2x8-10 RIR2",
+                "1x6-8 RIR 0 +\n2x8-10 RIR2",
+                "1x6-8 RIR 0 +\n2x8-10 RIR 1-\n2",
+                "1x6-8 RIR 0 +\n2x8-10 RIR 1",
+                "1x6-8 RIR 0 +\n2x8-10 RIR 1"
+              ]
+            },
+            {
+              "name": "Extensión de rodillas en máquina",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            },
+            {
+              "name": "Leg curl tumbado",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            },
+            {
+              "name": "Press multipower banco a 30º",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR1",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0"
+              ]
+            },
+            {
+              "name": "Press plano en máquina",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "3x10-12 RIR2",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Jalón al pecho agarres independientes",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-12 RIR3",
+                "3x8-12 RIR2",
+                "4x8-12 RIR2",
+                "4x8-12 RIR1",
+                "4x8-12 RIR1",
+                "4x8-12 RIR0",
+                "4x8-12 RIR0 +\n1 DS",
+                "4x8-12 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Remo T para trapecios",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR1",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0"
+              ]
+            }
+          ]
+        },
+        {
+          "page": 18,
+          "heading": "DÍA 2: BRAZO",
+          "exercises": [
+            {
+              "name": "Kaz press",
+              "muscleGroup": "Tríceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "4x8-10 RIR2",
+                "4x8-10 RIR1",
+                "4x8-10 RIR0",
+                "4x8-10 RIR0\n+ 1 DS",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0\n+ 1 DS",
+                "4x8-10 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Pushdown en polea alta",
+              "muscleGroup": "Tríceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12\nRIR3",
+                "4x10-12 RIR2",
+                "4x10-12\nRIR1",
+                "4x10-12\nRIR0",
+                "4x10-12\nRIR0 + 1 DS",
+                "4x10-12 RIR0 +\n1 DS",
+                "4x10-12\nRIR0 + 1 DS",
+                "4x10-12\nRIR0 + 1 DS"
+              ]
+            },
+            {
+              "name": "Curl desde polea baja",
+              "muscleGroup": "Bíceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12\nRIR3",
+                "4x10-12 RIR2",
+                "4x10-12\nRIR1",
+                "4x10-12\nRIR0",
+                "4x10-12\nRIR0 + 1 DS",
+                "4x10-12 RIR0 +\n1 DS",
+                "4x10-12\nRIR0 + 1 DS",
+                "4x10-12\nRIR0 + 1 DS"
+              ]
+            },
+            {
+              "name": "Curl predicador",
+              "muscleGroup": "Bíceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "4x8-10 RIR2",
+                "4x8-10 RIR1",
+                "4x8-10 RIR0",
+                "4x8-10 RIR0\n+ 1 DS",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0\n+ 1 DS",
+                "4x8-10 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Elevaciones laterales polea altura rodilla",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12\nRIR3",
+                "4x10-12 RIR2",
+                "4x10-12\nRIR1",
+                "4x10-12\nRIR0",
+                "4x10-12\nRIR0 + 1 DS",
+                "4x10-12 RIR0 +\n1 DS",
+                "4x10-12\nRIR0 + 1 DS",
+                "4x10-12\nRIR0 + 1 DS"
+              ]
+            },
+            {
+              "name": "Remo al mentón",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12\nRIR3",
+                "4x10-12 RIR2",
+                "4x10-12\nRIR1",
+                "4x10-12\nRIR0",
+                "4x10-12\nRIR0 + 1 DS",
+                "4x10-12 RIR0 +\n1 DS",
+                "4x10-12\nRIR0 + 1 DS",
+                "4x10-12\nRIR0 + 1 DS"
+              ]
+            },
+            {
+              "name": "Abwheel",
+              "muscleGroup": "Abdomen",
+              "loadType": "bodyweight",
+              "microcycles": [
+                "3x RIR 3",
+                "3x RIR 2",
+                "4x RIR2",
+                "4x RIR1",
+                "4x RIR0",
+                "4x RIR0",
+                "4x RIR0",
+                "4x RIR0"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fuerza-musculo-4-dias",
+      "sessions": [
+        {
+          "page": 4,
+          "heading": "DÍA 1: TORSO 1",
+          "exercises": [
+            {
+              "name": "Curl martillo",
+              "muscleGroup": "Bíceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "4x8-10 RIR2",
+                "4x8-10 RIR1",
+                "4x8-10 RIR0",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0\n+ 1 DS",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Curl bayesian en polea",
+              "muscleGroup": "Bíceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Extensiones katana en polea",
+              "muscleGroup": "Tríceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Extensiones desde polea alta",
+              "muscleGroup": "Tríceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "4x8-10 RIR2",
+                "4x8-10 RIR1",
+                "4x8-10 RIR0",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0\n+ 1 DS",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Jalón al pecho agarre prono",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-12 RIR3",
+                "3x8-12 RIR2",
+                "4x8-12 RIR2",
+                "4x8-12 RIR1",
+                "4x8-12 RIR1",
+                "4x8-12 RIR0",
+                "4x8-12 RIR0 +\n1 DS",
+                "4x8-12 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Helms Row con mancuernas",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR1",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0"
+              ]
+            },
+            {
+              "name": "Press w/ mancuernas, banco a 15º",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR1",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0"
+              ]
+            },
+            {
+              "name": "Aperturas en máquina",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "3x10-12 RIR2",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Elevaciones laterales desde polea baja",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            }
+          ]
+        },
+        {
+          "page": 9,
+          "heading": "DÍA 2: PIERNA 1",
+          "exercises": [
+            {
+              "name": "Extensión de tobillos de pie (en multipower mismo)",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x12-14 RIR 3",
+                "3x12-14 RIR 2",
+                "4x12-14 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1 DS",
+                "4x12-14 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Sentadilla hack",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR2",
+                "1x8-10 RIR1 +\n3x8-10 RIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "RDL con mancuernas",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR2",
+                "1x8-10 RIR1 +\n3x8-10 RIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "Extensión de rodillas en máquina",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x12-14 RIR 3",
+                "3x12-14 RIR 2",
+                "4x12-14 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1 DS",
+                "4x12-14 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Leg curl sentado",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x12-14 RIR 3",
+                "3x12-14 RIR 2",
+                "4x12-14 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1 DS",
+                "4x12-14 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Hip Thrust en máquina",
+              "muscleGroup": "Glúteos",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR2",
+                "1x8-10 RIR1 +\n3x8-10 RIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "Abducción en máquina",
+              "muscleGroup": "Glúteos",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            },
+            {
+              "name": "Aductor en máquina",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            }
+          ]
+        },
+        {
+          "page": 14,
+          "heading": "DÍA 3: EMPUJE",
+          "exercises": [
+            {
+              "name": "Prensa 45º",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR 1 +\n2x8-10 RIR2",
+                "1x6-8 RIR 1 +\n2x8-10 RIR2",
+                "1x6-8 RIR 0 +\n2x8-10 RIR2",
+                "1x6-8 RIR 0 +\n2x8-10 RIR 1-\n2",
+                "1x6-8 RIR 0 +\n2x8-10 RIR 1",
+                "1x6-8 RIR 0 +\n2x8-10 RIR 1"
+              ]
+            },
+            {
+              "name": "Extensión de rodillas en máquina",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            },
+            {
+              "name": "Press multipower banco a 30º",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR1",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0"
+              ]
+            },
+            {
+              "name": "Press plano en máquina",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "3x10-12 RIR2",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Kaz press",
+              "muscleGroup": "Tríceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "4x8-10 RIR2",
+                "4x8-10 RIR1",
+                "4x8-10 RIR0",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Pushdown en polea alta",
+              "muscleGroup": "Tríceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Elevaciones laterales polea altura rodilla",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Remo al mentón",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Aductor en máquina",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            }
+          ]
+        },
+        {
+          "page": 19,
+          "heading": "DÍA 3: TRACCIÓN",
+          "exercises": [
+            {
+              "name": "Peso muerto rumano",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1\n+ 2x8-10\nRIR3",
+                "1x8-10 RIR1\n+ 2x8-10\nRIR2",
+                "1x8-10 RIR1\n+ 3x8-10\nRIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "Leg curl tumbado",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12\nRIR2",
+                "4x12-14\nRIR1",
+                "4x12-14\nRIR0",
+                "4x12-14 RIR0 +\n1DS",
+                "4x12-14\nRIR0 + 1DS",
+                "4x12-14\nRIR0 + 1DS"
+              ]
+            },
+            {
+              "name": "Jalón al pecho agarres independientes",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-12 RIR3",
+                "3x8-12 RIR2",
+                "4x8-12 RIR2",
+                "4x8-12 RIR1",
+                "4x8-12 RIR1",
+                "4x8-12 RIR0",
+                "4x8-12 RIR0\n+ 1 DS",
+                "4x8-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Remo T para trapecios",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12\nRIR2",
+                "1x6-8 RIR1\n3x12-14\nRIR2",
+                "1x6-8 RIR1\n3x12-14\nRIR1",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14\nRIR0",
+                "1x6-8 RIR1\n3x12-14\nRIR0"
+              ]
+            },
+            {
+              "name": "Patadas de glúteo",
+              "muscleGroup": "Glúteos",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12\nRIR2",
+                "4x12-14\nRIR1",
+                "4x12-14\nRIR0",
+                "4x12-14 RIR0 +\n1DS",
+                "4x12-14\nRIR0 + 1DS",
+                "4x12-14\nRIR0 + 1DS"
+              ]
+            },
+            {
+              "name": "Curl desde polea baja",
+              "muscleGroup": "Bíceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12\nRIR3",
+                "4x10-12 RIR2",
+                "4x10-12\nRIR1",
+                "4x10-12\nRIR0",
+                "4x10-12\nRIR0 + 1 DS",
+                "4x10-12 RIR0 +\n1 DS",
+                "4x10-12\nRIR0 + 1 DS",
+                "4x10-12\nRIR0 + 1 DS"
+              ]
+            },
+            {
+              "name": "Curl predicador",
+              "muscleGroup": "Bíceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "4x8-10 RIR2",
+                "4x8-10 RIR1",
+                "4x8-10 RIR0",
+                "4x8-10 RIR0\n+ 1 DS",
+                "4x8-10 RIR0 +\n1 DS",
+                "4x8-10 RIR0\n+ 1 DS",
+                "4x8-10 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Deltoides posterior en polea",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12\nRIR2",
+                "4x12-14\nRIR1",
+                "4x12-14\nRIR0",
+                "4x12-14 RIR0 +\n1DS",
+                "4x12-14\nRIR0 + 1DS",
+                "4x12-14\nRIR0 + 1DS"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "especializacion-hombros-4-dias",
+      "sessions": [
+        {
+          "page": 5,
+          "heading": "DÍA 1: TORSO 1",
+          "exercises": [
+            {
+              "name": "Elevaciones laterales desde polea baja",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Press w/ mancuernas, banco a 15º",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR1",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0"
+              ]
+            },
+            {
+              "name": "Aperturas en máquina",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "3x10-12 RIR2",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Jalón al pecho agarre prono",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-12 RIR3",
+                "3x8-12 RIR2",
+                "4x8-12 RIR2",
+                "4x8-12 RIR1",
+                "4x8-12 RIR1",
+                "4x8-12 RIR0",
+                "4x8-12 RIR0 +\n1 DS",
+                "4x8-12 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Helms Row con mancuernas",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR1",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0"
+              ]
+            },
+            {
+              "name": "Curl bayesian en polea",
+              "muscleGroup": "Bíceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Extensiones katana en polea",
+              "muscleGroup": "Tríceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            }
+          ]
+        },
+        {
+          "page": 10,
+          "heading": "DÍA 2: PIERNA 1",
+          "exercises": [
+            {
+              "name": "Deltoides posterior en máquina",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            },
+            {
+              "name": "Extensión de tobillos de pie (en multipower mismo)",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x12-14 RIR 3",
+                "3x12-14 RIR 2",
+                "4x12-14 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1 DS",
+                "4x12-14 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Sentadilla hack",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR2",
+                "1x8-10 RIR1 +\n3x8-10 RIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "Extensión de rodillas en máquina",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x12-14 RIR 3",
+                "3x12-14 RIR 2",
+                "4x12-14 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1 DS",
+                "4x12-14 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Leg curl sentado",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            },
+            {
+              "name": "Hip Thrust en máquina",
+              "muscleGroup": "Glúteos",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR3",
+                "1x8-10 RIR1 +\n2x8-10 RIR2",
+                "1x8-10 RIR1 +\n3x8-10 RIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "Abducción en máquina",
+              "muscleGroup": "Glúteos",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            },
+            {
+              "name": "Aductor en máquina",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12 RIR2",
+                "4x12-14 RIR1",
+                "4x12-14 RIR0",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS",
+                "4x12-14 RIR0\n+ 1DS"
+              ]
+            }
+          ]
+        },
+        {
+          "page": 15,
+          "heading": "DÍA 3: TORSO 2",
+          "exercises": [
+            {
+              "name": "Remo al mentón",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Elevaciones laterales polea altura rodilla",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Press multipower banco a 30º",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x10-12 RIR1",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0",
+                "1x6-8 RIR1\n3x10-12 RIR0"
+              ]
+            },
+            {
+              "name": "Press plano en máquina",
+              "muscleGroup": "Pecho",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "3x10-12 RIR2",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Jalón al pecho agarres independientes",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-12 RIR3",
+                "3x8-12 RIR2",
+                "4x8-12 RIR2",
+                "4x8-12 RIR1",
+                "4x8-12 RIR1",
+                "4x8-12 RIR0",
+                "4x8-12 RIR0 +\n1 DS",
+                "4x8-12 RIR0 +\n1 DS"
+              ]
+            },
+            {
+              "name": "Remo T para trapecios",
+              "muscleGroup": "Espalda",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR2\n3x10-12 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR2",
+                "1x6-8 RIR1\n3x12-14 RIR1",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0",
+                "1x6-8 RIR1\n3x12-14 RIR0"
+              ]
+            },
+            {
+              "name": "Curl predicador",
+              "muscleGroup": "Bíceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            },
+            {
+              "name": "Pushdown desde polea alta",
+              "muscleGroup": "Tríceps",
+              "loadType": "external",
+              "microcycles": [
+                "3x10-12 RIR3",
+                "4x10-12 RIR2",
+                "4x10-12 RIR1",
+                "4x10-12 RIR0",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS",
+                "4x10-12 RIR0\n+ 1 DS"
+              ]
+            }
+          ]
+        },
+        {
+          "page": 20,
+          "heading": "DÍA 3: PIERNA 2",
+          "exercises": [
+            {
+              "name": "Deltoides posterior en polea",
+              "muscleGroup": "Hombros",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12\nRIR2",
+                "4x12-14\nRIR1",
+                "4x12-14\nRIR0",
+                "4x12-14 RIR0 +\n1DS",
+                "4x12-14\nRIR0 + 1DS",
+                "4x12-14\nRIR0 + 1DS"
+              ]
+            },
+            {
+              "name": "Extensión de tobillos sentado (en multipower mismo)",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x12-14 RIR\n3",
+                "3x12-14 RIR 2",
+                "4x12-14\nRIR2",
+                "4x12-14\nRIR1",
+                "4x12-14\nRIR1",
+                "4x12-14 RIR0",
+                "4x12-14\nRIR0 + 1 DS",
+                "4x12-14\nRIR0 + 1 DS"
+              ]
+            },
+            {
+              "name": "Peso muerto rumano",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR3",
+                "1x8-10 RIR2 +\n2x8-10 RIR3",
+                "1x8-10 RIR1\n+ 2x8-10\nRIR3",
+                "1x8-10 RIR1\n+ 2x8-10\nRIR2",
+                "1x8-10 RIR1\n+ 3x8-10\nRIR2-3",
+                "2x8-10 RIR1 +\n2x8-10 RIR2",
+                "3x8-10 RIR1",
+                "3x8-10 RIR1"
+              ]
+            },
+            {
+              "name": "Leg curl tumbado",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12\nRIR2",
+                "4x12-14\nRIR1",
+                "4x12-14\nRIR0",
+                "4x12-14 RIR0 +\n1DS",
+                "4x12-14\nRIR0 + 1DS",
+                "4x12-14\nRIR0 + 1DS"
+              ]
+            },
+            {
+              "name": "Prensa 45º",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "1x6-8 RIR 1 +\n2x8-10 RIR2",
+                "1x6-8 RIR 1 +\n2x8-10 RIR2",
+                "1x6-8 RIR 0 +\n2x8-10 RIR2",
+                "1x6-8 RIR 0 +\n2x8-10 RIR 1-2",
+                "1x6-8 RIR 0 +\n2x8-10 RIR 1",
+                "1x6-8 RIR 0 +\n2x8-10 RIR 1"
+              ]
+            },
+            {
+              "name": "Extensión de rodillas en máquina",
+              "muscleGroup": "Piernas",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12\nRIR2",
+                "4x12-14\nRIR1",
+                "4x12-14\nRIR0",
+                "4x12-14 RIR0 +\n1DS",
+                "4x12-14\nRIR0 + 1DS",
+                "4x12-14\nRIR0 + 1DS"
+              ]
+            },
+            {
+              "name": "Patadas de glúteo",
+              "muscleGroup": "Glúteos",
+              "loadType": "external",
+              "microcycles": [
+                "3x8-10 RIR 3",
+                "3x8-10 RIR 2",
+                "4x10-12\nRIR2",
+                "4x12-14\nRIR1",
+                "4x12-14\nRIR0",
+                "4x12-14 RIR0 +\n1DS",
+                "4x12-14\nRIR0 + 1DS",
+                "4x12-14\nRIR0 + 1DS"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

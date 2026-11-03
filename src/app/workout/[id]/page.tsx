@@ -31,6 +31,8 @@ import { PendingButton } from "@/components/pending-button";
 import { SetEntryForm } from "@/components/set-entry-form";
 import { FormSelect } from "@/components/form-select";
 import { AppHeader } from "@/components/app-header";
+import { SetPrescription } from "@/components/set-prescription";
+import { completedTargetSets } from "@/lib/set-prescription";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -90,6 +92,7 @@ async function getPreviousPerformance(
       and(
         eq(workoutExercises.exerciseId, exerciseId),
         isNull(workoutExercises.variation), eq(workoutExercises.measurement, "reps"), eq(workoutExercises.loadType, "external"),
+        isNull(workoutExercises.prescription),
         eq(workouts.userId, userId),
         eq(workouts.status, "completed"),
         ne(workouts.id, currentWorkoutId),
@@ -125,7 +128,7 @@ async function getProgressionSuggestion(
       workoutExerciseId: workoutExercises.id,
       performedAt: workouts.performedAt,
       weightUnit: workouts.weightUnit,
-      variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
+      prescription: workoutExercises.prescription, variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
       measurement: workoutExercises.measurement, loadType: workoutExercises.loadType, targetSeconds: workoutExercises.targetSeconds,
       targetSets: workoutExercises.targetSets,
       targetRepsMax: workoutExercises.targetRepsMax,
@@ -213,7 +216,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
       name: exercises.name,
       muscleGroup: exercises.muscleGroup,
       position: workoutExercises.position,
-      variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
+      prescription: workoutExercises.prescription, variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
       measurement: workoutExercises.measurement, loadType: workoutExercises.loadType, targetSeconds: workoutExercises.targetSeconds,
       targetSets: workoutExercises.targetSets,
       targetRepsMin: workoutExercises.targetRepsMin,
@@ -269,7 +272,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
     exerciseRows.map(async (exercise) => {
       const [reference, suggestion] = await Promise.all([
         getPreviousPerformance(userId, workout.id, exercise.exerciseId, workout.weightUnit),
-        getProgressionSuggestion(userId, workout.id, exercise.exerciseId, workout.weightUnit),
+        exercise.prescription ? Promise.resolve(null) : getProgressionSuggestion(userId, workout.id, exercise.exerciseId, workout.weightUnit),
       ]);
       references.set(exercise.workoutExerciseId, reference);
       suggestions.set(exercise.workoutExerciseId, suggestion);
@@ -378,14 +381,15 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
             const target =
               exercise.targetSets !== null
                 ? {
-                    variation: exercise.variation, progressionSteps: exercise.progressionSteps, progressionStep: exercise.progressionStep,
+                    prescription: exercise.prescription, variation: exercise.variation, progressionSteps: exercise.progressionSteps, progressionStep: exercise.progressionStep,
         measurement: exercise.measurement, loadType: exercise.loadType, targetSeconds: exercise.targetSeconds,
           targetSets: exercise.targetSets,
                     targetRepsMin: exercise.targetRepsMin,
                     targetRepsMax: exercise.targetRepsMax,
                   }
                 : null;
-            const remainingSets = target ? Math.max(0, target.targetSets - sets.length) : 0;
+            const completed = completedTargetSets({ ...exercise, sets });
+            const remainingSets = target ? Math.max(0, target.targetSets - completed) : 0;
             const isComplete = exercise.completedAt !== null;
             const rawSuggestion = suggestions.get(exercise.workoutExerciseId) ?? null;
             const alreadyAtSuggestedWeight =
@@ -409,7 +413,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                     <p className="mt-1 text-sm text-muted-foreground">
                       {exercise.muscleGroup}
                       {target
-                        ? ` · ${sets.length}/${target.targetSets} series`
+                        ? ` · ${completed}/${target.targetSets} series objetivo`
                         : ""}
                     </p>
                   </div>
@@ -441,6 +445,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                       </Badge>
                     </div>
                   )}
+                  <SetPrescription value={exercise.prescription} recorded={sets} />
                   {exercise.measurement === "reps" && exercise.loadType === "external" && suggestion && (
                     <Alert className="mb-2">
                       <TrendingUpIcon />
@@ -484,7 +489,7 @@ export default async function ActiveWorkoutPage({ params }: PageProps<"/workout/
                         {sets.map((set, index) => (
                           <TableRow key={set.id}>
                             <TableCell className="text-muted-foreground">
-                              {index + 1}
+                              {exercise.prescription ? set.position + 1 : index + 1}
                             </TableCell>
                             <TableCell className="font-semibold text-foreground">
                               <WeightSet value={{ ...set, weight: Number(set.weight) }} from={workout.weightUnit} />

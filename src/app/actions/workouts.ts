@@ -1,5 +1,6 @@
 "use server";
 import { validSet, matchesExercise, type LoadType } from "@/lib/training-metrics";
+import { nextSetPosition } from "@/lib/set-prescription";
 
 import { and, asc, eq, isNull, or, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
@@ -141,7 +142,7 @@ export async function startWorkout(formData?: FormData) {
       .select({
         exerciseId: trainingPlanExercises.exerciseId,
         position: trainingPlanExercises.position,
-        variation: trainingPlanExercises.variation, progressionSteps: trainingPlanExercises.progressionSteps, progressionStep: trainingPlanExercises.progressionStep,
+        prescription: trainingPlanExercises.prescription, variation: trainingPlanExercises.variation, progressionSteps: trainingPlanExercises.progressionSteps, progressionStep: trainingPlanExercises.progressionStep,
       measurement: trainingPlanExercises.measurement, loadType: trainingPlanExercises.loadType, targetSeconds: trainingPlanExercises.targetSeconds,
       targetSets: trainingPlanExercises.targetSets,
         targetRepsMin: trainingPlanExercises.targetRepsMin,
@@ -158,7 +159,7 @@ export async function startWorkout(formData?: FormData) {
           workoutId: created.id,
           exerciseId: exercise.exerciseId,
           position: exercise.position,
-          variation: exercise.variation, progressionSteps: exercise.progressionSteps, progressionStep: exercise.progressionStep,
+          prescription: exercise.prescription, variation: exercise.variation, progressionSteps: exercise.progressionSteps, progressionStep: exercise.progressionStep,
         measurement: exercise.measurement, loadType: exercise.loadType, targetSeconds: exercise.targetSeconds,
           targetSets: exercise.targetSets,
           targetRepsMin: exercise.targetRepsMin,
@@ -245,7 +246,7 @@ export async function addExercise(formData: FormData) {
     const [planTarget] = workout.trainingPlanId
       ? await transaction
           .select({
-            variation: trainingPlanExercises.variation, progressionSteps: trainingPlanExercises.progressionSteps, progressionStep: trainingPlanExercises.progressionStep,
+            prescription: trainingPlanExercises.prescription, variation: trainingPlanExercises.variation, progressionSteps: trainingPlanExercises.progressionSteps, progressionStep: trainingPlanExercises.progressionStep,
       measurement: trainingPlanExercises.measurement, loadType: trainingPlanExercises.loadType, targetSeconds: trainingPlanExercises.targetSeconds,
       targetSets: trainingPlanExercises.targetSets,
             targetRepsMin: trainingPlanExercises.targetRepsMin,
@@ -265,7 +266,7 @@ export async function addExercise(formData: FormData) {
       workoutId,
       exerciseId,
       position: Number(lastPosition?.value ?? -1) + 1,
-      variation: planTarget?.variation ?? null, progressionSteps: planTarget?.progressionSteps ?? [], progressionStep: planTarget?.progressionStep ?? null,
+      prescription: planTarget?.prescription ?? null, variation: planTarget?.variation ?? null, progressionSteps: planTarget?.progressionSteps ?? [], progressionStep: planTarget?.progressionStep ?? null,
       measurement: planTarget?.measurement ?? "reps", loadType: planTarget?.loadType ?? "external", targetSeconds: planTarget?.targetSeconds ?? null,
       targetSets: planTarget?.targetSets ?? null,
       targetRepsMin: planTarget?.targetRepsMin ?? null,
@@ -284,8 +285,10 @@ export async function addSet(formData: FormData) {
   const { reps, weight, rpe, durationSeconds, loadType, assistanceNote } = parseSetValues(formData);
 
   await db.transaction(async (transaction) => {
+    await transaction.select({ id: workouts.id }).from(workouts)
+      .where(and(eq(workouts.id, workoutId), eq(workouts.userId, userId))).for("update");
     const [ownedExercise] = await transaction
-      .select({ id: workoutExercises.id, variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
+      .select({ id: workoutExercises.id, prescription: workoutExercises.prescription, variation: workoutExercises.variation, progressionSteps: workoutExercises.progressionSteps, progressionStep: workoutExercises.progressionStep,
       measurement: workoutExercises.measurement, loadType: workoutExercises.loadType })
       .from(workoutExercises)
       .innerJoin(workouts, eq(workouts.id, workoutExercises.workoutId))
@@ -304,8 +307,8 @@ export async function addSet(formData: FormData) {
     }
 
     if (!matchesExercise({ reps, weight, durationSeconds, loadType, assistanceNote }, ownedExercise)) throw new Error("La serie no coincide con la variante del ejercicio.");
-    const [lastPosition] = await transaction
-      .select({ value: sql<number>`coalesce(max(${workoutSets.position}), -1)` })
+    const positions = await transaction
+      .select({ position: workoutSets.position })
       .from(workoutSets)
       .where(eq(workoutSets.workoutExerciseId, workoutExerciseId));
 
@@ -316,7 +319,7 @@ export async function addSet(formData: FormData) {
       .values({
         ...(setId ? { id: setId } : {}),
         workoutExerciseId,
-        position: Number(lastPosition?.value ?? -1) + 1,
+        position: nextSetPosition(positions, !!ownedExercise.prescription),
         reps, durationSeconds, loadType, assistanceNote,
         weight: weight.toFixed(2),
         rpe: rpe?.toFixed(1) ?? null,

@@ -1,22 +1,18 @@
 "use client";
 
-import { UsersIcon, VenusIcon } from "lucide-react";
 import { ButtonLink } from "@/components/button-link";
 
 import { createPlanFromTemplate } from "@/app/actions/plans";
 import { PendingButton } from "@/components/pending-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { PLAN_TEMPLATES, type TemplateAudience } from "@/lib/plan-templates";
+import { PLAN_TEMPLATES } from "@/lib/plan-templates";
+import { TemplateAudienceBadge } from "@/components/template-audience-badge";
 
 import { DISCIPLINES, describeBlock } from "@/lib/training-blocks";
 import { prioritizePlans } from "@/lib/plan-order";
 import { usePlansDiscipline } from "@/components/plans-discipline";
-
-const ENFOQUE: Record<TemplateAudience, { etiqueta: string; Icon: typeof VenusIcon }> = {
-  mixto: { etiqueta: "Mixto", Icon: UsersIcon },
-  mujeres: { etiqueta: "Mujeres", Icon: VenusIcon },
-};
+import { ProgramTemplates } from "@/components/program-templates";
 
 const DIAS = [
   "Domingo",
@@ -32,26 +28,18 @@ const DIAS = [
  * Planes listos para copiar. Lo que frena a alguien que entra por primera vez
  * no es la app, es tener que decidir qué ejercicios hacer y en qué orden.
  */
-function EnfoqueBadge({ enfoque }: { enfoque: TemplateAudience }) {
-  const { etiqueta, Icon } = ENFOQUE[enfoque];
-  return (
-    <Badge variant={enfoque === "mujeres" ? "default" : "secondary"}>
-      <Icon className="size-3" />
-      {etiqueta}
-    </Badge>
-  );
-}
-
 export function PlanTemplates({ titulo }: { titulo?: string }) {
   const discipline = usePlansDiscipline();
   const templates = prioritizePlans(PLAN_TEMPLATES, discipline);
   return (
+    <>
+    {discipline === "strength" && <ProgramTemplates />}
     <section className="mt-8">
       <h2 className="text-lg font-semibold text-foreground">
         {titulo ?? "Empieza con un plan hecho"}
       </h2>
       <p className="mt-1 text-sm leading-6 text-muted-foreground">
-        Lo copias y lo editas a tu gusto: quitar ejercicios, cambiar series o
+        Sesiones individuales que puedes copiar y editar a tu gusto: quitar ejercicios, cambiar series o
         mover el día. Nada queda fijo.
       </p>
 
@@ -67,7 +55,7 @@ export function PlanTemplates({ titulo }: { titulo?: string }) {
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1">
                 <Badge variant="outline">{DISCIPLINES[plantilla.discipline ?? "strength"]}</Badge>
-                <EnfoqueBadge enfoque={plantilla.gender} />
+                <TemplateAudienceBadge audience={plantilla.gender} />
                 <Badge variant="outline">
                   {plantilla.weekday === null
                     ? "Sin día"
@@ -96,21 +84,25 @@ export function PlanTemplates({ titulo }: { titulo?: string }) {
               ))}
             </ul>
 
-            <ButtonLink href={`/plans/templates/${plantilla.id}`} variant="outline" className="min-h-11 w-full">Ver detalle</ButtonLink>
-            <form action={createPlanFromTemplate}>
-              <input type="hidden" name="templateId" value={plantilla.id} />
-              <PendingButton
-                type="submit"
-                variant="outline"
-                className="h-11 w-full"
-                pendingLabel="Creando…"
-              >
-                Usar este plan
-              </PendingButton>
-            </form>
+            <div className="mt-auto flex flex-col gap-3">
+              <ButtonLink href={`/plans/templates/${plantilla.id}`} variant="outline" className="min-h-11 w-full">Ver detalle</ButtonLink>
+              <form action={createPlanFromTemplate}>
+                <input type="hidden" name="templateId" value={plantilla.id} />
+                <PendingButton
+                  type="submit"
+                  variant="outline"
+                  className="h-11 w-full"
+                  pendingLabel="Creando…"
+                >
+                  Usar este plan
+                </PendingButton>
+              </form>
+            </div>
           </Card>
         ))}
       </div>
     </section>
+    {discipline !== "strength" && <ProgramTemplates />}
+    </>
   );
 }

@@ -11,6 +11,7 @@ export function ExerciseTargetFields({ value }: { value?: ExerciseMetrics & { ta
   const selectClass = "mt-2 h-12 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring";
   return <fieldset className="space-y-3">
     <legend className="sr-only">Medición y objetivo del ejercicio</legend>
+    {value?.prescription && <p className="text-sm leading-6 text-muted-foreground">Guardar aquí sustituye los objetivos por serie de este ejercicio por tu objetivo personal. Los cambios de microciclo conservarán ese objetivo.</p>}
     <div className="grid gap-3 sm:grid-cols-2">
       <label htmlFor={`${id}-measurement`} className="text-sm font-medium">Registrar por
         <select id={`${id}-measurement`} name="measurement" aria-label="Registrar por" value={measurement} onChange={(event) => setMeasurement(event.target.value as "reps" | "time")} className={selectClass}>
@@ -26,8 +27,8 @@ export function ExerciseTargetFields({ value }: { value?: ExerciseMetrics & { ta
     <div className={`grid gap-2 ${measurement === "time" ? "grid-cols-2" : "grid-cols-3"}`}>
       <label className="text-xs font-semibold text-muted-foreground">Series<Input name="targetSets" type="number" min="1" max="20" required defaultValue={value?.targetSets ?? 3} className="mt-2 h-12 text-center" /></label>
       {measurement === "time" ? <label className="text-xs font-semibold text-muted-foreground">Segundos por serie<Input name="targetSeconds" type="number" min="1" max="86400" required defaultValue={value?.targetSeconds ?? 30} className="mt-2 h-12 text-center" /></label> : <>
-        <label className="text-xs font-semibold text-muted-foreground">Reps mín.<Input name="targetRepsMin" type="number" min="1" max="1000" required defaultValue={value?.targetRepsMin ?? 8} className="mt-2 h-12 text-center" /></label>
-        <label className="text-xs font-semibold text-muted-foreground">Reps máx.<Input name="targetRepsMax" type="number" min="1" max="1000" required defaultValue={value?.targetRepsMax ?? 12} className="mt-2 h-12 text-center" /></label>
+        <label className="text-xs font-semibold text-muted-foreground">Reps mín.<Input name="targetRepsMin" type="number" min="1" max="1000" required defaultValue={value?.prescription?.sets.every((set) => set.repsMin === null) ? "" : value?.targetRepsMin ?? 8} className="mt-2 h-12 text-center" /></label>
+        <label className="text-xs font-semibold text-muted-foreground">Reps máx.<Input name="targetRepsMax" type="number" min="1" max="1000" required defaultValue={value?.prescription?.sets.every((set) => set.repsMax === null) ? "" : value?.targetRepsMax ?? 12} className="mt-2 h-12 text-center" /></label>
       </>}
     </div>
     <details className="border-t border-border pt-3"><summary className="min-h-11 cursor-pointer py-2 text-sm font-medium">Variante y progresión personal</summary>

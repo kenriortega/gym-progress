@@ -38,11 +38,15 @@ await test("API de sincronización con PostgreSQL temporal real", { timeout: 90_
       const js = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText
         .replaceAll('"next/server"', '"next/server.js"').replaceAll('"@/auth"', '"./auth.mjs"').replaceAll('"@/db"', '"./db.mjs"').replaceAll('"@/db/schema"', '"./schema.mjs"').replaceAll('"@/lib/training-metrics"', '"./metrics.mjs"').replaceAll('"@/lib/training-blocks"', '"./blocks.mjs"')
         .replaceAll('"@/lib/plan-templates"', '"./templates.mjs"').replaceAll('"@/lib/schedule"', '"./schedule.mjs"').replaceAll('"@/lib/dates"', '"./dates.mjs"')
+        .replaceAll('"@/lib/program-templates"', '"./programs.mjs"').replaceAll('"@/lib/pdf-programs"', '"./pdf-programs.mjs"')
+        .replaceAll('"@/lib/set-prescription"', '"./prescription.mjs"').replaceAll('"./set-prescription"', '"./prescription.mjs"')
+        .replaceAll('import data from "./pdf-programs.json";', `const data = ${await readFile(join(root, "src/lib/pdf-programs.json"), "utf8")};`)
         .replaceAll('"next/cache"', '"./cache.mjs"').replaceAll('"next/navigation"', '"./navigation.mjs"');
       await writeFile(join(modules, destination), js);
       return import(pathToFileURL(join(modules, destination)).href);
     };
     await compile("src/lib/training-blocks.ts", "blocks.mjs");
+    await compile("src/lib/set-prescription.ts", "prescription.mjs");
     await compile("src/lib/training-metrics.ts", "metrics.mjs");
     await compile("src/db/schema.ts", "schema.mjs");
     ({ pool } = await import(pathToFileURL(join(modules, "db.mjs")).href));
@@ -52,6 +56,8 @@ await test("API de sincronización con PostgreSQL temporal real", { timeout: 90_
     await writeFile(join(modules, "cache.mjs"), 'export const revalidatePath = () => {};');
     await writeFile(join(modules, "navigation.mjs"), 'export const redirect = (url) => { throw Object.assign(new Error("redirect"), { url }); };');
     await compile("src/lib/dates.ts", "dates.mjs"); await compile("src/lib/schedule.ts", "schedule.mjs"); await compile("src/lib/plan-templates.ts", "templates.mjs");
+    await compile("src/lib/program-templates.ts", "programs.mjs");
+    await compile("src/lib/pdf-programs.ts", "pdf-programs.mjs");
     const planActions = await compile("src/app/actions/plans.ts", "plans.mjs");
     const { GET: offlinePlans } = await compile("src/app/api/offline/plans/route.ts", "offline-plans.mjs");
     const { POST } = await compile("src/app/api/sync/route.ts", "sync.mjs");
@@ -339,6 +345,73 @@ await test("API de sincronización con PostgreSQL temporal real", { timeout: 90_
       const wod = pkg.plans.find((item) => item.name === "AMRAP editable");
       assert.equal(calis.exercises.length, 3); assert.equal(calis.exercises[2].measurement, "time");
       assert.equal(wod.exercises.length, 3); assert.equal(wod.blocks[0].format, "amrap");
+    });
+    await scenario("PDF: copia, cambio de ciclo atómico, congelado, objetivos propios y aislamiento", async () => {
+      const { PROGRAM_TEMPLATES } = await import(pathToFileURL(join(modules, "programs.mjs")).href);
+      const { pdfProgram } = await import(pathToFileURL(join(modules, "pdf-programs.mjs")).href);
+      const form = (values) => { const f = new FormData(); for (const [k, v] of Object.entries(values)) f.set(k, String(v)); return f; };
+      const redirected = async (promise) => assert.rejects(promise, (error) => !!error.url?.startsWith("/plans"));
+      let chosen;
+      for (const template of PROGRAM_TEMPLATES.filter((program) => program.audience === "General")) {
+        await redirected(planActions.createProgramFromTemplate(null, form({ programId: template.id, microcycle: 1 })));
+        const pkg = await (await offlinePlans()).json();
+        assert.equal(pkg.schemaVersion, 4);
+        const expected = pdfProgram(template, 1);
+        for (const session of expected.sessions) {
+          const copied = pkg.plans.find((plan) => plan.name === `${expected.name} · ${session.name}`);
+          assert.ok(copied);
+          assert.deepEqual(copied.exercises.map((exercise) => exercise.prescription), session.exercises.map((exercise) => exercise.prescription));
+          if (!chosen && template.id === "equilibrio-torso-pierna-4-dias") chosen = copied;
+        }
+      }
+      const cycleOf = async (id) => (await pool.query("select program_cycle from training_plans where id=$1", [id])).rows[0].program_cycle;
+      const instance = (await cycleOf(chosen.id)).instanceId;
+      const groupState = async () => (await pool.query("select p.id,p.program_cycle,e.id as exercise_id,e.prescription,e.target_sets,e.target_reps_min from training_plans p join training_plan_exercises e on e.plan_id=p.id where p.user_id=$1 and p.program_cycle->>'instanceId'=$2 order by p.id,e.id", [userA, instance])).rows;
+      await redirected(planActions.createProgramFromTemplate(null, form({ programId: "equilibrio-torso-pierna-4-dias", microcycle: 1 })));
+      const otherCopy = (await pool.query("select id from training_plans where user_id=$1 and program_cycle->>'programId'='equilibrio-torso-pierna-4-dias' and program_cycle->>'instanceId'<>$2", [userA, instance])).rows;
+
+      const workout = make({ planId: chosen.id, exercises: chosen.exercises.map((exercise, position) => ({
+        workoutExerciseId: randomUUID(), exerciseId: exercise.exerciseId, position,
+        targetSets: exercise.targetSets, targetRepsMin: exercise.targetRepsMin, targetRepsMax: exercise.targetRepsMax,
+        notes: exercise.notes, prescription: exercise.prescription, measurement: exercise.measurement,
+        loadType: exercise.loadType, targetSeconds: exercise.targetSeconds,
+      })) });
+      assert.equal((await send(workout)).status, 200);
+      await redirected(planActions.changeProgramMicrocycle(null, form({ planId: chosen.id, microcycle: 3 })));
+      assert.ok((await groupState()).every((row) => row.prescription.microcycle === 3));
+      for (const plan of otherCopy) assert.equal((await cycleOf(plan.id)).microcycle, 1);
+      const frozen = await (await snapshot()).json();
+      assert.deepEqual(frozen.workout.exercises[0].prescription, chosen.exercises[0].prescription);
+
+      const firstSet = series(workout), secondSet = series(workout);
+      await send(firstSet); await send(secondSet);
+      await send(operation(workout, "deleteSet", { setId: firstSet.setId }));
+      const replacement = series(workout); assert.equal((await send(replacement)).status, 200);
+      assert.equal((await pool.query("select position from workout_sets where id=$1", [replacement.setId])).rows[0].position, 0);
+      assert.deepEqual((await (await snapshot()).json()).workout.exercises[0].sets.map((set) => set.position), [0, 1]);
+
+      const before = await groupState();
+      await pool.query(`create function reject_microcycle() returns trigger language plpgsql as $$ begin
+        if new.program_cycle->>'instanceId'='${instance}' and new.program_cycle->>'microcycle'='6' and new.program_cycle->>'sessionIndex'='3' then raise exception 'fallo de prueba'; end if;
+        return new; end $$; create trigger reject_microcycle before update on training_plans for each row execute function reject_microcycle()`);
+      const failure = await planActions.changeProgramMicrocycle(null, form({ planId: chosen.id, microcycle: 6 }));
+      assert.ok(failure.error); assert.deepEqual(await groupState(), before);
+      await pool.query("drop trigger reject_microcycle on training_plans; drop function reject_microcycle()");
+      const row = (await pool.query("select id from training_plan_exercises where plan_id=$1 order by position", [chosen.id])).rows[0];
+      await planActions.updatePlanExercise(form({ planId: chosen.id, planExerciseId: row.id, measurement: "reps", loadType: "external", targetSets: 2, targetRepsMin: 8, targetRepsMax: 12 }));
+      await redirected(planActions.changeProgramMicrocycle(null, form({ planId: chosen.id, microcycle: 8 })));
+      const custom = (await pool.query("select prescription,target_sets from training_plan_exercises where id=$1", [row.id])).rows[0];
+      assert.equal(custom.prescription, null); assert.equal(custom.target_sets, 2);
+      assert.ok((await groupState()).filter((item) => item.exercise_id !== row.id).every((item) => item.prescription.microcycle === 8));
+      setUser(userB);
+      assert.ok((await planActions.changeProgramMicrocycle(null, form({ planId: chosen.id, microcycle: 4 }))).error);
+      assert.equal((await cycleOf(chosen.id)).microcycle, 8);
+      setUser(userA);
+      const bad = structuredClone(workout); bad.workoutId = randomUUID(); bad.exercises[0].prescription.microcycle = 9;
+      assert.equal((await send(bad)).status, 400);
+      assert.equal((await send(operation(workout, "finishWorkout"))).status, 200);
+      const recorded = (await pool.query("select prescription from workout_exercises where workout_id=$1 order by position", [workout.workoutId])).rows;
+      assert.deepEqual(recorded[0].prescription, chosen.exercises[0].prescription);
     });
   } finally {
     await pool?.end();

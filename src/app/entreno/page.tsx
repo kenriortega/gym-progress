@@ -1,5 +1,7 @@
 "use client";
 import { WeightView, WeightSet } from "@/components/weight-view";
+import { SetPrescription } from "@/components/set-prescription";
+import { completedTargetSets } from "@/lib/set-prescription";
 import { useOfflinePlans } from "@/components/offline-plans-provider";
 import type { WeightUnit } from "@/lib/weight-units";
 import { TrainingBlockCard } from "@/components/training-block-card";
@@ -286,7 +288,7 @@ export default function EntrenoPage() {
         ejercicios={sesion.exercises.filter((e) => !(sesion.blocks ?? []).some((block) => block.format !== "sets" && block.exerciseIds.includes(e.exerciseId))).map((e) => ({
           name: e.name,
           targetSets: e.targetSets,
-          setsDone: e.sets.length,
+          setsDone: completedTargetSets(e),
         }))}
       />
 
@@ -391,7 +393,7 @@ function TarjetaEjercicio({
 
   const faltan =
     ejercicio.targetSets !== null
-      ? Math.max(0, ejercicio.targetSets - ejercicio.sets.length)
+      ? Math.max(0, ejercicio.targetSets - completedTargetSets(ejercicio))
       : null;
 
   return (
@@ -407,7 +409,7 @@ function TarjetaEjercicio({
           <p className="mt-1 text-sm text-muted-foreground">
             {ejercicio.muscleGroup}
             {ejercicio.targetSets !== null
-              ? ` · ${ejercicio.sets.length}/${ejercicio.targetSets} series`
+              ? ` · ${completedTargetSets(ejercicio)}/${ejercicio.targetSets} series objetivo`
               : ""}
           </p>
         </div>
@@ -438,6 +440,7 @@ function TarjetaEjercicio({
         )}
 
         <p className="text-sm text-muted-foreground">{formatTarget(ejercicio)}</p>
+        <SetPrescription value={ejercicio.prescription} recorded={ejercicio.sets} />
         {ejercicio.progressionStep && ejercicio.progressionSteps?.[ejercicio.progressionStep] && <p className="text-xs leading-5 text-muted-foreground">Siguiente paso de tu plan: {ejercicio.progressionSteps[ejercicio.progressionStep]}. Puedes avanzar editando el plan cuando lo decidas.</p>}
         {ejercicio.notes && <p className="whitespace-pre-wrap break-words text-sm leading-6">{ejercicio.notes}</p>}
         <DocumentLink
@@ -455,7 +458,7 @@ function TarjetaEjercicio({
               key={serie.id}
               className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-sm"
             >
-              <span className="text-muted-foreground">{i + 1}</span>
+              <span className="text-muted-foreground">{ejercicio.prescription ? serie.position + 1 : i + 1}</span>
               <span className="flex-1 text-right font-semibold text-foreground">
                 <WeightSet value={serie} from={unidad as WeightUnit} />
               </span>

@@ -1,4 +1,5 @@
 import type { TrainingBlock, BlockProgressMap, Discipline } from "../lib/training-blocks";
+import type { ProgramCycle, SetPrescription } from "../lib/set-prescription";
 import { sql } from "drizzle-orm";
 import {
   check,
@@ -30,7 +31,7 @@ export const workoutStatus = pgEnum("workout_status", [
 
 export const measurement = pgEnum("measurement", ["reps", "time"]);
 export const loadType = pgEnum("load_type", ["external", "bodyweight", "weighted", "assisted"]);
-const metrics = { variation: varchar("variation", { length: 120 }), progressionSteps: jsonb("progression_steps").$type<string[]>().notNull().default([]), progressionStep: smallint("progression_step"), measurement: measurement("measurement").notNull().default("reps"), loadType: loadType("load_type").notNull().default("external"), targetSeconds: integer("target_seconds") };
+const metrics = { prescription: jsonb("prescription").$type<SetPrescription>(), variation: varchar("variation", { length: 120 }), progressionSteps: jsonb("progression_steps").$type<string[]>().notNull().default([]), progressionStep: smallint("progression_step"), measurement: measurement("measurement").notNull().default("reps"), loadType: loadType("load_type").notNull().default("external"), targetSeconds: integer("target_seconds") };
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -133,6 +134,7 @@ export const trainingPlans = pgTable(
     name: varchar("name", { length: 100 }).notNull(),
     discipline: varchar("discipline", { length: 20 }).$type<Discipline>().notNull().default("strength"),
     blocks: jsonb("blocks").$type<TrainingBlock[]>().notNull().default([]),
+    programCycle: jsonb("program_cycle").$type<ProgramCycle>(),
     description: text("description"),
     weekday: smallint("weekday"),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
