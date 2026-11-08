@@ -19,6 +19,17 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "2026-11-08-programa-entero",
+    date: "8 de noviembre de 2026",
+    title: "Mira el programa entero, no solo el microciclo de hoy",
+    items: [
+      "En un plan de un programa de ocho microciclos tienes una barra con dónde estás, y debajo lo que pide este microciclo: series de la semana, RIR y drop sets si los lleva.",
+      "Al elegir otro microciclo en el desplegable ves qué cambia antes de aplicarlo: cuántas series más o menos, cuánto más cerca del fallo y si aparecen drop sets.",
+      "Al aplicarlo, una línea te dice qué dejas atrás y qué toca ahora.",
+      "La barra marca en qué punto de la secuencia estás, no un porcentaje de cumplimiento: un microciclo no se completa, lo cambias cuando lo decides. También puedes volver atrás.",
+    ],
+  },
+  {
     id: "2026-11-08-tu-semana-de-un-vistazo",
     date: "8 de noviembre de 2026",
     title: "Tu semana, de un vistazo",
