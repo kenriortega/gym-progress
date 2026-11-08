@@ -10,10 +10,16 @@ import { plansOn, type Reschedule, type SchedulablePlan } from "@/lib/schedule";
  *
  * Mira si hubo entrenamiento, no cuántos kilos: un día de dominadas y fondos
  * mueve cero kilos de carga externa y es un día entrenado como cualquier otro.
+ *
+ * Y mira cuál: un día no está hecho porque entrenaras, sino porque entrenaras
+ * lo que tocaba. Cambiar de programa dejaba los entrenos del anterior
+ * marcando los días del nuevo, que decía «4 de 5» de un plan sin estrenar.
  */
 export type StripState =
   /** Tocaba y lo hiciste. */
   | "hecho"
+  /** Tocaba, entrenaste, pero otra cosa. */
+  | "otro"
   /** Toca hoy y aún no. Un día no ha fallado hasta que termina. */
   | "hoy"
   /** Toca más adelante esta semana. */
@@ -24,6 +30,9 @@ export type StripState =
   | "libre"
   /** No tocaba y entrenaste igual. */
   | "extra";
+
+/** Un día entrenado y a qué planes se vincularon sus sesiones. */
+export type TrainedSession = { day: string; planId: string | null };
 
 export type StripDay = {
   day: string;
@@ -67,16 +76,21 @@ export function mondayOf(today: Date): Date {
 export function weekStripOf<T extends SchedulablePlan>({
   plans,
   reschedules,
-  trainedDays,
+  sessions,
   today = new Date(),
 }: {
   plans: T[];
   reschedules: Reschedule[];
-  /** Días con un entrenamiento terminado, en "YYYY-MM-DD". */
-  trainedDays: Iterable<string>;
+  /** Entrenamientos terminados, con el plan del que salió cada uno. */
+  sessions: Iterable<TrainedSession>;
   today?: Date;
 }): StripDay[] {
-  const trained = new Set(trainedDays);
+  const porDia = new Map<string, Set<string | null>>();
+  for (const session of sessions) {
+    const planes = porDia.get(session.day) ?? new Set<string | null>();
+    planes.add(session.planId);
+    porDia.set(session.day, planes);
+  }
   const hoy = dayOf(today);
   // El cursor avanza con setDate y no sumando milisegundos: el domingo del
   // cambio de hora dura 25 horas y la semana entera se correría un día.
@@ -86,20 +100,25 @@ export function weekStripOf<T extends SchedulablePlan>({
   for (let index = 0; index < 7; index++) {
     const day = dayOf(cursor);
     const scheduled = plansOn(plans, reschedules, day);
-    const hecho = trained.has(day);
+    const entrenados = porDia.get(day);
+    const entrenaste = entrenados !== undefined;
     const tocaba = scheduled.length > 0;
+    // Hecho es haber entrenado alguno de los planes que tocaban ese día.
+    const cumplido = Boolean(entrenados) && scheduled.some((item) => entrenados!.has(item.plan.id));
 
-    const state: StripState = hecho
-      ? tocaba
+    const state: StripState = !tocaba
+      ? entrenaste
+        ? "extra"
+        : "libre"
+      : cumplido
         ? "hecho"
-        : "extra"
-      : !tocaba
-        ? "libre"
-        : day === hoy
-          ? "hoy"
-          : day < hoy
-            ? "perdido"
-            : "pendiente";
+        : entrenaste
+          ? "otro"
+          : day === hoy
+            ? "hoy"
+            : day < hoy
+              ? "perdido"
+              : "pendiente";
 
     days.push({
       day,
@@ -112,11 +131,20 @@ export function weekStripOf<T extends SchedulablePlan>({
   return days;
 }
 
-/** «3 de 5»: lo hecho sobre lo que la semana pedía. Los extras no inflan el total. */
+/**
+ * «3 de 5»: lo hecho sobre lo que la semana pedía. Ni los días extra ni los
+ * que entrenaste otra cosa cuentan como cumplidos; los previstos sí los
+ * incluyen, porque el plan seguía tocando.
+ */
 export function weekTally(days: StripDay[]) {
   const previstos = days.filter((item) => item.state !== "libre" && item.state !== "extra").length;
   const hechos = days.filter((item) => item.state === "hecho").length;
-  return { hechos, previstos, extras: days.filter((item) => item.state === "extra").length };
+  return {
+    hechos,
+    previstos,
+    extras: days.filter((item) => item.state === "extra").length,
+    otros: days.filter((item) => item.state === "otro").length,
+  };
 }
 
 /** Comparar cadenas "YYYY-MM-DD" ordena por fecha; esto solo lo documenta. */

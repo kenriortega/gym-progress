@@ -12,6 +12,9 @@ import { weekTally, type StripDay, type StripState } from "@/lib/week-strip";
  */
 const DOT: Record<StripState, string> = {
   hecho: "border-primary bg-primary text-primary-foreground",
+  // Entrenaste, pero no lo que tocaba: el aro dice que hubo sesión y el relleno
+  // vacío dice que el plan del día sigue sin hacerse.
+  otro: "border-primary/60 text-primary/80",
   hoy: "border-primary text-primary",
   pendiente: "border-border text-muted-foreground",
   perdido: "border-dashed border-border text-muted-foreground/60",
@@ -21,6 +24,7 @@ const DOT: Record<StripState, string> = {
 
 const MARK: Record<StripState, string> = {
   hecho: "✓",
+  otro: "~",
   hoy: "•",
   pendiente: "",
   perdido: "",
@@ -29,7 +33,7 @@ const MARK: Record<StripState, string> = {
 };
 
 export function WeekStrip({ days }: { days: StripDay[] }) {
-  const { hechos, previstos, extras } = weekTally(days);
+  const { hechos, previstos, extras, otros } = weekTally(days);
   if (!previstos && !extras) return null;
 
   return (
@@ -69,7 +73,7 @@ export function WeekStrip({ days }: { days: StripDay[] }) {
       </ol>
 
       <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-        {resumen({ hechos, previstos, extras, days })}
+        {resumen({ hechos, previstos, extras, otros, days })}
       </p>
     </Card>
   );
@@ -79,10 +83,14 @@ function resumen({
   hechos,
   previstos,
   extras,
+  otros,
   days,
 }: ReturnType<typeof weekTally> & { days: StripDay[] }) {
   const hoy = days.find((day) => day.state === "hoy");
   if (hoy) return `Hoy toca ${hoy.plans.join(" y ")}.`;
+  if (otros > 0 && hechos === 0) {
+    return `Entrenaste ${otros} ${otros === 1 ? "día" : "días"}, pero no lo que tocaba: el plan es nuevo.`;
+  }
   if (previstos > 0 && hechos === previstos) {
     return extras > 0 ? "Semana completa, y un día de más." : "Semana completa.";
   }

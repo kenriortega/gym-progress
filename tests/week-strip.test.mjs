@@ -35,7 +35,7 @@ const PLANES = [
 const estados = (days) => days.map((item) => item.state);
 
 test("la semana empieza en lunes y trae siete días", () => {
-  const days = weekStripOf({ plans: PLANES, reschedules: [], trainedDays: [], today: JUEVES });
+  const days = weekStripOf({ plans: PLANES, reschedules: [], sessions: [], today: JUEVES });
   assert.equal(days.length, 7);
   assert.deepEqual(days.map((item) => item.label), ["L", "M", "X", "J", "V", "S", "D"]);
   assert.equal(days[0].day, "2026-11-02");
@@ -47,30 +47,34 @@ test("el jueves por la mañana: lo anterior hecho, hoy pendiente de hacer, el vi
   const days = weekStripOf({
     plans: PLANES,
     reschedules: [],
-    trainedDays: ["2026-11-02", "2026-11-03", "2026-11-04"],
+    sessions: [
+      { day: "2026-11-02", planId: "p1" },
+      { day: "2026-11-03", planId: "t1" },
+      { day: "2026-11-04", planId: "su" },
+    ],
     today: JUEVES,
   });
   assert.deepEqual(estados(days), ["hecho", "hecho", "hecho", "hoy", "pendiente", "libre", "libre"]);
 });
 
 test("un día que tocaba y pasó sin entrenar queda perdido, no pendiente", () => {
-  const days = weekStripOf({ plans: PLANES, reschedules: [], trainedDays: ["2026-11-02"], today: JUEVES });
+  const days = weekStripOf({ plans: PLANES, reschedules: [], sessions: [{ day: "2026-11-02", planId: "p1" }], today: JUEVES });
   assert.deepEqual(estados(days), ["hecho", "perdido", "perdido", "hoy", "pendiente", "libre", "libre"]);
 });
 
 test("hoy no se da por perdido aunque aún no hayas ido", () => {
-  const days = weekStripOf({ plans: PLANES, reschedules: [], trainedDays: [], today: LUNES });
+  const days = weekStripOf({ plans: PLANES, reschedules: [], sessions: [], today: LUNES });
   assert.equal(days[0].state, "hoy");
 });
 
 test("un día de peso corporal cuenta: la tira mira si entrenaste, no cuántos kilos", () => {
   // El miércoles es dominadas, fondos y carrera: cero kilos de carga externa.
-  const days = weekStripOf({ plans: PLANES, reschedules: [], trainedDays: ["2026-11-04"], today: JUEVES });
+  const days = weekStripOf({ plans: PLANES, reschedules: [], sessions: [{ day: "2026-11-04", planId: "su" }], today: JUEVES });
   assert.equal(days[2].state, "hecho");
 });
 
 test("entrenar un día libre se marca aparte y no cuenta como sesión prevista", () => {
-  const days = weekStripOf({ plans: PLANES, reschedules: [], trainedDays: ["2026-11-07"], today: DOMINGO });
+  const days = weekStripOf({ plans: PLANES, reschedules: [], sessions: [{ day: "2026-11-07", planId: null }], today: DOMINGO });
   assert.equal(days[5].state, "extra");
   const { hechos, previstos, extras } = weekTally(days);
   assert.equal(extras, 1);
@@ -82,7 +86,7 @@ test("un plan movido aparece en su destino y no en su día de siempre", () => {
   const days = weekStripOf({
     plans: PLANES,
     reschedules: [{ planId: "t1", fromDate: "2026-11-03", toDate: "2026-11-07" }],
-    trainedDays: [],
+    sessions: [],
     today: LUNES,
   });
   assert.equal(days[1].plans.length, 0, "el martes se queda sin su plan");
@@ -95,7 +99,11 @@ test("el recuento cuenta lo hecho sobre lo previsto", () => {
   const days = weekStripOf({
     plans: PLANES,
     reschedules: [],
-    trainedDays: ["2026-11-02", "2026-11-03", "2026-11-04"],
+    sessions: [
+      { day: "2026-11-02", planId: "p1" },
+      { day: "2026-11-03", planId: "t1" },
+      { day: "2026-11-04", planId: "su" },
+    ],
     today: JUEVES,
   });
   const { hechos, previstos } = weekTally(days);
@@ -104,9 +112,9 @@ test("el recuento cuenta lo hecho sobre lo previsto", () => {
 });
 
 test("sin planes la semana entera queda libre y sin nada que reclamar", () => {
-  const days = weekStripOf({ plans: [], reschedules: [], trainedDays: [], today: JUEVES });
+  const days = weekStripOf({ plans: [], reschedules: [], sessions: [], today: JUEVES });
   assert.deepEqual(estados(days), Array(7).fill("libre"));
-  assert.deepEqual(weekTally(days), { hechos: 0, previstos: 0, extras: 0 });
+  assert.deepEqual(weekTally(days), { hechos: 0, previstos: 0, extras: 0, otros: 0 });
 });
 
 test("el nombre corto se queda con el último tramo, que es el que distingue la sesión", () => {
@@ -117,4 +125,59 @@ test("el nombre corto se queda con el último tramo, que es el que distingue la 
   assert.equal(shortPlanName("Acondicionamiento general · Circuito metabólico largo"), "Circuito me…");
   assert.equal(shortPlanName("Pierna"), "Pierna");
   assert.equal(shortPlanName("  ·  Torso 2  "), "Torso 2");
+});
+
+test("entrenar otra cosa el día que tocaba no cuenta como hecho", () => {
+  // El caso real: cambias de programa a mitad de semana y los entrenos del
+  // anterior marcaban los días del nuevo, que decía «4 de 5» sin estrenarse.
+  const days = weekStripOf({
+    plans: PLANES,
+    reschedules: [],
+    sessions: [
+      { day: "2026-11-02", planId: "viejo-pierna" },
+      { day: "2026-11-03", planId: "viejo-espalda" },
+    ],
+    today: JUEVES,
+  });
+  assert.equal(days[0].state, "otro");
+  assert.equal(days[1].state, "otro");
+  const { hechos, previstos, otros } = weekTally(days);
+  assert.equal(hechos, 0, "un plan recién creado no nace con días cumplidos");
+  assert.equal(otros, 2);
+  assert.equal(previstos, 5, "los días seguían tocando, así que siguen contando");
+});
+
+test("un entreno sin plan el día que tocaba también es otra cosa", () => {
+  const days = weekStripOf({
+    plans: PLANES,
+    reschedules: [],
+    sessions: [{ day: "2026-11-02", planId: null }],
+    today: JUEVES,
+  });
+  assert.equal(days[0].state, "otro");
+});
+
+test("dos sesiones el mismo día: basta con que una sea la que tocaba", () => {
+  const days = weekStripOf({
+    plans: PLANES,
+    reschedules: [],
+    sessions: [
+      { day: "2026-11-02", planId: "viejo-pierna" },
+      { day: "2026-11-02", planId: "p1" },
+    ],
+    today: JUEVES,
+  });
+  assert.equal(days[0].state, "hecho");
+});
+
+test("el plan movido se cumple en su destino, no en su día de siempre", () => {
+  const reschedules = [{ planId: "t1", fromDate: "2026-11-03", toDate: "2026-11-07" }];
+  const days = weekStripOf({
+    plans: PLANES,
+    reschedules,
+    sessions: [{ day: "2026-11-07", planId: "t1" }],
+    today: DOMINGO,
+  });
+  assert.equal(days[5].state, "hecho", "el sábado, que es donde lo moviste");
+  assert.equal(days[1].state, "libre", "el martes ya no lo reclama");
 });

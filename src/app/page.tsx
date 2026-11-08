@@ -172,9 +172,22 @@ export default async function Home() {
     )
     .groupBy(sql`to_char(${workouts.performedAt}, 'YYYY-MM-DD')`);
   const trained = trainedRows.map((row) => ({ day: row.day, volume: Number(row.volume) }));
-  // La tira mira si hubo entrenamiento, no cuántos kilos: el día de dominadas
-  // y fondos mueve cero de carga externa y es un día entrenado igual.
-  const weekDays = weekStripOf({ plans, reschedules, trainedDays: trained.map((item) => item.day) });
+  // La tira necesita saber de qué plan salió cada sesión: un día está hecho
+  // porque entrenaste lo que tocaba, no porque entrenaras.
+  const weekSessions = await db
+    .select({
+      day: sql<string>`to_char(${workouts.performedAt}, 'YYYY-MM-DD')`,
+      planId: workouts.trainingPlanId,
+    })
+    .from(workouts)
+    .where(
+      and(
+        eq(workouts.userId, session.user.id),
+        eq(workouts.status, "completed"),
+        sql`${workouts.performedAt} >= date_trunc('week', now())`,
+      ),
+    );
+  const weekDays = weekStripOf({ plans, reschedules, sessions: weekSessions });
 
   const [lastWorkout] = await db
     .select({
