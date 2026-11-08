@@ -19,6 +19,30 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "2026-11-08-tu-semana-de-un-vistazo",
+    date: "8 de noviembre de 2026",
+    title: "Tu semana, de un vistazo",
+    items: [
+      "En Inicio, encima del mapa del año, tienes los siete días de esta semana con lo que te tocaba y lo que hiciste: cumplido, hoy, pendiente, sin hacer, descanso y los días que entrenaste sin que tocara.",
+      "Un día cuenta como cumplido solo si entrenaste el plan de ese día. Al estrenar un programa, las sesiones del anterior ya no lo dan por empezado.",
+      "Los días movidos aparecen donde los moviste, y un día de peso corporal cuenta como cualquier otro aunque no muevas carga externa.",
+      "En el mapa de constancia puedes tocar un día para ver su fecha y la carga que moviste. Antes hacía falta un ratón, así que en el móvil no había manera de consultarlo.",
+      "En el móvil tienes una barra fija abajo con Inicio, Entrenar, Planes y Progreso. El resto de secciones siguen en el menú de arriba.",
+    ],
+  },
+  {
+    id: "2026-11-08-fuerza-y-progreso",
+    date: "8 de noviembre de 2026",
+    title: "Mide tu fuerza, no solo el peso de la barra",
+    items: [
+      "Cada ejercicio muestra su 1RM estimado: lo que podrías mover una sola vez, calculado desde tus series. Así una serie de 10 repeticiones puede valer más que una de 3 con más peso, que es lo que pasa de verdad.",
+      "La gráfica de evolución separa las sesiones por su fecha real, así que una pausa de tres semanas se ve como una pausa y no como la sesión siguiente.",
+      "Elige qué mide la gráfica: peso máximo, 1RM estimado o volumen. Y aparece desde la primera sesión, sin esperar a la tercera.",
+      "Al volver atrás desde un ejercicio regresas de donde venías. Si lo abriste durante un entreno, vuelves al entreno.",
+      "Los objetivos de cada ejercicio solo nombran el tipo de carga cuando cambia algo: peso corporal, lastre o asistencia. La carga externa se da por supuesta y las líneas se leen de un vistazo.",
+    ],
+  },
+  {
     id: "2026-11-02-programas-completos",
     date: "2 de noviembre de 2026",
     title: "Elige una semana completa de entrenamiento",
