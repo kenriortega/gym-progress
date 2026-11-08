@@ -8,6 +8,7 @@ import { OfflinePlansProvider } from "@/components/offline-plans-provider";
 import { OfflineWorkoutSync } from "@/components/offline-workout-sync";
 import { OfflineBanner } from "@/components/offline-banner";
 import { ServiceWorkerProvider } from "@/components/serwist-provider";
+import { BottomNav } from "@/components/bottom-nav";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -55,6 +56,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <OfflineBanner />
             <OfflineWorkoutSync />
             {children}
+            <BottomNav />
             <Toaster />
           </OfflinePlansProvider>
         </ThemeProvider>

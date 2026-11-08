@@ -190,7 +190,7 @@ export default async function HistoryDetailPage({
             key={exercise.id}
             className="gap-0 overflow-hidden py-0"
           >
-            <div className="flex items-center gap-3 border-b border-border p-5">
+            <div className="flex items-start gap-3 border-b border-border p-5">
               <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-sm font-black text-primary-foreground">
                 {String(exerciseIndex + 1).padStart(2, "0")}
               </div>
@@ -204,7 +204,10 @@ export default async function HistoryDetailPage({
                 <p className="mt-1 text-sm text-muted-foreground">{exercise.muscleGroup}</p>
                 {exercise.targetSets !== null && (
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary">
+                    {/* La insignia nace sin encoger y sin partir línea: con el
+                        objetivo entero —series, repeticiones y tipo de carga— se
+                        desbordaba por debajo del recuento de la derecha. */}
+                    <Badge variant="secondary" className="h-auto min-w-0 shrink whitespace-normal py-1 text-left">
                       {formatTarget(exercise)}
                     </Badge>
                     <Badge
@@ -221,7 +224,7 @@ export default async function HistoryDetailPage({
                   </div>
                 )}
               </div>
-              <Badge variant="outline">
+              <Badge variant="outline" className="self-start">
                 {exercise.sets.length} {exercise.sets.length === 1 ? "serie" : "series"}
               </Badge>
             </div>
