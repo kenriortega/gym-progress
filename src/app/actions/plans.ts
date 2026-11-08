@@ -568,12 +568,14 @@ export async function changeProgramMicrocycle(_state: { error: string } | null, 
   const planId = requiredUuid(formData, "planId");
   const microcycle = Number(formData.get("microcycle"));
   if (!Number.isInteger(microcycle) || microcycle < 1 || microcycle > 8) return { error: "Elige un microciclo del 1 al 8." };
+  let previous: number | null = null;
   try {
     await db.transaction(async (tx) => {
       await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}), hashtext('program-templates'))`);
       const [selected] = await tx.select().from(trainingPlans)
         .where(and(eq(trainingPlans.id, planId), eq(trainingPlans.userId, userId), isNull(trainingPlans.archivedAt)));
       const cycle = selected?.programCycle;
+      previous = cycle?.microcycle ?? null;
       const template = cycle && findProgramTemplate(cycle.programId);
       if (!cycle || !template || !hasPdfProgram(template.id)) throw new Error("Copia del programa no disponible.");
       const target = pdfProgram(template, microcycle);
@@ -599,7 +601,9 @@ export async function changeProgramMicrocycle(_state: { error: string } | null, 
   }
   revalidatePath("/");
   revalidatePath("/plans", "layout");
-  redirect(`/plans/${planId}`);
+  // El microciclo del que vienes viaja en la URL: al volver del servidor el
+  // formulario se monta de cero y no puede recordar dónde estabas.
+  redirect(`/plans/${planId}?desde=${previous}`);
 }
 
 export async function createPlanFromTemplate(formData: FormData) {

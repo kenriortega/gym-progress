@@ -34,16 +34,26 @@ import { db } from "@/db";
 import { exercises, trainingPlanExercises, trainingPlans } from "@/db/schema";
 import { AppHeader } from "@/components/app-header";
 import { ProgramCycleForm } from "@/components/program-cycle-form";
+import { microcycleSummaries } from "@/lib/microcycle-summary";
 import { SetPrescription } from "@/components/set-prescription";
 import { ExercisePicker } from "@/components/exercise-picker";
 
 const weekdays = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
-export default async function PlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PlanDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ desde?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
   const { id } = await params;
+  // De dónde vienes tras aplicar un microciclo, para decir qué dejaste atrás.
+  const desde = Number((await searchParams).desde);
+  const cameFrom = Number.isInteger(desde) && desde >= 1 && desde <= 8 ? desde : null;
   const userId = session.user.id;
   const [plan] = await db
     .select()
@@ -83,7 +93,16 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
   return (
     <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-12 pt-6">
       <AppHeader backHref="/plans" eyebrow="Configurar plan" title={plan.name} />
-      {plan.programCycle && <ProgramCycleForm planId={plan.id} microcycle={plan.programCycle.microcycle} />}
+      {plan.programCycle && (
+        <ProgramCycleForm
+          planId={plan.id}
+          microcycle={plan.programCycle.microcycle}
+          /* Calculado en el servidor: aquí el JSON del programa ya está
+             cargado, y en el navegador costaría el archivo entero. */
+          summaries={microcycleSummaries(plan.programCycle.programId) ?? []}
+          cameFrom={cameFrom}
+        />
+      )}
 
       <StartWorkoutButton refreshBeforeStart userId={userId} planId={plan.id} disabled={plannedExercises.length === 0}
         className="mt-6 h-14 w-full rounded-2xl bg-primary text-base font-black text-primary-foreground disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground">
