@@ -19,6 +19,8 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/button-link";
 import { ChangelogDialog } from "@/components/changelog-dialog";
 import { ActivityHeatmap } from "@/components/activity-heatmap";
+import { WeekStrip } from "@/components/week-strip";
+import { weekStripOf } from "@/lib/week-strip";
 import { BodyWeightCard } from "@/components/body-weight-card";
 import {
   Card,
@@ -170,6 +172,9 @@ export default async function Home() {
     )
     .groupBy(sql`to_char(${workouts.performedAt}, 'YYYY-MM-DD')`);
   const trained = trainedRows.map((row) => ({ day: row.day, volume: Number(row.volume) }));
+  // La tira mira si hubo entrenamiento, no cuántos kilos: el día de dominadas
+  // y fondos mueve cero de carga externa y es un día entrenado igual.
+  const weekDays = weekStripOf({ plans, reschedules, trainedDays: trained.map((item) => item.day) });
 
   const [lastWorkout] = await db
     .select({
@@ -341,6 +346,8 @@ export default async function Home() {
         pero en portada le ocupa media pantalla a quien acaba de instalar la app
         para no decirle nada.
       */}
+      <WeekStrip days={weekDays} />
+
       {trained.length > 0 ? <ActivityHeatmap trained={trained} unit={profile?.trainingUnit ?? "kg"} /> : null}
 
       <section id="planes" className="mt-8 scroll-mt-5">
