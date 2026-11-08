@@ -1,4 +1,4 @@
-import { DocumentLink } from "@/components/document-link";
+import { BackLink } from "@/components/back-link";
 
 import { auth, signOut } from "@/auth";
 import { AnalyticsIdentity } from "@/components/analytics-identity";
@@ -32,13 +32,13 @@ export async function AppHeader({ eyebrow, title, backHref, action, icon }: AppH
       </> : null}
 
       {backHref ? (
-        <DocumentLink
+        <BackLink
           href={backHref}
           className="grid size-11 shrink-0 place-items-center rounded-full border border-border text-xl text-muted-foreground transition hover:border-foreground/30 hover:text-foreground"
           aria-label="Volver"
         >
           ←
-        </DocumentLink>
+        </BackLink>
       ) : null}
 
       {icon ? <div className="shrink-0">{icon}</div> : null}

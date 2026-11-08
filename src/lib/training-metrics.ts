@@ -81,3 +81,20 @@ export function parseTargets(form: FormData) {
   }
   return { measurement, loadType, targetSeconds, targetSets, targetRepsMin, targetRepsMax, variation, progressionSteps, progressionStep };
 }
+
+/**
+ * 1RM estimado por la fórmula de Epley: peso × (1 + reps/30).
+ *
+ * El récord de peso premia la serie más pesada aunque sea de tres
+ * repeticiones, y 160 × 10 es más fuerza que 175 × 3. Esto compara ambas en la
+ * misma escala.
+ *
+ * Por encima de doce repeticiones la fórmula se dispara —a 20 repeticiones
+ * predice un 67 % más del peso movido, que ya no es fuerza sino resistencia—,
+ * así que esas series no estiman nada y devuelven null.
+ */
+export const ONE_REP_MAX_REPS = 12;
+export function estimatedOneRepMax(set: { weight: number; reps: number }): number | null {
+  if (!(set.weight > 0) || !Number.isFinite(set.reps) || set.reps < 1 || set.reps > ONE_REP_MAX_REPS) return null;
+  return set.weight * (1 + set.reps / 30);
+}

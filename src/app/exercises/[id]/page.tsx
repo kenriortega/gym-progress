@@ -15,6 +15,8 @@ import { ExerciseFigure } from "@/components/exercise-figure";
 import { MuscleIcon } from "@/components/muscle-icon";
 import { Badge } from "@/components/ui/badge";
 import { hasFigure } from "@/lib/exercise-figures";
+import { estimatedOneRepMax } from "@/lib/training-metrics";
+import { ExerciseProgressChart, type ChartSession } from "@/components/exercise-progress-chart";
 import { MUSCLE_LABELS, isMuscleRegion, weightOf, type MuscleRegion } from "@/lib/muscles";
 import {
   Card,
@@ -81,45 +83,25 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
     return !best || candidate.weight > best.weight || (candidate.weight === best.weight && candidate.reps > best.reps) ? candidate : best;
   }, null);
   const bestVolume = Math.max(...sessionList.map((item) => item.volume), 0);
+  const bestOneRepMax = rows.reduce<number | null>((best, row) => {
+    const estimate = estimatedOneRepMax({ weight: Number(row.weight), reps: row.reps });
+    return estimate !== null && (best === null || estimate > best) ? estimate : best;
+  }, null);
   const dateFormatter = new Intl.DateTimeFormat("es", { day: "numeric", month: "short", year: "2-digit" });
-  const timeFormatter = new Intl.DateTimeFormat("es", { hour: "2-digit", minute: "2-digit" });
-  const chartDayFormatter = new Intl.DateTimeFormat("es", { day: "numeric", month: "short" });
 
 
-  // Dos entrenamientos del mismo día daban dos barras con la etiqueta idéntica,
-  // porque las sesiones se agrupan por entrenamiento y no por fecha.
-  const perDay = new Map<string, number>();
-  for (const item of sessionList) {
-    const day = dateFormatter.format(item.date);
-    perDay.set(day, (perDay.get(day) ?? 0) + 1);
-  }
-  // Bajo una barra de 64 px no cabe "29 sept 26 · 19:30": sin año, y solo la hora
-  // cuando ese día tiene más de una sesión. La lista de abajo conserva la fecha entera.
-  const labelOf = (date: Date) => {
-    const day = dateFormatter.format(date);
-    return (perDay.get(day) ?? 0) > 1 ? timeFormatter.format(date) : chartDayFormatter.format(date);
-  };
-
-  // El eje no arranca en cero a propósito. El rango útil de una serie de fuerza
-  // es estrecho, y desde cero una subida de 2.5 kg son dos píxeles: justo la
-  // señal que la gráfica existe para mostrar. El pie del gráfico lo advierte.
-  const weights = sessionList.map((item) => item.maxWeight);
-  const topWeight = Math.max(...weights, 1);
-  const spread = topWeight - Math.min(...weights, topWeight);
-  const chartFloor = topWeight - spread * 1.5;
-  const BAR_MIN = 26;
-  const BAR_MAX = 132;
-  // Sin variación todas van a media altura: al tope leerían como un buen resultado,
-  // y lo que dicen es que llevas tres sesiones con el mismo peso.
-  const barHeight = (weight: number) =>
-    spread > 0
-      ? BAR_MIN + ((weight - chartFloor) / (topWeight - chartFloor)) * (BAR_MAX - BAR_MIN)
-      : (BAR_MIN + BAR_MAX) / 2;
-
-  // Dos barras no son una tendencia: con pocas sesiones el dato directo dice más.
-  const latest = sessionList.at(-1) ?? null;
-  const previous = sessionList.at(-2) ?? null;
-  const change = latest && previous ? latest.maxWeight - previous.maxWeight : null;
+  // La gráfica vive en el cliente: el selector de métrica es estado, y las
+  // fechas tienen que viajar como texto.
+  const chartSessions: ChartSession[] = sessionList.map((item) => ({
+    id: item.id,
+    date: item.date.toISOString(),
+    maxWeight: item.maxWeight,
+    volume: item.volume,
+    oneRepMax: item.sets.reduce<number | null>((best, set) => {
+      const estimate = estimatedOneRepMax(set);
+      return estimate !== null && (best === null || estimate > best) ? estimate : best;
+    }, null),
+  }));
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl px-5 pb-12 pt-6">
@@ -161,11 +143,20 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
 
       {bestSet ? (
         <>
-          <section className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
+          <section className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-3 md:gap-4">
             <Card className="gap-1 bg-primary p-4 text-primary-foreground">
               <p className="text-xs font-medium uppercase tracking-wider text-primary-foreground/75">Récord de peso</p>
               <p className="text-2xl sm:text-3xl font-bold tabular-nums"><WeightValue value={bestSet.weight} /></p>
               <p className="text-sm text-primary-foreground/75">× {bestSet.reps} reps</p>
+            </Card>
+            <Card className="gap-1 p-4">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">1RM estimado</p>
+              <p className="text-2xl sm:text-3xl font-bold tabular-nums text-foreground">
+                {bestOneRepMax !== null ? <WeightValue value={bestOneRepMax} /> : "—"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {bestOneRepMax !== null ? "tu mejor serie, llevada a una repetición" : "necesita una serie de 12 repeticiones o menos"}
+              </p>
             </Card>
             <Card className="gap-1 p-4">
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Mejor volumen</p>
@@ -175,55 +166,12 @@ export default async function ExerciseProgressPage({ params }: { params: Promise
           </section>
 
           <Card className="mt-6 p-5">
-            <CardHeader className="flex-row items-end justify-between p-0">
-              <div>
-                <CardDescription>Peso máximo</CardDescription>
-                <CardTitle className="mt-1 text-lg">Evolución</CardTitle>
-              </div>
-              <Badge variant="outline">
-                {sessionList.length} {sessionList.length === 1 ? "sesión" : "sesiones"}
-              </Badge>
+            <CardHeader className="p-0">
+              <CardDescription>Progreso</CardDescription>
+              <CardTitle className="mt-1 text-lg">Evolución</CardTitle>
             </CardHeader>
 
-            {sessionList.length >= 3 ? (
-              <>
-                <div className="mt-6 flex h-52 items-end gap-2 overflow-x-auto pb-1">
-                  {sessionList.map((item) => (
-                    <div key={item.id} className="flex min-w-12 max-w-16 flex-1 flex-col items-center justify-end gap-2">
-                      <span className="text-[11px] font-bold tabular-nums text-muted-foreground"><WeightValue value={item.maxWeight} single /></span>
-                      <div className="w-full rounded-t-md bg-foreground" style={{ height: `${barHeight(item.maxWeight)}px` }} />
-                      <span className="whitespace-nowrap text-[10px] text-muted-foreground">{labelOf(item.date)}</span>
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-                  La más antigua a la izquierda. El eje no empieza en cero, para que se note el
-                  cambio de una sesión a otra.
-                </p>
-              </>
-            ) : (
-              <div className="mt-5">
-                {change !== null && latest && previous ? (
-                  <>
-                    <p className="text-2xl sm:text-3xl font-bold tabular-nums text-foreground">
-                      {change > 0 ? "+" : ""}
-                      <WeightValue value={change} />
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      desde la sesión anterior · <WeightValue value={previous.maxWeight} /> → <WeightValue value={latest.maxWeight} />
-                    </p>
-                  </>
-                ) : latest ? (
-                  <>
-                    <p className="text-2xl sm:text-3xl font-bold tabular-nums text-foreground"><WeightValue value={latest.maxWeight} /></p>
-                    <p className="mt-1 text-sm text-muted-foreground">en tu primera sesión registrada</p>
-                  </>
-                ) : null}
-                <p className="mt-4 text-[11px] text-muted-foreground">
-                  A partir de la tercera sesión aquí sale la gráfica.
-                </p>
-              </div>
-            )}
+            <ExerciseProgressChart sessions={chartSessions} />
           </Card>
 
           <section className="mt-6">
