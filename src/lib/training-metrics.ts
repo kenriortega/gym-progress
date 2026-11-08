@@ -60,10 +60,18 @@ export function formatSet(set: SetMetrics, unit: string, formatLoad = (weight: n
     default: return set.durationSeconds != null ? `${set.durationSeconds} s · ${formatLoad(set.weight)}` : `${formatLoad(set.weight)} × ${set.reps}`;
   }
 }
+/**
+ * La carga externa es el valor por defecto y no distingue nada: estaba en casi
+ * todas las líneas ocupando un tercio del ancho, y en las tarjetas estrechas
+ * empujaba el objetivo a una segunda línea. Solo se nombra la carga cuando
+ * dice algo —peso corporal, lastre, asistencia—, que es cuando cambia lo que
+ * tienes que hacer.
+ */
 export function formatTarget(value: ExerciseMetrics & { targetSets: number | null; targetRepsMin: number | null; targetRepsMax: number | null }): string {
-  if (value.prescription) return `Microciclo ${value.prescription.microcycle} · ${value.prescription.sets.length} series · ${LOAD_LABELS[value.loadType ?? "external"]}`;
+  const load = (value.loadType ?? "external") === "external" ? "" : ` · ${LOAD_LABELS[value.loadType ?? "external"]}`;
+  if (value.prescription) return `Microciclo ${value.prescription.microcycle} · ${value.prescription.sets.length} series${load}`;
   const target = value.measurement === "time" ? `${value.targetSeconds} s` : `${value.targetRepsMin ?? "—"}${value.targetRepsMax !== value.targetRepsMin ? `–${value.targetRepsMax ?? "—"}` : ""} reps`;
-  return `${value.targetSets ?? "—"} ${value.targetSets === 1 ? "serie" : "series"} · ${target} · ${LOAD_LABELS[value.loadType ?? "external"]}${value.variation ? ` · ${value.variation}` : ""}`;
+  return `${value.targetSets ?? "—"} ${value.targetSets === 1 ? "serie" : "series"} · ${target}${load}${value.variation ? ` · ${value.variation}` : ""}`;
 }
 export function parseTargets(form: FormData) {
   const progressionSteps = String(form.get("progressionSteps") ?? "").split("\n").map((item) => item.trim()).filter(Boolean);

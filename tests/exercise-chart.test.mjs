@@ -116,3 +116,49 @@ test("el peso corporal sin lastre no estima un máximo", () => {
   assert.equal(estimatedOneRepMax({ weight: 60, reps: 0 }), null);
   assert.equal(estimatedOneRepMax({ weight: Number.NaN, reps: 5 }), null);
 });
+
+const { formatTarget } = await import(
+  await moduleUrl("src/lib/training-metrics.ts", { "./set-prescription": prescriptionUrl })
+);
+
+test("el objetivo no nombra la carga externa, que es lo que hace todo el mundo", () => {
+  assert.equal(
+    formatTarget({ targetSets: 3, targetRepsMin: 8, targetRepsMax: 12, loadType: "external" }),
+    "3 series · 8–12 reps",
+  );
+  assert.equal(
+    formatTarget({ targetSets: 3, targetRepsMin: 8, targetRepsMax: 12 }),
+    "3 series · 8–12 reps",
+  );
+});
+
+test("sí nombra la carga cuando cambia lo que tienes que hacer", () => {
+  assert.equal(
+    formatTarget({ targetSets: 3, targetRepsMin: 6, targetRepsMax: 10, loadType: "bodyweight" }),
+    "3 series · 6–10 reps · Peso corporal",
+  );
+  assert.equal(
+    formatTarget({ targetSets: 4, targetRepsMin: 5, targetRepsMax: 5, loadType: "weighted" }),
+    "4 series · 5 reps · Con lastre",
+  );
+  assert.equal(
+    formatTarget({ targetSets: 3, targetRepsMin: 8, targetRepsMax: 8, loadType: "assisted" }),
+    "3 series · 8 reps · Con asistencia",
+  );
+});
+
+test("con prescripción basta el microciclo y las series", () => {
+  const prescription = { microcycle: 6, sets: [{}, {}, {}, {}] };
+  assert.equal(formatTarget({ prescription, targetSets: 4, targetRepsMin: 10, targetRepsMax: 12 }), "Microciclo 6 · 4 series");
+  assert.equal(
+    formatTarget({ prescription, targetSets: 4, targetRepsMin: 10, targetRepsMax: 12, loadType: "bodyweight" }),
+    "Microciclo 6 · 4 series · Peso corporal",
+  );
+});
+
+test("el trabajo por tiempo sigue diciendo los segundos", () => {
+  assert.equal(
+    formatTarget({ targetSets: 3, targetRepsMin: null, targetRepsMax: null, measurement: "time", targetSeconds: 40, loadType: "bodyweight" }),
+    "3 series · 40 s · Peso corporal",
+  );
+});
