@@ -21,6 +21,7 @@ import { ChangelogDialog } from "@/components/changelog-dialog";
 import { ActivityHeatmap } from "@/components/activity-heatmap";
 import { WeekStrip } from "@/components/week-strip";
 import { weekStripOf } from "@/lib/week-strip";
+import { shortPlanName } from "@/lib/plan-name";
 import { BodyWeightCard } from "@/components/body-weight-card";
 import {
   Card,
@@ -288,7 +289,7 @@ export default async function Home() {
           {activeWorkout
             ? (activeWorkout.planName ?? "Sigue donde lo dejaste.")
             : todayPlan
-              ? todayPlan.name
+              ? shortPlanName(todayPlan.name)
               : plans.length > 0
                 ? "Elige tu plan de hoy."
                 : "Organiza tu semana."}
@@ -335,10 +336,13 @@ export default async function Home() {
             </ButtonLink>
           </div>
         ) : todayPlan ? (
+          /* El nombre entero no cabe: el botón nace con `whitespace-nowrap`
+             y se desbordaba por los dos lados. `overflow-hidden` es la red
+             por si algún día el nombre corto tampoco entra. */
           <StartWorkoutButton userId={userId} planId={todayPlan.id}
             size="lg" disabled={todayPlan.exerciseCount === 0}
-            className="mt-7 h-14 w-full rounded-2xl bg-background text-base font-semibold text-foreground hover:bg-background/90">
-            Empezar {todayPlan.name}
+            className="mt-7 h-14 w-full overflow-hidden rounded-2xl bg-background px-5 text-base font-semibold text-foreground hover:bg-background/90">
+            Empezar {shortPlanName(todayPlan.name)}
           </StartWorkoutButton>
         ) : (
           <ButtonLink

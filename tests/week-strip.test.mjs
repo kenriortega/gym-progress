@@ -15,8 +15,12 @@ async function moduleUrl(file, replacements = {}) {
 }
 const datesUrl = await moduleUrl("src/lib/dates.ts");
 const scheduleUrl = await moduleUrl("src/lib/schedule.ts", { "@/lib/dates": datesUrl });
-const { weekStripOf, weekTally, shortPlanName, mondayOf } = await import(
-  await moduleUrl("src/lib/week-strip.ts", { "@/lib/dates": datesUrl, "@/lib/schedule": scheduleUrl })
+const planNameUrl = await moduleUrl("src/lib/plan-name.ts");
+const { shortPlanName } = await import(planNameUrl);
+const { weekStripOf, weekTally, mondayOf } = await import(
+  await moduleUrl("src/lib/week-strip.ts", {
+    "@/lib/dates": datesUrl, "@/lib/schedule": scheduleUrl, "@/lib/plan-name": planNameUrl,
+  })
 );
 
 // Semana del lunes 2 al domingo 8 de noviembre de 2026.
